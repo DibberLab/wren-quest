@@ -2,8 +2,9 @@
 
 An 8-bit top-down action-adventure in the spirit of classic NES games, with an original hero, world and chiptune soundtrack. Live at **https://quest.dibberlab.me**.
 
-- 864-screen overworld (36x24), 14 shard dungeons plus the Obsidian Throne, 9 secret puzzle dungeons
-- Disc golf: a 27-hole course across the world. Par or better refills your hearts; a bogey or worse costs one; every 9 holes brings a scorecard with a progress report
+- 864-screen overworld (36x24), 27 disc golf holes that are also 27 dungeons, the Obsidian Throne, 9 secret puzzle dungeons
+- Disc golf: sink one of the 27 baskets and the ground opens into its dungeon. Beat the boss, then sink a ghostly hole in par or better (aim, lock power, lock curve; wind, trees, water) for one of 27 crown pieces. Over par and the boss rises again. Every 9 holes brings a scorecard with a progress report
+- Sword levels 1-30 earned through kills (enemies toughen with you, but more slowly); heart pieces (4 make a heart container) from duels, aces, birdies, moats, bounties and sword milestones
 - 17 underground caverns (15-35 screens each, some connecting regions) with cave-only enemies, dim lighting, ore to mine, and a unique reward deep in each; a Pick-Shovel to break boulders and dig up hidden entrances and buried treasure
 - 30 kinds of monster (15 added in this update), from the common Marebear, who oozes sticky white goo and sometimes gets smitten and starts a charm duel (fill her love meter and she walks off with a heart container; beat a Marebear in the next duel to win it back), to gem-stealing ravens, rolling thornbacks and sleeping boulderkin
 - Stamina: tap B to roll, hold it to sprint; jumping, rolling, sprinting, spin attacks and heavy swings use stamina, which refills quickly; run dry and you're winded for a moment

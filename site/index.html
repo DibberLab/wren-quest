@@ -104,7 +104,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;width
     </div>
     <div class="card">
       <h2>The quest</h2>
-      <p>The Obsidian King broke the Ember Crown into fourteen shards. Grab your gear from the sage's cave, clear fourteen dungeons for their shards and upgrades, then storm the Obsidian Throne in the far northeast. Talk to strangers (walk up and press attack) for quests, clues and lies. Eat strange mushrooms. Beware wandering champions. There are 13 secrets to find. Progress saves in this browser.</p>
+      <p>The Obsidian King broke the Ember Crown into 27 pieces and hid one under each of the 27 disc golf baskets. Grab your gear from the sage's cave, sink a basket to drop into its dungeon, beat the boss, then sink the ghostly hole in par or better for the crown piece, then storm the Obsidian Throne in the far northeast. Talk to strangers (walk up and press attack) for quests, clues and lies. Eat strange mushrooms. Beware wandering champions. There are 13 secrets to find. Progress saves in this browser.</p>
     </div>
   </section>
 </main>
@@ -411,7 +411,7 @@ function wallSprite(g,th,X,Y){const t=th.wall;
 }
 
 // ================= WORLD =================
-const WW=36,WH=24,START=[18,23],NDUN=15,NSH=14;
+const WW=36,WH=24,START=[18,23],NDUN=15,NSH=27,HD0=100;
 const RC0=['#8a8478','#b8b0a0','#5a544c'];
 const BIO={
   meadow:{n:'Emberglen',lvl:0,g:'#5fa84a',g2:'#4a8c3a',wall:'tree',tc:['#1f5a2a','#2f7a36','#5aa84a'],rc:RC0,lc:['#2a6ad0','#6aa8f8'],en:['slime','beetle','spitter','toad','marebear','thornback']},
@@ -522,10 +522,10 @@ const NPCS=[
  {id:'hermit',spr:'mage',pal:{p:'#6a6a8a',q:'#3a3a5a',y:'#ffffff'},bio:['snow'],say(){const q=S.q;
    if(q.letter===2){q.letter=3;S.gems=Math.min(999,S.gems+100);return['A letter? For me? ... It says: Dear Hermit, please stop yelling at the snow. ... RUDE. Fine. Thank you, I suppose. Take these 100 gems and this.',()=>giveHeart('The hermit gave you a HEART CONTAINER! He is already yelling again.')]}
    return pick(['Go away. I am busy yelling at the snow.','SNOW! STOP BEING COLD! ... Oh. You are still here.','I moved up here for peace and quiet. Then the snow started talking back.'])}},
- {id:'scholar',spr:'hd',pal:{h:'#4060c0',d:'#203070',r:'#f0c040'},lines:['Each shard guardian has a weakness. Most of them hate being frozen.','Bosses get angrier below half health. Be ready to roll.','There are fourteen dungeons. The doors glow orange on your map, then green once you have their shard.']},
+ {id:'scholar',spr:'hd',pal:{h:'#4060c0',d:'#203070',r:'#f0c040'},lines:['Each shard guardian has a weakness. Most of them hate being frozen.','Bosses get angrier below half health. Be ready to roll.','Every basket hides a dungeon. Sink it and the ground opens. Beat the boss, then beat par.']},
  {id:'oldman',spr:'mage',pal:{p:'#a08060',q:'#604030',y:'#ffffff'},lines:['Cracked rocks near the top of a screen often hide a cave. Bring a bomb.','Not every cave is a shop. Some are full of free bombs.','In my day we only had one sword and we LIKED it.']},
  {id:'vet',spr:'knight',pal:{a:'#b0b0c0',d:'#606070',r:'#4060ff'},lines:['Hold your sword and let it charge. At full health, the spin hurls a blade clear across the screen.','Face enemy shots with your shield. Seeds and fireballs bounce right off.','I used to be an adventurer like you. Then I sat down. It was very comfortable.']},
- {id:'bard',spr:'hd',pal:{h:'#c04080',d:'#702050',r:'#40c0ff'},lines:['Ambushes are scary, but the treasure is worth it. Also I wrote a song about it. It goes: aaaaaaaa.','La la la, fourteen shards, la la la, I cannot rhyme with shards.','Swing at shots to parry them! That is not a song. That is advice.']},
+ {id:'bard',spr:'hd',pal:{h:'#c04080',d:'#702050',r:'#40c0ff'},lines:['Ambushes are scary, but the treasure is worth it. Also I wrote a song about it. It goes: aaaaaaaa.','La la la, twenty-seven pieces, la la la, nothing rhymes with pieces.','Swing at shots to parry them! That is not a song. That is advice.']},
  {id:'liar',spr:'hd',pal:{h:'#e07030',d:'#904010',r:'#ffffff'},lines:['Honest Pete here! The Obsidian Throne? Southwest. Definitely. Under a cow.','Bombs are delicious. Honest Pete has never lied. Except right now. And before.','Slimes are actually very rich. Ask them for a loan.']},
  {id:'bridge',spr:'mage',pal:{p:'#a0a020',q:'#505010',y:'#ffffff'},lines:['Psst. Want to buy a bridge? ... No? It is a really good bridge. It goes over things.','I also sell holes. Pre-dug. Gently used.']},
  {id:'digger',spr:'hd',pal:{h:'#806040',d:'#503020',r:'#ff4040'},lines:['There is treasure buried under the very first screen! Dig with your face! ... It did not work for me either.','The X on my map marks the spot. I drew the X. I do not know where the spot is.']},
@@ -581,7 +581,7 @@ function genScreen(sx,sy){
   for(let w=4;w<=5;w++)for(let c=6;c<=9;c++){const v=Gx(c,w);Sx(c,w,(v===WA||v===LV||v===BR)?BR:GR)}
   for(let w=1;w<10;w++)for(let c=1;c<15;c++)if(Gx(c,w)===GR&&r()<0.06)Sx(c,w,BU);
   const dn=DSCR[key];
-  if(dn){for(let w=1;w<=4;w++)for(let c=4;c<=11;c++)Sx(c,w,GR);for(let c=5;c<=10;c++){Sx(c,1,EW);Sx(c,2,EW)}Sx(7,2,DE);Sx(8,2,DE);path(7,3,7,4)}
+  if(dn){for(let w=1;w<=4;w++)for(let c=4;c<=11;c++)Sx(c,w,GR);for(let c=5;c<=10;c++){Sx(c,1,EW);Sx(c,2,EW)}Sx(7,2,dn===NDUN?DE:RK);Sx(8,2,dn===NDUN?DE:RK);path(7,3,7,4)}
   const cv=CAVES[key];let caveC=-1;
   if(cv&&!dn){for(let i=0;i<60;i++){const cc=2+Math.floor(r()*12);if(Math.abs(cc-topC-0.5)>=2.6){caveC=cc;break}}
     if(caveC<0)caveC=topC>7?3:12;
@@ -613,6 +613,9 @@ const DSPEC=[null,
  ['Bonelord Tomb','grave2','inferno','BONE EMPEROR','bA',{b:'#e0dcc8',d:'#8a8470',w:'#300000',r:'#ff2020',t:'#ffffff'},['summon','aimed','spiral','charge'],'skeleton'],
  ['Obsidian Throne','volcano',null,'OBSIDIAN KING','knight',{a:'#3a3040',d:'#1a1420',r:'#ff4010',k:'#000000'},['charge','spiral','teleport','shock','summon','radial','aimed'],'imp']];
 const DUN=DSPEC.map((q,d)=>{if(!q)return null;const th=THM[q[1]],bio=q[1].replace('2','');return{n:q[0],f:th[0],f2:th[1],w:th[2],w2:th[3],liq:th[4],en:ENB[bio],item:q[2],turret:d>=5?1:0,boss:{n:q[3],tpl:q[4],pal:q[5],hp:d===NDUN?110:18+d*5,pat:q[6],min:q[7],final:d===NDUN?1:0}}});
+HOLES.forEach(h=>{const [x,y]=h.key.split(',').map(Number),bn=CEN[regMap[y][x]][0].replace('2','');const th=[];for(let i=1;i<NDUN;i++)if(DSPEC[i][1].replace('2','')===bn)th.push(i);
+  const t=th.length?th[h.n%th.length]:((h.n-1)%(NDUN-1))+1,T=DUN[t],sz=Math.max(1,Math.min(14,Math.round(1+(h.n-1)*13/26)));
+  DUN[HD0+h.n]=Object.assign({},T,{n:'Hole '+h.n+': '+T.n,item:h.n<NDUN?DSPEC[h.n][2]:null,turret:sz>=5?1:0,sz,lvl:1+Math.round(sz*0.55),hole:h.n,boss:Object.assign({},T.boss,{hp:18+sz*5,final:0})})});
 const RELICS=[
  {id:'lens',n:"SEER'S LENS",d:'Map marks secrets',msg:"SEER'S LENS! Your map now marks quest items, hidden caves and secret dungeons."},
  {id:'magnet',n:'GEM MAGNET',d:'Loot flies to you',msg:'GEM MAGNET! Gems, hearts and supplies now fly toward you.'},
@@ -685,7 +688,7 @@ const SHROOMS={
  jester:{n:'JESTER CAP',d:'Anything can happen',cap:'rainbow',dot:'#ffffff',w:6}};
 function pickShroom(){let tot=0;for(const k in SHROOMS)tot+=SHROOMS[k].w;let r=R()*tot;for(const k in SHROOMS){r-=SHROOMS[k].w;if(r<=0)return k}return'red'}
 function genDungeon(d){
-  const r=rng(SEED+d*1013),N=8+Math.ceil(d*0.7)+(d===NDUN?4:0),rooms={},list=[];
+  const sz=DUN[d].sz||d,r=rng(SEED+d*1013),N=8+Math.ceil(sz*0.7)+(d===NDUN?4:0),rooms={},list=[];
   const add=(x,y,depth,par)=>{const o={kind:'dun',d,x,y,depth,par,doors:[0,0,0,0],kids:0,en:[],tpl:0,cleared:0};rooms[x+','+y]=o;list.push(o);return o};
   const st=add(3,6,0,null);st.start=1;st.doors[2]='exit';
   let guard=0;
@@ -704,7 +707,7 @@ function genDungeon(d){
     const a=path[li],b=path[li+1],dd=dirTo(a,b);a.doors[dd]='lock';b.doors[(dd+2)%4]='lock'});
   if(DUN[d].item){let c=list.filter(o=>!o.start&&!o.boss&&!o.key&&o.kids===0);if(!c.length)c=list.filter(o=>!o.start&&!o.boss&&!o.key);if(!c.length)c=list.filter(o=>!o.start&&!o.boss);c.sort((a,b)=>b.depth-a.depth);if(c[0])c[0].item=1}
   {const c=list.filter(o=>!o.start&&!o.boss&&!o.key&&!o.item);if(c.length){c[Math.floor(r()*c.length)].loot=CONSK[Math.floor(r()*CONSK.length)]}}
-  list.forEach(o=>{if(o.start||o.boss)return;o.tpl=1+Math.floor(r()*6);const n=1+Math.floor(r()*3)+Math.floor(d/4);for(let i=0;i<n;i++)o.en.push(DUN[d].en[Math.floor(r()*DUN[d].en.length)]);
+  list.forEach(o=>{if(o.start||o.boss)return;o.tpl=1+Math.floor(r()*6);const n=1+Math.floor(r()*3)+Math.floor(sz/4);for(let i=0;i<n;i++)o.en.push(DUN[d].en[Math.floor(r()*DUN[d].en.length)]);
     o.shut=r()<0.45||o.item;if(DUN[d].turret&&r()<0.35)o.turrets=1;if(r()<0.1&&!o.item&&!o.key)o.en=[]});
   return{d,rooms,list,start:st,boss};
 }
@@ -768,7 +771,7 @@ mole:[{b:'#8a5a3a',p:'#ff90a0',c:'#e0d0c0'},{b:'#5a4a6a',p:'#ff90a0',c:'#e0d0c0'
  knight:[{a:'#8090b0',d:'#405070',r:'#e03030'},{a:'#a0c8e0',d:'#507890',r:'#3050e0'},{a:'#403848',d:'#201828',r:'#ff6020'}],
  turret:[{b:'#6a6a7a',d:'#3a3a4a',w:'#d8d8d8',r:'#ff3030'}]};
 const ESPR={turret:'bB',thief:'hd',bandit:'hd'};
-function makeEnemy(type,x,y,lvl){const d=EN[type]||ENC[type];return{type,x,y,ox:2,oy:2,w:12,h:12,hp:Math.round(d.hp*(1+lvl*0.12)),dmg:d.dmg+(lvl>=8?1:0),sp:d.sp*(1+lvl*0.025),tier:lvl<3?0:lvl<6?1:2,t:ri(60),st:0,dir:ri(4),vx:0,vy:0,inv:0,kbT:0,spawn:45+ri(40),fly:d.fly,noCount:d.noCount,invuln:d.invuln,heavy:d.heavy,frozen:0,stun:0,alpha:1,anim:ri(100),jt:0}}
+function makeEnemy(type,x,y,lvl){const d=EN[type]||ENC[type],L=S&&S.swl||1;return{type,x,y,ox:2,oy:2,w:12,h:12,hp:Math.max(1,Math.round(d.hp*(1+lvl*0.12)*swTough()*2)/2),dmg:d.dmg+(lvl>=8?1:0)+(L>=15?1:0),sp:d.sp*(1+lvl*0.025)*(1+0.008*(L-1)),tier:lvl<3?0:lvl<6?1:2,t:ri(60),st:0,dir:ri(4),vx:0,vy:0,inv:0,kbT:0,spawn:45+ri(40),fly:d.fly,noCount:d.noCount,invuln:d.invuln,heavy:d.heavy,frozen:0,stun:0,alpha:1,anim:ri(100),jt:0}}
 const ehb=e=>({x:e.x+e.ox,y:e.y+e.oy,w:e.w,h:e.h}),ecx=e=>e.x+e.ox+e.w/2,ecy=e=>e.y+e.oy+e.h/2;
 const phb=()=>({x:P.x+3,y:P.y+6,w:10,h:10});
 const ov=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
@@ -788,7 +791,7 @@ const AI={
     if(e.st===1){if(--e.jt<=0){e.st=2;e.jt=22;const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*2.3;e.vy=Math.sin(a)*2.3;e.face=e.vx<0;sfx('roar')}return}
     if(e.st===0&&(e.gt=(e.gt||0)+1)%220===0)gooAt(ecx(e),ecy(e)+6,0);
     const a=Math.atan2(P.y-e.y,P.x-e.x),cl=pdist(e)<110,mx=cl?Math.cos(a)*e.sp:DIRS[e.dir][0]*e.sp*0.6,my=cl?Math.sin(a)*e.sp:DIRS[e.dir][1]*e.sp*0.6;if(emove(e,mx,my)||R()<0.01)e.dir=ri(4);if(Math.abs(mx)>0.05)e.face=mx<0;
-    if(e.t>0)e.t--;else if(pdist(e)<64){if(!e.charmChk){e.charmChk=1;if(G.room.kind==='over'&&!G.duel&&!G.duelPending&&swordLv()&&G.t-(G.lastDuelT||-1e9)>(S.mareHearts>0?900:1800)&&R()<(S.mareHearts>0?0.6:0.3)){e.dead=1;e.noCount=1;puff(ecx(e),ecy(e),'#ff80c0',16,1.6);G.floats.push({x:ecx(e),y:ecy(e)-12,s:S.mareHearts>0?'SHE HAS YOUR HEART!':'SHE IS SMITTEN!',t:70,c:'#ff80c0'});G.duelPending='marebear';G.duelLvl=G.room.lvl;return}}e.st=1;e.jt=34;e.face=P.x<e.x}},
+    if(e.t>0)e.t--;else if(pdist(e)<64){if(!e.charmChk){e.charmChk=1;if(G.room.kind==='over'&&!G.duel&&!G.duelPending&&!G.arena&&!G.needClear&&swordLv()&&G.t-(G.lastDuelT||-1e9)>(S.mareHearts>0?900:1800)&&R()<(S.mareHearts>0?0.6:0.3)){e.dead=1;e.noCount=1;puff(ecx(e),ecy(e),'#ff80c0',16,1.6);G.floats.push({x:ecx(e),y:ecy(e)-12,s:S.mareHearts>0?'SHE HAS YOUR HEART!':'SHE IS SMITTEN!',t:70,c:'#ff80c0'});G.duelPending='marebear';G.duelLvl=G.room.lvl;return}}e.st=1;e.jt=34;e.face=P.x<e.x}},
   toad(e){if(e.z>0||e.vz>0){e.z+=e.vz;e.vz-=0.25;emove(e,e.vx,e.vy);if(e.z<=0){e.z=0;e.vz=0;e.t=40+ri(50)}return}if(e.t--<=0){const a=pdist(e)<120&&R()<0.7?Math.atan2(P.y-e.y,P.x-e.x):R()*6.28;e.vx=Math.cos(a)*1.3;e.vy=Math.sin(a)*1.3;e.vz=3;e.z=0.1;e.face=e.vx<0}},
   thornback(e){if(e.st===2){if(emove(e,e.vx,0))e.vx*=-1;if(emove(e,0,e.vy))e.vy*=-1;if(--e.jt<=0){e.st=3;e.jt=50}return}
     if(e.st===1){if(--e.jt<=0){e.st=2;e.jt=70;const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*2.4;e.vy=Math.sin(a)*2.4;sfx('roll')}return}
@@ -853,7 +856,7 @@ const AI={
     else{e.alpha=e.t%6<3?1:0.55;if(--e.t<=0){e.dead=1;puff(ecx(e),ecy(e),'#a0f0ff',16,2);sfx('boom');G.shake=4;for(let i=0;i<8;i++){const a=i*Math.PI/4;G.shots.push({x:ecx(e),y:ecy(e),vx:Math.cos(a)*1.5,vy:Math.sin(a)*1.5,r:3,from:'e',kind:'orb',dmg:1,life:120})}if(pdist(e)<24)hurtPlayer(2,ecx(e),ecy(e))}}},
   turret(e){if(e.t--<=0){e.t=140+ri(40);eshoot(e,'orb',1.6,0)}}
 };
-function makeBoss(cfg){return{type:'boss',boss:1,x:112,y:28,ox:3,oy:3,w:26,h:26,hp:Math.round(cfg.hp*0.8),maxhp:Math.round(cfg.hp*0.8),dmg:2,cfg,st:'move',t:70,pt:0,inv:0,alpha:1,z:0,anim:0,kbT:0,frozen:0,stun:0,spawn:0}}
+function makeBoss(cfg){return{type:'boss',boss:1,x:112,y:28,ox:3,oy:3,w:26,h:26,hp:Math.round(cfg.hp*0.8*(1+0.1*((S&&S.swl||1)-1))),maxhp:Math.round(cfg.hp*0.8*(1+0.1*((S&&S.swl||1)-1))),dmg:2,cfg,st:'move',t:70,pt:0,inv:0,alpha:1,z:0,anim:0,kbT:0,frozen:0,stun:0,spawn:0}}
 function toMove(e){e.st='move';e.pt=0;e.shk=0;e.alpha=1;e.t=(e.hp<e.maxhp/2?60:95)+ri(40)}
 function ring(e,n,sp,off,kind){const x=ecx(e),y=ecy(e);for(let i=0;i<n;i++){const a=off+i*Math.PI*2/n;G.shots.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='seed'?2:3,from:'e',kind:kind||'orb',dmg:e.cfg.final?2:1,life:400})}sfx('shoot')}
 function bossAI(e){const enr=e.hp<e.maxhp/2,sp=enr?1.15:0.9;e.pt++;
@@ -864,7 +867,7 @@ function bossAI(e){const enr=e.hp<e.maxhp/2,sp=enr?1.15:0.9;e.pt++;
   case'spiral':if(e.pt%5===0){const arms=enr?3:2,x=ecx(e),y=ecy(e);for(let i=0;i<arms;i++){const a=e.pt*0.13+i*Math.PI*2/arms;G.shots.push({x,y,vx:Math.cos(a)*1.5*sp,vy:Math.sin(a)*1.5*sp,r:3,from:'e',kind:'orb',dmg:e.cfg.final?2:1,life:400})}if(e.pt%10===0)sfx('shoot')}if(e.pt>100)toMove(e);break;
   case'charge':if(e.pt<30)e.shk=1;else if(e.pt===30){e.shk=0;const a=Math.atan2(P.y-e.y-8,P.x-e.x-8);e.vx=Math.cos(a)*3.4*sp;e.vy=Math.sin(a)*3.4*sp;sfx('roll')}else if(emove(e,e.vx,e.vy)||e.pt>110){G.shake=10;sfx('boom');ring(e,8,1.4,0.2,'seed');toMove(e)}break;
   case'teleport':if(e.pt<20)e.alpha=1-e.pt/20;else if(e.pt===20){for(let i=0;i<40;i++){const nx=24+ri(176),ny=20+ri(100);if(efree(e,nx,ny)&&Math.hypot(nx+16-P.x-8,ny+16-P.y-10)>70){e.x=nx;e.y=ny;break}}}else if(e.pt<40)e.alpha=(e.pt-20)/20;else if(e.pt===40){e.alpha=1;ring(e,enr?12:8,1.5*sp,R()*6)}else if(e.pt>60)toMove(e);break;
-  case'summon':if(e.pt===12){const mt=e.cfg.min||pick(DUN[G.dn].en);const alive=G.ents.filter(o=>!o.dead&&!o.boss).length;for(let i=0;i<2&&alive+i<4;i++){const m=makeEnemy(mt,clamp(e.x+(i?36:-20),20,220),clamp(e.y+28,20,140),dlvl(G.dn));m.noCount=1;G.ents.push(m)}sfx('roar')}if(e.pt>40)toMove(e);break;
+  case'summon':if(e.pt===12){const mt=e.cfg.min||pick(DUN[G.dn].en);const alive=G.ents.filter(o=>!o.dead&&!o.boss).length;for(let i=0;i<2&&alive+i<4;i++){const m=makeEnemy(mt,clamp(e.x+(i?36:-20),20,220),clamp(e.y+28,20,140),dlvlS(G.dn));m.noCount=1;G.ents.push(m)}sfx('roar')}if(e.pt>40)toMove(e);break;
   case'shock':if(e.pt<=20)e.z=e.pt*1.2;else if(e.pt<=32)e.z=Math.max(0,24-(e.pt-20)*2);if(e.pt===12){e.tx2=P.x-8;e.ty2=P.y-8}
     if(e.pt>12&&e.pt<32){e.x+=(clamp(e.tx2,20,206)-e.x)*0.12;e.y+=(clamp(e.ty2,20,118)-e.y)*0.12}
     if(e.pt===33){e.z=0;G.shake=12;sfx('boom');ring(e,enr?16:12,1.6*sp,0,'seed')}if(e.pt>60)toMove(e);break;
@@ -893,7 +896,7 @@ function killEnemy(e){e.dead=1;sfx('kill');puff(ecx(e),ecy(e),'#ffffff',10,2);pu
   if(e.loot)for(let i=0;i<e.loot;i++)G.picks.push({kind:'gem',x:ecx(e)-4+(R()-0.5)*12,y:ecy(e)-4,z:0,vz:2+R()*2,t:600});
   if(e.type==='crab')for(let i=0;i<2;i++)G.picks.push({kind:R()<0.4?'gem5':'gem',x:ecx(e)-4+(R()-0.5)*12,y:ecy(e)-4,z:0,vz:2+R()*2,t:600});
   if(e.champ){duelWin(e);return}
-  if(!e.noCount)S.kills[e.type]=(S.kills[e.type]||0)+1;
+  if(!e.noCount){S.kills[e.type]=(S.kills[e.type]||0)+1;swordXP(1)}
   G.combo++;G.comboT=150;if(G.combo>=3)G.floats.push({x:ecx(e),y:ecy(e)-8,s:'x'+G.combo,t:40,c:'#ffe060'});
   if(G.combo>0&&G.combo%8===0){G.picks.push({kind:'gem5',x:ecx(e)-4,y:ecy(e)-4,z:0,vz:2.5,t:480});G.floats.push({x:ecx(e),y:ecy(e)-18,s:'COMBO!',t:50,c:'#7fffd4'});sfx('gem')}
   dropAt(ecx(e),ecy(e))}
@@ -1015,15 +1018,15 @@ const ITEMS={
  inferno:{n:'INFERNO ROD',msg:'INFERNO ROD! Your flame rod now fires three fireballs at once.',give(){S.items.flame=1;S.items.inferno=1;S.sel='flame'}}};
 for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thunder','disc_putt','disc_mid','disc_drive','disc_glow','disc_crystal','pick','silk'])ITEMS[w].give=function(){S.items[w]=1;S.sel=w};
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
-const HINTS=['Fourteen dungeons hide fourteen Ember Shards. Dungeon doors show orange on your map once found.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
+const HINTS=['27 baskets hide 27 dungeons and 27 crown pieces. After each boss, sink the ghostly hole in par or better: aim, lock power, then lock the curve. Watch the wind.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:2,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:3,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY)||localStorage.getItem('emberwake-save-v3');return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
 
 // ================= ROOMS =================
-function setRoom(room){G.slicks=[];G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
+function setRoom(room){G.slicks=[];G.holeEnter=null;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
 function reachCells(){const sc=clamp(Math.floor((P.x+8)/16),0,15),sw=clamp(Math.floor((P.y+11)/16),0,10),seen=new Set([sw*16+sc]),q=[[sc,sw]],out=[];
   while(q.length){const [c,w]=q.shift();if(c>=1&&c<=14&&w>=1&&w<=9&&EWALK.has(G.room.t[w*16+c]))out.push([c,w]);for(const d of DIRS){const nc=c+d[0],nw=w+d[1];if(nc<0||nc>15||nw<0||nw>10)continue;const k=nw*16+nc;if(seen.has(k)||!WALK.has(G.room.t[k]))continue;seen.add(k);q.push([nc,nw])}}return out}
 function spawnList(types,n,lvl){const far=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8&&Math.hypot(c*16-P.x,w*16-P.y)>76);for(let i=0;i<n&&far.length;i++){const [c,w]=far.splice(ri(far.length),1)[0];G.ents.push(makeEnemy(pick(types),c*16,w*16,lvl))}}
@@ -1076,11 +1079,86 @@ function updPuzzle(){const z=G.puz;if(!z||z.done)return;for(const k in z.cd)if(z
   if(z.type==='braziers'){z.bz=z.bz.map(v=>v>0?v-1:0);if(z.bz.every(v=>v>0))solvePuzzle()}
   if(z.type==='silence'){if(IN.x||IN.y||IN.a||IN.b||IN.i)z.still=0;else z.still++;if(z.still===240)G.floats.push({x:128,y:100,s:'...',t:60,c:'#9a9ac8'});if(z.still===420)G.floats.push({x:128,y:100,s:'...good...',t:60,c:'#9a9ac8'});if(z.still>=600)solvePuzzle()}}
 // ---- duels ----
-function startDuel(type,o){o=o||{};const lvl=o.lvl||2;const D={type,t:0,phase:'ready',combo:0,comboT:0,saved:G.room.t.slice(),npcs:G.npcs,dojo:o.dojo,lvl};G.duel=D;
+
+// ================= HOLE CHALLENGE: DISC GOLF AFTER THE BOSS =================
+const GOLF_MAX=210,GOLF_PUTT=64;
+function golfCourse(h){const r=rng(SEED+h.n*7717),par=h.par,L=par<=2?240:par===3?370:520,tee={x:128+(r()-0.5)*60,y:L-26},bk={x:52+r()*152,y:36},mid=par>=4?{x:r()<0.5?40+r()*30:186+r()*30,y:L*0.52}:null;
+  const path=mid?[tee,mid,bk]:[tee,bk],sd=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1);return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
+  const near=(x,y,m)=>{for(let i=0;i<path.length-1;i++)if(sd({x,y},path[i],path[i+1])<m)return true;return false};
+  const trees=[];let g=0;const nt=Math.round(L/15*(0.55+0.45*h.n/27));while(trees.length<nt&&g++<600){const x=10+r()*236,y=18+r()*(L-36);if(near(x,y,24)||Math.hypot(x-tee.x,y-tee.y)<30||Math.hypot(x-bk.x,y-bk.y)<30||trees.some(t=>Math.hypot(t.x-x,t.y-y)<17))continue;trees.push({x,y,r:6+r()*3})}
+  if(mid)for(let k=1;k<=5;k++){const f=0.3+k*0.08,x=tee.x+(bk.x-tee.x)*f,y=tee.y+(bk.y-tee.y)*f;if(!near(x,y,20))trees.push({x,y,r:8})}
+  const water=[];if(par>=3&&r()<0.75){const y=Math.round(L*(0.42+r()*0.16)),hh=16+Math.round(r()*10);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
+  const a=r()*6.28,ws=(0.03+r()*0.12)*Math.min(1,0.4+h.n/27);
+  return{L,tee,bk,mid,path,trees,water,wind:{x:Math.cos(a)*ws,y:Math.sin(a)*ws,s:ws,a},par}}
+function startGolf(){const h=HOLES[DUN[G.dn].hole-1],c=golfCourse(h);G.golf={h,c,lie:{x:c.tee.x,y:c.tee.y},prev:{x:c.tee.x,y:c.tee.y},strokes:0,ph:'intro',t:0,aim:Math.atan2(c.bk.y-c.tee.y,c.bk.x-c.tee.x),pw:0,pd:1,cv:-1,cd:1,disc:null,cam:0,msg:null,trail:[]};G.mode='golf';play('title')}
+function golfMsg(s,c,t){G.golf.msg={s,c:c||'#ffffff',t:t||90}}
+function golfAimHome(){const g=G.golf,c=g.c;let tx=c.bk.x,ty=c.bk.y;if(c.mid&&g.lie.y>c.mid.y+20&&Math.hypot(c.bk.x-g.lie.x,c.bk.y-g.lie.y)>GOLF_MAX*0.9){tx=c.mid.x;ty=c.mid.y}g.aim=Math.atan2(ty-g.lie.y,tx-g.lie.x)}
+function golfPutt(){const g=G.golf;return Math.hypot(g.c.bk.x-g.lie.x,g.c.bk.y-g.lie.y)<GOLF_PUTT}
+function updGolf(){const g=G.golf,c=g.c;if(!g)return;g.t++;if(g.msg&&--g.msg.t<=0)g.msg=null;
+  const camT=g.ph==='fly'&&g.disc?g.disc.y-96:g.ph==='intro'?(g.t<70?c.bk.y-60:c.bk.y-60+(g.lie.y-c.bk.y)*Math.min(1,(g.t-70)/70)):g.lie.y-96;g.cam+=(clamp(camT,0,c.L-PH+48)-g.cam)*(g.ph==='intro'?0.2:0.12);
+  for(const p of G.parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.t--}G.parts=G.parts.filter(p=>p.t>0);
+  switch(g.ph){
+  case'intro':if(g.t>150||(g.t>30&&IN.pa)){g.ph='aim';g.t=0;golfAimHome()}break;
+  case'aim':if(IN.x)g.aim+=IN.x*0.03;if(IN.y)g.aim+=IN.y*0.012;if(IN.pa){g.ph='power';g.pw=0;g.pd=1;sfx('sel')}break;
+  case'power':g.pw+=g.pd*0.019;if(g.pw>=1){g.pw=1;g.pd=-1}if(g.pw<=0){g.pw=0;g.pd=1}if(IN.pb){g.ph='aim';break}if(IN.pa){g.ph='curve';g.cv=-1;g.cd=1;sfx('sel')}break;
+  case'curve':g.cv+=g.cd*0.034;if(g.cv>=1){g.cv=1;g.cd=-1}if(g.cv<=-1){g.cv=-1;g.cd=1}if(IN.pb){g.ph='aim';break}if(IN.pa)golfThrow();break;
+  case'fly':golfFly();break;
+  case'land':if(--g.lt<=0)golfAfter();break;
+  case'done':if(g.t>100&&(IN.pa||g.t>260))golfFinish();break}}
+function golfThrow(){const g=G.golf,putt=golfPutt(),maxD=putt?92:GOLF_MAX,D=maxD*(0.12+0.88*g.pw),v0=Math.sqrt(2*0.05*D);
+  g.disc={x:g.lie.x,y:g.lie.y,a:g.aim,v:v0,v0,cv:g.cv*(putt?0.35:1),t:0,T:v0/0.05,zm:putt?5:7+11*g.pw,z:0,hitB:0,putt};g.ph='fly';g.trail=[];sfx('chak');P.dir=Math.abs(Math.cos(g.aim))>Math.abs(Math.sin(g.aim))?(Math.cos(g.aim)>0?1:3):(Math.sin(g.aim)>0?2:0)}
+function golfFly(){const g=G.golf,c=g.c,d=g.disc;const sp=d.v/d.v0;d.a+=d.cv*0.022*(0.25+(1-sp)*1.2);d.x+=Math.cos(d.a)*d.v+c.wind.x*(d.putt?0.3:1);d.y+=Math.sin(d.a)*d.v+c.wind.y*(d.putt?0.3:1);d.v-=0.05;d.t++;d.z=d.zm*Math.sin(Math.PI*Math.min(1,d.t/d.T));
+  if(d.t%3===0)g.trail.push({x:d.x,y:d.y-d.z,t:30});for(const q of g.trail)q.t--;g.trail=g.trail.filter(q=>q.t>0);
+  const bd=Math.hypot(d.x-c.bk.x,d.y-c.bk.y);
+  if(bd<7&&d.z<10){if(sp<0.85||d.putt&&sp<0.95){golfEnd('in');return}if(!d.hitB){d.hitB=1;d.v*=0.3;d.a+=Math.PI*(0.7+R()*0.6);sfx('chains');golfMsg('CHAINS... SPIT OUT!','#ffe060',60)}}
+  for(const t of c.trees)if(d.z<13&&Math.hypot(d.x-t.x,d.y-t.y)<t.r+2){d.x-=Math.cos(d.a)*4;d.y-=Math.sin(d.a)*4;sfx('tink');golfMsg('TREE!','#a0e060',50);for(let i=0;i<8;i++)part(t.x,t.y-6-g.cam,pick(['#2f6a2a','#5aa84a']),(R()-0.5)*2,-R()*1.5,24,2,0.08);golfEnd('stop');return}
+  if(d.x<4||d.x>252||d.y<4||d.y>c.L-4){golfEnd('ob');return}
+  if(d.v<=0)golfEnd('stop')}
+function golfEnd(how){const g=G.golf,c=g.c,d=g.disc;g.strokes++;
+  if(how==='in'){g.made=1;sfx('chains');jingle('get',null);G.shake=6;for(let i=0;i<30;i++)part(c.bk.x,c.bk.y-g.cam-6,pick(['#ffe060','#ffffff','#7fffd4']),(R()-0.5)*4,(R()-0.5)*4-1,40,2,0.04);g.ph='done';g.t=0;return}
+  const wet=c.water.some(w=>d.x>=w.x&&d.x<=w.x+w.w&&d.y>=w.y&&d.y<=w.y+w.h);
+  if(how==='ob'||wet){g.strokes++;golfMsg(wet?'SPLASH! +1 STROKE':'OUT OF BOUNDS! +1','#80c0ff',90);sfx(wet?'land':'tink');if(wet)for(let i=0;i<10;i++)part(d.x,d.y-g.cam,'#a0d0ff',(R()-0.5)*2,-R()*2,20,2,0.1)}
+  else{let x=d.x,y=d.y;for(const t of c.trees){const q=Math.hypot(x-t.x,y-t.y);if(q<t.r+4){x=t.x+(x-t.x)/(q||1)*(t.r+5);y=t.y+(y-t.y)/(q||1)*(t.r+5)}}g.lie={x:clamp(x,8,248),y:clamp(y,8,c.L-8)};g.prev={x:g.lie.x,y:g.lie.y};const left=Math.round(Math.hypot(c.bk.x-g.lie.x,c.bk.y-g.lie.y));if(!g.msg)golfMsg(left+' FT TO GO','#ffffff',70)}
+  if(how==='ob'||wet)g.lie={x:g.prev.x,y:g.prev.y};
+  g.ph='land';g.lt=50}
+function golfAfter(){const g=G.golf;if(g.strokes>=g.c.par){g.ph='done';g.t=0;g.failed=1;sfx('hurt');return}g.ph='aim';g.disc=null;golfAimHome()}
+function golfFinish(){const g=G.golf,h=g.h,ds=S.dun[G.dn];G.golf=null;G.mode='play';G.parts=[];P.x=112;P.y=110;P.dir=0;
+  if(g.failed||!g.made){say('OVER PAR! The ghostly basket shatters... and the boss rises again! Beat it, then try the hole again.',()=>{G.bossPending=80;play(null)});return}
+  const st=g.strokes,dd=st-h.par;ds.boss=1;ds.golf=1;G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');
+  if(!S.shards.includes(G.dn))S.shards.push(G.dn);if(!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:200};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
+  if(st===1){S.aces=(S.aces||0)+1;addSecret('ace')}S.hp=S.maxHp;save();
+  const nm=st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!','');
+  giveItem('shard',nm+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'! '+(S.shards.length>=NSH?'The seal on the Obsidian Throne is broken. Go to the far northeast!':'The stairs will take you back to the surface.'));
+  if(dd<0)heartPiece('Under par!')}
+function drawGolf(){const g=G.golf,c=g.c,cy=Math.round(g.cam),Y=v=>Math.round(v-cy);
+  px(ctx,'#3e7230',0,0,PW,PH);for(let i=0;i<60;i++){const x=Math.floor(h2(i,g.h.n,1)*256),y=Math.floor(h2(g.h.n,i,2)*c.L);if(y-cy>-4&&y-cy<PH+4)px(ctx,'#356628',x,Y(y),3,1)}
+  ctx.fillStyle='#5a9a44';for(let i=0;i<c.path.length-1;i++){const a=c.path[i],b=c.path[i+1],n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/8);for(let k=0;k<=n;k++){const x=a.x+(b.x-a.x)*k/n,y=a.y+(b.y-a.y)*k/n;if(y-cy<-30||y-cy>PH+30)continue;ctx.beginPath();ctx.ellipse(x,Y(y),24,20,0,0,6.29);ctx.fill()}}
+  ctx.fillStyle='#6ab052';ctx.beginPath();ctx.ellipse(c.bk.x,Y(c.bk.y),30,22,0,0,6.29);ctx.fill();
+  for(const w of c.water){px(ctx,'#1a3a80',w.x,Y(w.y)-1,w.w,w.h+2);px(ctx,'#2a5ab0',w.x,Y(w.y),w.w,w.h);for(let i=0;i<w.w;i+=14)px(ctx,'#6aa8f8',w.x+i+((G.t>>4)+i)%8,Y(w.y)+3+(i*7)%Math.max(1,w.h-5),5,1)}
+  px(ctx,'#1a1020',c.tee.x-9,Y(c.tee.y)-3,18,10);px(ctx,'#9a8a78',c.tee.x-8,Y(c.tee.y)-2,16,8);
+  for(const t of c.trees){const x=Math.round(t.x),y=Y(t.y);if(y<-20||y>PH+20)continue;px(ctx,'rgba(0,0,0,0.25)',x-t.r,y+2,t.r*2,4);px(ctx,'#5a3a1a',x-1,y-2,3,5);disc(ctx,'#14301a',x,y-6,t.r+1);disc(ctx,'#2f6a2a',x,y-6,t.r);disc(ctx,'#4a8a3a',x-2,y-8,Math.max(2,t.r-4))}
+  drawBasket({x:Math.round(c.bk.x)-8,y:Y(c.bk.y)-5,cx:c.bk.x,cy:Y(c.bk.y),made:g.made});
+  for(const q of g.trail)px(ctx,'rgba(255,255,255,'+(q.t/40)+')',Math.round(q.x),Y(q.y),1,1);
+  if(g.ph==='aim'||g.ph==='power'||g.ph==='curve'){const L=golfPutt()?26:46;for(let i=8;i<L;i+=5)px(ctx,'#ffffff',Math.round(g.lie.x+Math.cos(g.aim)*i),Y(g.lie.y+Math.sin(g.aim)*i),2,2);px(ctx,'#ff7a2f',Math.round(g.lie.x+Math.cos(g.aim)*L)-1,Y(g.lie.y+Math.sin(g.aim)*L)-1,3,3)}
+  if(g.ph!=='intro'||g.t>70)ctx.drawImage(heroImg(P.dir,0),Math.round(g.lie.x)-8,Y(g.lie.y)-14);
+  if(g.disc&&g.ph==='fly'){const d=g.disc;px(ctx,'rgba(0,0,0,0.3)',Math.round(d.x)-3,Y(d.y)+1,7,2);const sp=(d.t>>1)%2;px(ctx,'#1a1020',Math.round(d.x)-4,Y(d.y-d.z)-2,9,5);px(ctx,'#ff5a3a',Math.round(d.x)-3,Y(d.y-d.z)-1,7,3);px(ctx,'#ffffff',Math.round(d.x)+(sp?-2:1),Y(d.y-d.z)-1,2,1)}
+  for(const p of G.parts)px(ctx,p.c,Math.round(p.x),Math.round(p.y),p.s,p.s);
+  px(ctx,'rgba(0,0,0,0.72)',0,0,PW,13);txt('PAR '+g.h.par,4,3,'#ffe060');txt('THROW '+(g.strokes+(g.ph==='done'?0:1)),96,3,'#ffffff','center');
+  const w=c.wind;txt('WIND',206,3,'#a0d0ff','right');const wx=226,wy=6,wl=3+Math.round(w.s*60);px(ctx,'#a0d0ff',wx-1,wy-1,3,3);for(let i=0;i<wl;i++)px(ctx,'#a0d0ff',Math.round(wx+Math.cos(w.a)*i),Math.round(wy+Math.sin(w.a)*i),1,1);txt(''+Math.round(w.s*60),252,3,'#a0d0ff','right');
+  if(g.ph==='aim'||g.ph==='power'||g.ph==='curve'){const by=PH-28;px(ctx,'rgba(0,0,0,0.72)',0,by-14,PW,42);const putt=golfPutt();
+    txt(putt?'PUTT':'POWER',6,by,'#ffe060');px(ctx,'#000',52,by,150,7);px(ctx,'#3a3048',53,by+1,148,5);const pf=g.ph==='aim'?0:Math.round(148*g.pw);px(ctx,g.pw>0.92?'#ff5040':'#60d860',53,by+1,pf,5);px(ctx,'#ffffff',53+Math.round(148*0.92),by,1,7);
+    txt('CURVE',6,by+12,'#ffe060');px(ctx,'#000',52,by+12,150,7);px(ctx,'#3a3048',53,by+13,148,5);px(ctx,'#ffffff',127,by+11,1,9);txt('HYZER',52,by+21,'#8a7a9a');txt('ANHYZER',202,by+21,'#8a7a9a','right');if(g.ph==='curve')px(ctx,'#ff7a2f',127+Math.round(g.cv*73),by+11,3,9);
+    const hint=g.ph==='aim'?'ARROWS AIM  A: START':g.ph==='power'?'A: LOCK POWER  B: BACK':'A: LOCK CURVE + THROW';txt(hint,6,by-11,'#ffffff');txt(Math.round(Math.hypot(c.bk.x-g.lie.x,c.bk.y-g.lie.y))+' FT',250,by-11,'#a0d0ff','right')}
+  const big=(a,b,col)=>{px(ctx,'rgba(0,0,0,0.65)',0,62,PW,44);txt(a,128,68,col,'center',16);if(b)txt(b,128,90,'#ffffff','center')};
+  if(g.ph==='intro')big('HOLE '+g.h.n+'  PAR '+g.h.par,'SINK IT IN PAR OR BETTER','#ffe060');
+  if(g.ph==='done'){if(g.failed)big('OVER PAR','THE BOSS STIRS...','#ff6040');else{const dd=g.strokes-g.h.par;big(g.strokes===1?'ACE!!':(SCORENM[String(dd)]||'PAR'),g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  CROWN PIECE!','#7fffd4')}}
+  if(g.msg)txt(g.msg.s,128,40,g.msg.c,'center')}
+
+function startDuel(type,o){o=o||{};const lvl=o.lvl||2;const D={type,t:0,phase:'ready',combo:0,comboT:0,saved:G.room.t.slice(),npcs:G.npcs,dojo:o.dojo,lvl,arena:G.arena,needClear:G.needClear,ents:G.ents.filter(e=>!e.dead&&!e.champ)};G.duel=D;
   G.npcs=[];G.ents=[];G.shots=[];G.bombs=[];G.needClear=0;G.arena=null;G.pendingArena=0;
   for(let i=0;i<176;i++){const c=i%16,w=i>>4,border=c===0||c===15||w===0||w===10,v=G.room.t[i];if(G.room.kind==='over'){if(border){if(WALK.has(v))G.room.t[i]=BA}else G.room.t[i]=GR}else if(v===DO)G.room.t[i]=SH}
   G.bg=buildBg(G.room);G.flash=16;const ch=makeChamp(type,lvl);ch.y=P.y>88?26:122;G.ents.push(ch);play('duel');sfx('roar');G.shake=10;G.banner=null}
-function makeChamp(type,lvl){const c=CHAMPS[type],hp=Math.round(c.hp*(1+lvl*0.12));return{type:'champ',champ:1,ct:type,cfg:c,x:116,y:40,ox:4,oy:4,w:16,h:18,hp,maxhp:hp,dmg:1+(lvl>=6?1:0),st:'approach',t:50,pt:0,inv:0,alpha:1,z:0,anim:0,kbT:0,frozen:0,stun:0,spawn:0,face:[0,1],k:0}}
+function makeChamp(type,lvl){const c=CHAMPS[type],hp=Math.round(c.hp*(1+lvl*0.12)*(1+0.1*((S&&S.swl||1)-1)));return{type:'champ',champ:1,ct:type,cfg:c,x:116,y:40,ox:4,oy:4,w:16,h:18,hp,maxhp:hp,dmg:1+(lvl>=6?1:0),st:'approach',t:50,pt:0,inv:0,alpha:1,z:0,anim:0,kbT:0,frozen:0,stun:0,spawn:0,face:[0,1],k:0}}
 function cToAp(e,t){e.st='approach';e.t=t||40+ri(40);e.pt=0;e.alpha=1;e.z=0}
 AI.champ=function(e){const c=e.cfg,dx=P.x+8-ecx(e),dy=P.y+11-ecy(e),d=Math.hypot(dx,dy)||1;e.pt++;
   switch(e.st){
@@ -1109,8 +1187,8 @@ function updDuel(){const D=G.duel;D.t++;if(G.flash>0)G.flash--;if(D.phase==='fig
   if(D.phase==='ko'||D.phase==='lost'){if(D.t>=110)endDuel();return true}
   if(D.comboT>0&&--D.comboT===0)D.combo=0;return false}
 function duelWin(e){const D=G.duel;D.phase='ko';D.t=0;D.ex=ecx(e);D.ey=ecy(e);G.shots=[];G.ents.forEach(o=>o.dead=1);sfx('boom');G.shake=16;play(null);jingle('get',null)}
-function endDuel(){const D=G.duel;G.room.t=D.saved;G.bg=buildBg(G.room);G.npcs=D.npcs;G.ents=[];G.shots=[];G.duel=null;G.lastDuelT=G.t;unstick();
-  if(D.phase==='ko'){const n=3+Math.ceil(D.lvl/2);for(let i=0;i<n;i++)G.picks.push({kind:i%4===3?'heart':'gem5',x:D.ex-4+(R()-0.5)*40,y:D.ey-4+(R()-0.5)*30,z:0,vz:2+R()*2,t:900});G.picks.push({kind:'mush',mt:pickShroom(),x:D.ex,y:D.ey,z:0,vz:3,t:900});addSecret('champ');S.champs=(S.champs||0)+1;
+function endDuel(){const D=G.duel;G.room.t=D.saved;G.bg=buildBg(G.room);G.npcs=D.npcs;G.ents=D.arena?D.ents:[];G.shots=[];G.duel=null;G.lastDuelT=G.t;if(D.arena){G.arena=D.arena;G.needClear=1}unstick();
+  if(D.phase==='ko'){swordXP(3);heartPiece('Champion defeated!');const n=3+Math.ceil(D.lvl/2);for(let i=0;i<n;i++)G.picks.push({kind:i%4===3?'heart':'gem5',x:D.ex-4+(R()-0.5)*40,y:D.ey-4+(R()-0.5)*30,z:0,vz:2+R()*2,t:900});G.picks.push({kind:'mush',mt:pickShroom(),x:D.ex,y:D.ey,z:0,vz:3,t:900});addSecret('champ');S.champs=(S.champs||0)+1;
     if(D.dojo!==undefined&&!S.caves.includes(D.dojo)){S.caves.push(D.dojo);S.gems=Math.min(999,S.gems+150);G.floats.push({x:128,y:60,s:'+150 GEMS',t:90,c:'#7fffd4'});const w=['axe','spear','hammer','fan'].find(x=>!S.items[x]);if(w){ITEMS[w].give();giveItem(w,'The master gives you a gift. '+ITEMS[w].msg)}}}
   else{P.inv=120;if(D.lovelost){const took=S.maxHp>6;S.maxHp=Math.max(6,S.maxHp-2);S.hp=Math.min(Math.max(S.hp,2),S.maxHp);if(took)S.mareHearts=(S.mareHearts||0)+1;save();setTimeout(()=>{if(G.mode==='play')say(took?'You fell head over heels for the Marebear. She ambles off into the woods with one of your heart containers. Beat a Marebear in a duel to win it back. (Max life down one heart.)':'You fell head over heels for the Marebear... but your heart is too small to take. She sighs and wanders off.')},300)}}
   if(D.type==='marebear'&&D.phase==='ko'){gooAt(D.ex,D.ey+4,1);if(S.mareHearts>0){S.mareHearts--;giveHeart('You won your HEART back from the Marebear! It is a little sticky.')}}
@@ -1147,7 +1225,7 @@ function collectShroom(pk){const t=pk.mt,M=SHROOMS[t];const first=!S.seen[t];S.s
   if(M.bag){S.bag[t]=Math.min(9,(S.bag[t]||0)+1);sfx('key');G.floats.push({x:pk.x+4,y:pk.y-6,s:'+'+M.n,t:60,c:'#ffffff'});if(!S.sel)S.sel='m_'+t;if(first)say('You found a '+M.n+'! '+M.d+'. It went into your pouch. Switch to it with Q/E and use it like an item.')}
   else{if(first)say('A '+M.n+'! '+M.d+'.');eatShroom(t)}save()}
 // ---- warp ----
-function openWarp(){const o=[{n:'EMBERGLEN (START)',x:START[0],y:START[1]}];for(let d=1;d<=NDUN;d++){const k=CEN[d][1]+','+CEN[d][2];if(S.visited.includes(k))o.push({n:DUN[d].n.toUpperCase(),x:CEN[d][1],y:CEN[d][2],d})}G.warp={o,i:0};G.mode='warp';sfx('secret')}
+function openWarp(){const o=[{n:'EMBERGLEN (START)',x:START[0],y:START[1]}];for(const h of HOLES){if(!S.visited.includes(h.key))continue;const [x,y]=h.key.split(',').map(Number);o.push({n:'HOLE '+h.n+(S.shards.includes(HD0+h.n)?' *':''),x,y})}{const k=CEN[NDUN][1]+','+CEN[NDUN][2];if(S.visited.includes(k))o.push({n:DUN[NDUN].n.toUpperCase(),x:CEN[NDUN][1],y:CEN[NDUN][2],d:NDUN})}G.warp={o,i:0};G.mode='warp';sfx('secret')}
 function updWarp(){const w=G.warp;if(IN.pu)w.i=(w.i+w.o.length-1)%w.o.length;if(IN.pd)w.i=(w.i+1)%w.o.length;if(IN.pu||IN.pd)sfx('sel');if(IN.pb||IN.pst){G.mode='play';return}
   if(IN.pa||IN.pi){const t=w.o[w.i];G.mode='play';fadeTo(()=>{G.lastArea=null;const rm=genScreen(t.x,t.y);setRoom(rm);if(t.d){P.x=112;P.y=52}else{const f=findSafe(rm);P.x=f[0];P.y=f[1]}P.dir=2;onEnter()})}}
 function updNpcs(){for(const n of G.npcs.slice()){if(n.wand){updFolk(n);continue}if(n.watch&&Math.hypot(n.x-P.x,n.y-P.y)<64)vanish(n,0)}
@@ -1156,14 +1234,15 @@ function updNpcs(){for(const n of G.npcs.slice()){if(n.wand){updFolk(n);continue
 function discLand(s){const tl=tileAt(s.x,s.y),c=Math.floor(s.x/16),w=Math.floor(s.y/16);
   if(tl!==null&&EWALK.has(tl)&&c>=1&&c<=14&&w>=1&&w<=9){G.picks.push({kind:'discdrop',dk:s.dk,x:s.x-4,y:s.y-3,perm:1,rt:300})}else{G.discOut=0;G.floats.push({x:P.x+8,y:P.y-6,s:'DISC RETURNED',t:40,c:'#ffe060'})}}
 const SCORENM={'-3':'ALBATROSS!','-2':'EAGLE!','-1':'BIRDIE!','0':'PAR','1':'BOGEY','2':'DOUBLE BOGEY'};
-function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1,dd=h?st-h.par:0,hurt=dd>0;if(hurt)S.hp=Math.max(1,S.hp-2);else S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
+function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1,won=h&&S.shards.includes(HD0+h.n);G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
   S.putts=(S.putts||0)+1;for(let i=0;i<30;i++)part(b.cx,b.cy,pick(['#ffe060','#ffffff','#7fffd4']),(R()-0.5)*4,(R()-0.5)*4-1,40,2,0.04);
   const d=h?st-h.par:0,label=ace?'ACE!!':h?(SCORENM[String(d)]||(d>0?'+'+d:'')):'CHAINS!';
-  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});G.floats.push({x:b.cx,y:b.cy-2,s:hurt?'-1 HEART':'HEARTS REFILLED',t:120,c:hurt?'#c03020':'#ff8090'});
-  if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+8,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace')}
-  if(h&&!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:110};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
+  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});
+  if(h&&!won){G.floats.push({x:b.cx,y:b.cy-2,s:'THE GROUND OPENS...',t:120,c:'#ff9a40'});G.holeEnter={n:h.n,t:110};G.shake=14}
+  else{S.hp=S.maxHp;G.floats.push({x:b.cx,y:b.cy-2,s:'HEARTS REFILLED',t:120,c:'#ff8090'})}
+  if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+8,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace');if(h){S.aceH=S.aceH||[];if(!S.aceH.includes(h.n)){S.aceH.push(h.n);heartPiece('An ACE on hole '+h.n+'!')}}}
   G.strokes=0;save()}
-function bossLoot(rm){const ds=S.dun[rm.d];if(!ds.hc)G.picks.push({kind:'heartc',x:84,y:110,w:12,h:12,perm:1});if(!S.shards.includes(rm.d)&&!DUN[rm.d].boss.final)G.picks.push({kind:'shard',x:160,y:110,perm:1})}
+function bossLoot(rm){const ds=S.dun[rm.d],D=DUN[rm.d];if(!ds.hc&&(!D.hole||D.hole%2===1))G.picks.push({kind:'heartc',x:84,y:110,w:12,h:12,perm:1});if(!D.hole&&!S.shards.includes(rm.d)&&!D.boss.final)G.picks.push({kind:'shard',x:160,y:110,perm:1})}
 function roomRewards(rm,ann){const ds=S.dun[rm.d],rk=rm.x+','+rm.y;let got=0;
   if(rm.key&&!ds.keys.includes(rk)&&!G.picks.some(p=>p.kind==='key')){G.picks.push({kind:'key',x:124,y:84,perm:1,z:0,vz:ann?3:0,rk});got=1}
   if(rm.item&&!ds.item&&DUN[rm.d].item&&!G.picks.some(p=>p.kind==='chest')){G.picks.push({kind:'chest',x:121,y:56,w:14,h:12,perm:1,content:DUN[rm.d].item});got=1}
@@ -1196,16 +1275,16 @@ function shopStock(cv,taken){if(cv.type==='hcshop')return taken?[{item:'p_heal',
   return[{item:'bombs',price:20},{item:a,price:CONS[a].price},{item:b,price:CONS[b].price}]}
 function caveTalk(){const cv=G.room.cv,taken=S.caves.includes(cv.id);let m;
   switch(cv.type){
-  case'intro':if(!taken){S.caves.push(cv.id);say('WREN! The Obsidian King shattered the Ember Crown into fourteen shards and hid them in fourteen dungeons. You cannot face him empty-handed. Take these!',()=>{S.items.sword=1;S.items.shield=1;S.items.bow=1;S.items.bombs=1;S.items.disc_putt=1;S.bombs=10;S.gems+=30;S.inv.p_heal=1;S.sel='disc_putt';save();giveItem('kit','You got a SWORD, SHIELD, BOW, BOMBS and a disc golf PUTTER! There is a basket right outside. Throw your disc into it (K/X) and the chains will refill your hearts. Swing with J/Z (A), jump with SPACE (Y), roll with SHIFT (B) and hold it to sprint. The green bar is your stamina. Use items with K/X (X), switch with Q/E. Arrows cost 1 gem each. Open your inventory with ENTER.')});return}else m=HINTS[0];break;
+  case'intro':if(!taken){S.caves.push(cv.id);say('WREN! The Obsidian King shattered the Ember Crown into 27 pieces and buried them beneath the 27 disc golf baskets. You cannot face him empty-handed. Take these!',()=>{S.items.sword=1;S.items.shield=1;S.items.bow=1;S.items.bombs=1;S.items.disc_putt=1;S.bombs=10;S.gems+=30;S.inv.p_heal=1;S.sel='disc_putt';save();giveItem('kit','You got a SWORD, SHIELD, BOW, BOMBS and a disc golf PUTTER! There is a basket right outside. Throw your disc into it (K/X) and the chains will refill your hearts. Swing with J/Z (A), jump with SPACE (Y), roll with SHIFT (B) and hold it to sprint. The green bar is your stamina. Use items with K/X (X), switch with Q/E. Arrows cost 1 gem each. Open your inventory with ENTER.')});return}else m=HINTS[0];break;
   case'supply':m='Supply cache! Your bombs are full again, and there is a potion on the shelf.';S.bombs=bombMax();S.inv.p_heal=Math.min(9,(S.inv.p_heal||0)+(S.caves.includes(cv.id)?0:1));if(!S.caves.includes(cv.id))S.caves.push(cv.id);sfx('key');save();break;
   case'shop':case'hcshop':m='Welcome, traveler! Walk into an item to buy it.';break;
   case'smith':m='Finest steel in the land! Walk into a weapon to buy it. No refunds. No exceptions. No crying.';break;
-  case'proshop':m='Welcome to the pro shop! Baskets stand all over the land. Sink a disc and the chains will heal you right up. Hit one from way back and that is an ACE.';break;
+  case'proshop':m='Welcome to the pro shop! Baskets stand all over the land. Sink one and the ground opens into a dungeon. Once you have its crown piece, the chains just heal you. Hit one from way back and that is an ACE.';break;
   case'fount':m='Rest here, brave one. Your wounds are healed.'+(S.relics.feather&&S.featherUsed?' Your phoenix feather glows again.':'');S.hp=S.maxHp;S.featherUsed=0;P.st=stMax();P.winded=0;if(S.relics.echo){if(S.echoLeft<10)m+=' Your Echo Ring hums with power again.';S.echoLeft=10}sfx('heart');break;
   case'quest':{const b=BOUNTIES[cv.q%BOUNTIES.length],st=S.bounty[cv.q],k=S.kills[b[0]]||0;
     if(!st){S.bounty[cv.q]={base:k};save();m='BOUNTY BOARD: Defeat '+b[1]+' '+b[2]+' anywhere in the land, then come back for a reward.'}
     else if(st.done)m='No new bounties. The monsters are getting nervous.';
-    else{const n=k-st.base;if(n>=b[1]){st.done=1;S.gems=Math.min(999,S.gems+120);S.bombs=bombMax();S.inv.p_heal=Math.min(9,(S.inv.p_heal||0)+1);sfx('secret');save();m=b[1]+' '+b[2]+'! Impressive. Here are 120 gems, two Red Caps, a Health Potion and a full stock of bombs.'}else m=n+' of '+b[1]+' '+b[2]+' defeated. Keep hunting!'}break}
+    else{const n=k-st.base;if(n>=b[1]){st.done=1;S.gems=Math.min(999,S.gems+120);heartPiece();S.bombs=bombMax();S.inv.p_heal=Math.min(9,(S.inv.p_heal||0)+1);sfx('secret');save();m=b[1]+' '+b[2]+'! Impressive. Here are 120 gems, two Red Caps, a Health Potion and a full stock of bombs.'}else m=n+' of '+b[1]+' '+b[2]+' defeated. Keep hunting!'}break}
   case'dojo':{const t=['duelist','witch','brute'][cv.dj%3];if(!G.room.met){G.room.met=1;m='Welcome to my dojo. When you are ready to face the '+CHAMPS[t].n+', speak to me.'}else{say('Then we begin! Do not swing into a raised guard. Strike from the side, use bombs or a spin, and punish them while they recover. Go!',()=>startDuel(t,{dojo:cv.id,lvl:Math.max(2,S.shards.length+1)}));return}break}
   case'gift':m=taken?'Nothing left here but dust and good wishes.':'You found my hideout! Take this, and keep it quiet.';break;
   case'gems':m=taken?'An empty old stash.':'A forgotten stash of gems!';break;
@@ -1225,7 +1304,7 @@ function go(dir){const rm=G.room;
   exitCave();return true}
 function enterOver(sx,sy,px_,py_){sx=clamp(sx|0,0,WW-1);sy=clamp(sy|0,0,WH-1);setRoom(genScreen(sx,sy));P.x=px_;P.y=py_;onEnter()}
 function enterDungeon(d){fadeTo(()=>{S.dun[d]=S.dun[d]||{unl:[],keys:[],item:0,boss:0,hc:0,vis:[]};S.keys[d]=S.keys[d]||0;G.dn=d;G.dg=genDungeon(d);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter();G.banner={s:DUN[d].n.toUpperCase(),t:120};save()})}
-function exitDungeon(){fadeTo(()=>{if(G.dn>=20){const r=G.sideRet;G.lastArea=null;enterOver(r.x,r.y,r.px,r.py);P.dir=2;return}const c=CEN[G.dn];G.lastArea=null;enterOver(c[1],c[2],112,52);P.dir=2})}
+function exitDungeon(){fadeTo(()=>{if(G.dn>=HD0){const h=HOLES[G.dn-HD0-1],r=G.holeRet||(()=>{const [x,y]=h.key.split(',').map(Number);return{x,y,px:112,py:120}})();G.holeRet=null;G.lastArea=null;enterOver(r.x,r.y,r.px,r.py);P.dir=2;return}if(G.dn>=20){const r=G.sideRet;G.lastArea=null;enterOver(r.x,r.y,r.px,r.py);P.dir=2;return}const c=CEN[G.dn];G.lastArea=null;enterOver(c[1],c[2],112,52);P.dir=2})}
 function enterCave(c){if(G.room.cave.type==='secret'){enterSide(G.room.cave,c);return}fadeTo(()=>{G.caveRet={x:G.room.x,y:G.room.y,px:c*16,py:34};setRoom(caveRoom(G.room.cave,G.room.key));P.x=112;P.y=124;P.dir=0;onEnter()},caveTalk)}
 function enterSide(cv,c){fadeTo(()=>{const d=20+cv.sid;G.sideRet=G.room.kind==='over'?{x:G.room.x,y:G.room.y,px:c*16,py:34}:{x:S.sx,y:S.sy,px:112,py:77};S.dun[d]=S.dun[d]||{unl:[],keys:[],item:0,boss:0,hc:0,vis:[]};S.keys[d]=S.keys[d]||0;G.dn=d;G.dg=genSide(d);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter();G.banner={s:'SECRET: '+DUN[d].n.toUpperCase(),t:140};sfx('secret');save()})}
 function exitCave(){fadeTo(()=>{const r=G.caveRet;enterOver(r.x,r.y,r.px,r.py);P.dir=2})}
@@ -1242,7 +1321,7 @@ function bump(dir){if(G.room.kind!=='dun')return false;const qx=P.x+8+DIRS[dir][
 function checkEdge(){const l=P.x+3,r=P.x+13,t=P.y+6,b=P.y+16;if(l<0)return go(3);if(r>PW)return go(1);if(t<0)return go(0);if(b>PH)return go(2);return false}
 function checkTriggers(){if(P.z>0)return;const c=Math.floor((P.x+8)/16),w=Math.floor((P.y+11)/16);if(c<0||c>15||w<0||w>10)return;const v=G.room.t[w*16+c];
   if(v===CV&&G.room.kind==='over'){enterCave(c);return}
-  if(v===DE){const d=G.room.dn;if(d===NDUN&&S.shards.length<NSH){P.y+=10;say('A wall of black fire seals the Obsidian Throne. Only all fourteen Crown Shards can break it. You have '+S.shards.length+'.');return}enterDungeon(d);return}
+  if(v===DE){const d=G.room.dn;if(d===NDUN&&S.shards.length<NSH){P.y+=10;say('A wall of black fire seals the Obsidian Throne. Only all 27 crown pieces can break it. You have '+S.shards.length+'.');return}enterDungeon(d);return}
   if(v===ST&&G.room.kind==='dun')exitDungeon();
   if(v===MO&&G.room.kind==='over'&&MOUTHAT[G.room.key]){enterCavern(MOUTHAT[G.room.key]);return}
   if(v===LD&&G.room.kind==='cav'){const rm=G.room,m=CAVS[rm.cv].mouths.find(q=>q.gx===rm.gx&&q.gy===rm.gy);if(m)fadeTo(()=>{G.lastArea=null;enterOver(m.sx,m.sy,m.px,m.py);P.dir=2})}}
@@ -1281,7 +1360,10 @@ function swordHits(){if(P.atk>12||P.atk<3)return;const b=swordBox(),dmg=swordDmg
   parry(b);cutTiles(b);puzHitBox(b)}
 function spinHits(){const b={x:P.x-16,y:P.y-12,w:48,h:44},dmg=swordDmg()*2;for(const e of G.ents){if(e.dead||e.spawn>0||e.swing===P.swing)continue;if(ov(b,ehb(e))){e.swing=P.swing;hitEnemy(e,dmg,P.x+8,P.y+11)}}parry(b);cutTiles(b);cutTiles({x:P.x-8,y:P.y-4,w:32,h:28});puzHitBox(b)}
 function maybeBeam(){if((S.hp>=S.maxHp||(S.relics.echo&&S.echoLeft>0)||(swordLv()>=2&&S.hp>=S.maxHp/2))&&!G.shots.some(s=>s.kind==='beam')){const d=DIRS[P.dir];G.shots.push({kind:'beam',x:P.x+8+d[0]*10,y:P.y+10+d[1]*10,vx:d[0]*4,vy:d[1]*4,r:4,from:'p',dmg:swordDmg(),life:80});sfx('beam')}}
-function swordDmg(){return swordLv()*(G.bf.iron>0?2:1)+(G.bf.giant>0?1:0)}
+function swordDmg(){return (swordLv()+swBonus())*(G.bf.iron>0?2:1)+(G.bf.giant>0?1:0)}
+const swNeed=L=>5+2*L,swBonus=()=>S?0.25*((S.swl||1)-1):0,swTough=()=>S?1+0.15*((S.swl||1)-1):1;
+function swordXP(n){if(!swordLv()||(S.swl||1)>=30)return;S.swl=S.swl||1;S.swx=(S.swx||0)+n;while(S.swl<30&&S.swx>=swNeed(S.swl)){S.swx-=swNeed(S.swl);S.swl++;G.floats.push({x:P.x+8,y:P.y-14,s:'SWORD LV '+S.swl+'!',t:110,c:'#7fffd4'});sfx('secret');G.flash=6;if(S.swl%5===0)heartPiece('Sword level '+S.swl+'!')}if(S.swl>=30)S.swx=0;save()}
+function heartPiece(why){S.hpc=(S.hpc||0)+1;if(S.hpc>=4){S.hpc=0;G.heartQ=(why?why+' ':'')+'Four HEART PIECES fuse into a HEART CONTAINER!'}else{G.floats.push({x:P.x+8,y:P.y-22,s:'HEART PIECE '+S.hpc+'/4',t:120,c:'#ff9ab0'});sfx('heart')}save()}
 function spinThrow(){if(S.hp<S.maxHp)return;const d=DIRS[P.dir];G.shots.push({kind:'sblade',x:P.x+8+d[0]*8,y:P.y+10+d[1]*8,vx:d[0]*4.2,vy:d[1]*4.2,r:9,from:'p',dmg:swordDmg()*2,life:90,pierce:1,hit:new Set(),t:0});sfx('beam');sfx('spin')}
 function cycleItem(d){const own=usable();if(!own.length)return;let i=own.indexOf(S.sel);i=(i+d+own.length)%own.length;if(own[i]!==S.sel){S.sel=own[i];sfx('sel')}}
 function useItem(){const k=S.sel;if(!k)return;const d=DIRS[P.dir],x=P.x+8,y=P.y+10;
@@ -1358,7 +1440,7 @@ function hurtPlayer(d,fx,fy){if(P.inv>0||P.roll>0||G.mode!=='play'||G.bossDie||G
   if(S.hp<=0){if(G.duel){S.hp=2;G.duel.phase='lost';G.duel.t=0;play(null);sfx('hurt');return}if(S.relics.feather&&!S.featherUsed){S.featherUsed=1;S.hp=Math.max(2,Math.floor(S.maxHp/4)*2);P.inv=150;puff(P.x+8,P.y+8,'#ff9a40',24,2.5);puff(P.x+8,P.y+8,'#ffe060',16,1.5);G.floats.push({x:P.x+8,y:P.y-8,s:'REBORN!',t:90,c:'#ffb040'});sfx('secret');save();return}S.hp=0;die()}}
 function die(){G.mode='dying';G.dieT=100;play(null);jingle('over_',null);S.deaths++}
 function respawn(){S.hp=S.maxHp;P.inv=90;P.st=100;P.winded=0;P.kbT=0;G.bf={};
-  if(G.room.kind==='dun'){G.dg=(G.dn>=20?genSide:genDungeon)(G.dn);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter()}
+  if(G.room.kind==='dun'){G.dg=(G.dn>=20&&G.dn<HD0?genSide:genDungeon)(G.dn);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter()}
   else{const rm=genScreen(S.sx,S.sy);setRoom(rm);const f=findSafe(rm);P.x=f[0];P.y=f[1];onEnter()}G.mode='play';save()}
 
 // ================= SHOTS / PICKUPS / BOMBS =================
@@ -1433,7 +1515,7 @@ function cavReward(pk){const c=pk.content;if(!S.cavr.includes(pk.cav))S.cavr.pus
   else if(c==='stash'){S.bag.giant=Math.min(9,(S.bag.giant||0)+2);S.bag.boom=Math.min(9,(S.bag.boom||0)+2);S.bag.frost=Math.min(9,(S.bag.frost||0)+1);giveItem('stash','A STASH of rare mushrooms! Giant, Boom and Red Caps.')}
   else if(c==='elix3'){S.inv.p_elixir=Math.min(9,(S.inv.p_elixir||0)+3);giveItem('p_elixir','THREE ELIXIRS, sealed in wax!')}
   else{ITEMS[c].give();giveItem(c,ITEMS[c].msg)}save()}
-function openChest(pk){if(pk.cav!==undefined){sfx('door');puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);cavReward(pk);return}sfx('door');const c=pk.content;if(c==='jump'){if(!S.opened.includes('j:'+pk.jk))S.opened.push('j:'+pk.jk);puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);const g=pk.wide?40:20;S.gems=Math.min(999,S.gems+g);if(pk.wide){const k=pick(CONSK);S.inv[k]=Math.min(9,(S.inv[k]||0)+1);giveItem('gems','A daring leap! '+g+' GEMS and a '+CONS[k].n+'.')}else giveItem('gems','Nice jump! You found '+g+' GEMS.');save();return}if(pk.cid!==undefined&&!S.caves.includes(pk.cid))S.caves.push(pk.cid);
+function openChest(pk){if(pk.cav!==undefined){sfx('door');puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);cavReward(pk);return}sfx('door');const c=pk.content;if(c==='jump'){if(!S.opened.includes('j:'+pk.jk))S.opened.push('j:'+pk.jk);puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);const g=pk.wide?40:20;S.gems=Math.min(999,S.gems+g);if(pk.wide){giveItem('gems','A daring leap! '+g+' GEMS and a HEART PIECE.');heartPiece()}else giveItem('gems','Nice jump! You found '+g+' GEMS.');save();return}if(pk.cid!==undefined&&!S.caves.includes(pk.cid))S.caves.push(pk.cid);
   puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);
   if(c==='heartc'){S.maxHp=Math.min(32,S.maxHp+2);S.hp=S.maxHp;giveItem('heartc','HEART CONTAINER! Your life grows by one heart.')}
   else if(c==='gems50'){S.gems=Math.min(999,S.gems+50);giveItem('gems','You found 50 GEMS!')}
@@ -1455,7 +1537,8 @@ function shopBuy(pk){const it=pk.item;
 function giveItem(kind,msg){G.mode='hold';G.holdT=80;G.holdKind=kind;G.holdMsg=msg;jingle(kind==='shard'?'shard':'get');P.atk=0;P.spin=0;P.charge=0;P.atkHeld=0}
 function bossDeath(e){G.bossDie={t:0,x:ecx(e),y:ecy(e),final:!!e.cfg.final};G.ents.forEach(o=>{if(o!==e)o.dead=1});G.shots=[];play(null)}
 function updBossDie(){const b=G.bossDie;b.t++;if(b.t%6===0){const x=b.x+(R()-0.5)*36,y=b.y+(R()-0.5)*36;puff(x,y,pick(['#ff7a2f','#ffd040','#ffffff']),12,2.2);sfx('boom');G.shake=5}
-  if(b.t>=96){G.bossDie=null;const ds=S.dun[G.dn];ds.boss=1;if(b.final){winGame();return}G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');sfx('secret');save()}}
+  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1];say('The boss falls! A ghostly basket rises from the stone. HOLE '+h.n+', PAR '+h.par+'. Sink it in par or better to claim the crown piece. Go over par and the boss returns!',()=>startGolf());return}
+  if(b.t>=96){G.bossDie=null;const ds=S.dun[G.dn];ds.boss=1;swordXP(5);if(b.final){winGame();return}G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');sfx('secret');save()}}
 function winGame(){G.mode='win';G.winT=0;S.won=1;jingle('win','title');save()}
 
 // ================= DIALOG =================
@@ -1492,8 +1575,9 @@ function poll(){let x=0,y=0,a=0,b=0,it=0,st=0,l=0,r=0;
 
 // ================= GAME FLOW =================
 function newGame(){S=newState();G.bf={};if(G.konami){S.gold=1;S.secrets.push('konami')}G.lastArea=null;const rm=genScreen(START[0],START[1]);setRoom(rm);const f=findSafe(rm);P.x=f[0];P.y=f[1]+16;if(!freeP(P.x,P.y))P.y=f[1];P.dir=0;P.inv=0;G.mode='play';onEnter();
-  say('The Ember Crown once held back the endless night. Now it lies in fourteen shards. Wren, you have no weapon yet. The old sage waits in the cave to the north. Begin there.')}
+  say('The Ember Crown once held back the endless night. Now it lies in 27 pieces, buried beneath the disc golf baskets of the land. Wren, you have no weapon yet. The old sage waits in the cave to the north. Begin there.')}
 function startLoaded(){G.lastArea=null;if(S.inv)delete S.inv.p_slime;if(S.sel&&!INV.includes(S.sel)&&!(ITEMS[S.sel]&&S.items[S.sel]))S.sel=usable()[0]||null;let msg='';if(!S.wv||S.wv<2){S.wv=2;S.sx=START[0];S.sy=START[1];S.visited=[];S.opened=[];S.arenas=[];S.caves=S.caves.filter(c=>c===99);S.qgot=[];S.bounty={};msg='The land has grown to twice its size while you rested. You wake in Emberglen with all your gear.'}
+  if(S.wv<3){S.wv=3;const k=Math.min(NHOLE,(S.shards||[]).filter(d=>d<HD0).length);S.shards=[];S.bk={};for(let i=1;i<=k;i++){const d=HD0+i;S.shards.push(d);S.dun[d]={unl:[],keys:[],item:1,boss:1,hc:1,vis:[],golf:1};S.bk[HOLES[i-1].key]={s:HOLES[i-1].par,o:i};const it=DUN[d].item;if(it&&ITEMS[it]&&ITEMS[it].give&&!S.items[it])try{ITEMS[it].give()}catch(e){}}S.swl=S.swl||1;S.swx=S.swx||0;S.hpc=S.hpc||0;msg+=(msg?' ':'')+'The Ember Crown has shattered into 27 pieces, one beneath each disc golf basket. Sink a basket to drop into its dungeon.'+(k?' Your '+k+' shards became the first '+k+' crown pieces.':'')}
   if(S.items.sword&&!S.items.disc_putt){S.items.disc_putt=1;msg+=(msg?' ':'')+'A disc golf PUTTER lies beside you! Baskets stand all over the land: sink a throw and the chains refill your hearts.'}
   if(msg)setTimeout(()=>{if(G.mode==='play')say(msg)},400);if(S.relics&&S.relics.echo&&S.echoLeft===undefined)S.echoLeft=10;G.bf={};if(G.konami&&!S.gold){S.gold=1;if(!S.secrets.includes('konami'))S.secrets.push('konami')}const rm=genScreen(S.sx,S.sy);setRoom(rm);const f=findSafe(rm);P.x=f[0];P.y=f[1];P.dir=2;P.inv=60;if(S.hp<=0)S.hp=S.maxHp;G.mode='play';onEnter()}
 function titleOpts(){return G.hasSave?['CONTINUE','NEW GAME']:['NEW GAME']}
@@ -1518,6 +1602,8 @@ function updatePlay(){
   for(const k in G.bf)if(k!=='bubble'&&G.bf[k]>0)G.bf[k]--;if(G.flash>0)G.flash--;
   updPuzzle();if(G.glowT>0)G.glowT--;if(G.cardPending&&--G.cardPending.t<=0&&G.mode==='play'){openCard(G.cardPending.n);G.cardPending=null;return}
   if(G.bf.vigor>0&&G.t%120===0&&S.hp<S.maxHp)S.hp++;if(G.reveal>0)G.reveal--;for(const b of G.bolts)b.t--;G.bolts=G.bolts.filter(b=>b.t>0);
+  if(G.heartQ&&G.mode==='play'){const m=G.heartQ;G.heartQ=null;giveHeart(m);return}
+  if(G.holeEnter&&G.mode==='play'&&--G.holeEnter.t<=0){const n=G.holeEnter.n;G.holeEnter=null;G.holeRet={x:G.room.x,y:G.room.y,px:P.x,py:P.y};enterDungeon(HD0+n);return}
   if(G.bossDie)updBossDie();else updPlayer();
   if(G.mode!=='play'&&G.mode!=='dialog'&&G.mode!=='hold')return;
   updNpcs();
@@ -1545,6 +1631,7 @@ function tick(){poll();G.t++;
   case'over':updOver();break;
   case'win':updWin();break;
   case'card':updCard();break;
+  case'golf':updGolf();break;
   case'warp':updWarp();break}}
 
 // ================= RENDER =================
@@ -1707,9 +1794,9 @@ function nextHole(){return HOLES.find(h=>!S.bk[h.key])}
 function openCard(n,from){G.card={n:Math.min(3,Math.max(1,n)),t:0,from:from||'play'};G.mode='card';sfx('secret')}
 function updCard(){const c=G.card;c.t++;const tot=3;if(IN.pL&&c.n>1){c.n--;sfx('sel')}if(IN.pR&&c.n<tot){c.n++;sfx('sel')}
   if(c.t>40&&(IN.pa||IN.pst||IN.pb)){G.mode=c.from==='pause'?'pause':'play';G.card=null;sfx('sel')}}
-function progress(){const dn=[];for(let d=1;d<=NDUN;d++)if(S.dun[d]&&S.dun[d].boss)dn.push(d);let sd=0;for(let d=20;d<29;d++)if(S.dun[d]&&S.dun[d].solved)sd++;
+function progress(){const dn=[];for(let d=HD0+1;d<=HD0+NHOLE;d++)if(S.dun[d]&&S.dun[d].boss)dn.push(d);let sd=0;for(let d=20;d<29;d++)if(S.dun[d]&&S.dun[d].solved)sd++;
   const q=S.q,qd=(q.cat===3)+(q.bones===2)+(q.shroom===2)+(q.letter===3),bt=Object.values(S.bounty).filter(b=>b.done).length,m=Math.floor(S.time/3600),mm=Math.floor(S.time/60)%60;
-  return[['SHARDS',S.shards.length+'/'+NSH],['SECRETS',S.secrets.length+'/'+NSEC],['DUNGEONS',dn.length+'/'+NDUN],['HIDDEN',sd+'/9'],['EXPLORED',Math.round(100*S.visited.length/(WW*WH))+'%'],['ITEMS',usable().length+'/'+INV.length],['HEARTS',(S.maxHp/2)+'/16'],['QUESTS',qd+'/4'],['BOUNTIES',bt+'/12'],['CHAMPIONS',''+(S.champs||0)],['TIME',m+':'+String(mm).padStart(2,'0')],['CAVERNS',S.cavr.length+'/'+CAVS.length]]}
+  return[['CROWN',S.shards.length+'/'+NSH],['SECRETS',S.secrets.length+'/'+NSEC],['DUNGEONS',dn.length+'/'+NHOLE],['HIDDEN',sd+'/9'],['EXPLORED',Math.round(100*S.visited.length/(WW*WH))+'%'],['ITEMS',usable().length+'/'+INV.length],['HEARTS',(S.maxHp/2)+'/16'],['QUESTS',qd+'/4'],['BOUNTIES',bt+'/12'],['CHAMPIONS',''+(S.champs||0)],['TIME',m+':'+String(mm).padStart(2,'0')],['CAVERNS',S.cavr.length+'/'+CAVS.length]]}
 function drawCard(){const c=G.card,ink='#2a2018',paper='#f2e8d0',line='#b8a888';px(ctx,'rgba(0,0,0,0.7)',0,0,W,H);
   const off=Math.max(0,24-c.t*2);px(ctx,'#1a1020',3,3+off,250,226);px(ctx,paper,4,4+off,248,224);const Y=4+off;
   px(ctx,'#2f6a3a',4,Y,248,18);txt('WREN QUEST DISC GOLF',10,Y+5,'#f2e8d0');txt('CARD '+c.n+'/3',246,Y+5,'#ffe060','right');
@@ -1763,18 +1850,18 @@ function drawMap(x0,y0,big){const r=G.room;
       if(ds.vis.includes(k))px(ctx,o.boss?'#a03030':'#5a6a8a',vx,vy,cw-1,chh-1);else if(o.boss)px(ctx,'#4a1a1a',vx,vy,cw-1,chh-1);
       if(o===r&&(G.t>>3)%2)px(ctx,'#7fffd4',vx+1,vy+1,cw-3,chh-3)}return}
   const cw=big?6:2,chh=big?3:1,cur=r.kind==='over'?r.key:(G.caveRet?G.caveRet.x+','+G.caveRet.y:'');
-  for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y,vis=S.visited.includes(k);px(ctx,vis?'#4a4458':'#1c1824',x0+x*cw,y0+y*chh,cw-(big?1:0),chh-(big?1:0));if(vis&&BASKETS.has(k)&&big)px(ctx,S.bk[k]?'#a0e060':'#ffffff',x0+x*cw+2,y0+y*chh+1,1,1);if(vis&&DSCR[k])px(ctx,S.shards.includes(DSCR[k])?'#7fffd4':'#ff7a2f',x0+x*cw,y0+y*chh,cw,chh);if(vis&&MOUTHAT[k]){const mo=MOUTHAT[k],m=CAVS[mo.cav].mouths[mo.mi];if(m.hide==='none'||S.opened.includes('m:'+k))px(ctx,'#c08040',x0+x*cw,y0+y*chh+(big?1:0),big?2:1,1)}if(k===cur&&(G.t>>3)%2)px(ctx,'#ffffff',x0+x*cw,y0+y*chh,cw,chh)}
+  for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y,vis=S.visited.includes(k);px(ctx,vis?'#4a4458':'#1c1824',x0+x*cw,y0+y*chh,cw-(big?1:0),chh-(big?1:0));if(vis&&BASKETS.has(k)&&big)px(ctx,S.bk[k]?'#a0e060':'#ffffff',x0+x*cw+2,y0+y*chh+1,1,1);if(vis&&DSCR[k]===NDUN)px(ctx,S.shards.length>=NSH?'#7fffd4':'#a020ff',x0+x*cw,y0+y*chh,cw,chh);if(vis&&MOUTHAT[k]){const mo=MOUTHAT[k],m=CAVS[mo.cav].mouths[mo.mi];if(m.hide==='none'||S.opened.includes('m:'+k))px(ctx,'#c08040',x0+x*cw,y0+y*chh+(big?1:0),big?2:1,1)}if(k===cur&&(G.t>>3)%2)px(ctx,'#ffffff',x0+x*cw,y0+y*chh,cw,chh)}
   if(S.relics.lens||G.bf.sight>0){const dot=(k,c)=>{const q=k.split(',').map(Number);px(ctx,c,x0+q[0]*cw+(big?1:0),y0+q[1]*chh,big?cw-2:cw,big?chh-1:chh)};for(const k in CAVES){const cv=CAVES[k];if(cv.type==='secret')dot(k,'#ffe060');else if(cv.hidden&&!S.opened.includes(k))dot(k,'#ff60ff')}for(const k in QAT)if(!S.qgot.includes(QAT[k].id))dot(k,'#60e0ff');for(const k in MOUTHAT){const mo=MOUTHAT[k],m=CAVS[mo.cav].mouths[mo.mi];if(m.hide!=='none'&&!S.opened.includes('m:'+k))dot(k,'#c060ff')}if(big)for(const k of BASKETS)dot(k,S.bk[k]?'#a0e060':'#ffffff')}}
 function drawHUD(){px(ctx,'#000',0,0,W,HUD);if(!S)return;
-  txt(areaName(),8,4,'#ffcf9a');txt('-LIFE-',204,4,'#ff5a4a','center');
+  {let an=areaName();if(an.length>21){const m=/^HOLE \d+/.exec(an);an=m?m[0]:an.slice(0,20)+'.'}txt(an,8,4,'#ffcf9a')}txt('-LIFE-',204,4,'#ff5a4a','center');
   drawMap(8,16,false);
   ctx.drawImage(GEM1,87,15);txt(''+S.gems,96,15,'#ffffff');
   ctx.drawImage(KEYI,87,25);txt(G.room&&G.room.kind==='dun'?''+(S.keys[G.dn]||0):'-',96,25,'#ffffff');
   ctx.drawImage(BOMBI,86,35);txt(''+S.bombs,96,35,'#ffffff');
-  {const w=Math.round(stMax()*0.4),f=Math.round(clamp(P.st,0,stMax())*0.4),c=P.winded?((G.t>>3)%2?'#ff5040':'#a03020'):'#60d860';px(ctx,'#3a3048',86,46,w+2,5);px(ctx,'#000',87,47,w,3);px(ctx,c,87,47,Math.min(f,40),3);if(f>40)px(ctx,'#f4f4ec',127,47,f-40,3)}
+  {const w=Math.round(stMax()*0.4),f=Math.round(clamp(P.st,0,stMax())*0.4),c=P.winded?((G.t>>3)%2?'#ff5040':'#a03020'):'#60d860';txt('L'+(S.swl||1),131,46,'#7fffd4');px(ctx,'#3a3048',86,46,w+2,5);px(ctx,'#000',87,47,w,3);px(ctx,c,87,47,Math.min(f,40),3);if(f>40)px(ctx,'#f4f4ec',127,47,f-40,3)}
   px(ctx,'#ff7a2f',128,15,26,28);px(ctx,'#000',130,17,22,24);if(S.sel)drawIcon(S.sel,133,21);
   const nh=S.maxHp/2;for(let i=0;i<nh;i++){const v=clamp(S.hp-i*2,0,2),x=166+(i%8)*10,y=15+Math.floor(i/8)*8;ctx.drawImage(HEARTS[v],x,y)}
-  for(let i=1;i<=NSH;i++)drawShard(166+((i-1)%7)*11,33+Math.floor((i-1)/7)*11,S.shards.includes(i))}
+  for(let i=1;i<=NSH;i++){const x=166+((i-1)%9)*9,y=34+Math.floor((i-1)/9)*7,on=S.shards.includes(HD0+i);px(ctx,on?'#ff7a2f':'#3a2a30',x+2,y,3,1);px(ctx,on?'#ff7a2f':'#3a2a30',x+1,y+1,5,2);px(ctx,on?'#ff7a2f':'#3a2a30',x+2,y+3,3,1);px(ctx,on?'#ff7a2f':'#3a2a30',x+3,y+4,1,1);if(on)px(ctx,'#ffe0a0',x+2,y+1,1,1)}}
 function wrapT(t,n){const out=[];let cur='';for(const w of t.split(' ')){if((cur+' '+w).trim().length>n){out.push(cur);cur=w}else cur=(cur+' '+w).trim()}if(cur)out.push(cur);return out}
 function drawPause(){px(ctx,'rgba(8,4,14,0.96)',0,HUD,PW,PH);const y0=HUD;
   txt('ITEMS',70,y0+3,G.ppage?'#6a5a7a':'#ff7a2f','center');txt('MAP',186,y0+3,G.ppage?'#ff7a2f':'#6a5a7a','center');txt('Q/E',128,y0+3,'#4a3a5a','center');
@@ -1788,7 +1875,7 @@ function drawPause(){px(ctx,'rgba(8,4,14,0.96)',0,HUD,PW,PH);const y0=HUD;
   else{drawMap(20,y0+16,2);
     const ex=['bigbag','quiver','boots','silver','aegis','storm','regen','inferno','lamp','oremail'].filter(k=>S.items[k]).concat(RELICS.map(r=>r.id).filter(k=>S.relics[k]));const sp=Math.min(17,240/Math.max(1,ex.length));ex.forEach((k,i)=>drawIcon(k,Math.round(128-ex.length*sp/2+i*sp),y0+112));
     if(!ex.length)txt('No upgrades or relics yet',128,y0+116,'#5a4a6a','center');
-    txt('SHARDS '+S.shards.length+'/'+NSH+'  SECRETS '+S.secrets.length+'/'+NSEC,128,y0+136,'#ffe0b0','center');txt('HEARTS '+(S.maxHp/2)+'   FALLS '+S.deaths,128,y0+148,'#a99db2','center');txt('BASKETS '+Object.keys(S.bk).length+'/'+NHOLE+'   A: SCORECARD',128,y0+124,'#a0e060','center');txt('Q/E ITEMS   START BACK',128,y0+164,'#5a4a6a','center')}}
+    txt('CROWN '+S.shards.length+'/'+NSH+'  SECRETS '+S.secrets.length+'/'+NSEC,128,y0+134,'#ffe0b0','center');txt('SWORD L'+(S.swl||1)+(S.swl>=30?'  MAX LEVEL':'  NEXT IN '+(swNeed(S.swl||1)-(S.swx||0))+' KILLS'),128,y0+144,'#7fffd4','center');txt('HEARTS '+(S.maxHp/2)+'  PIECES '+(S.hpc||0)+'/4  FALLS '+S.deaths,128,y0+154,'#ff9ab0','center');txt('BASKETS '+Object.keys(S.bk).length+'/'+NHOLE+'   A: SCORECARD',128,y0+124,'#a0e060','center');txt('Q/E ITEMS   START BACK',128,y0+164,'#5a4a6a','center')}}
 function drawOver(){if(G.mode==='dying')return;px(ctx,'rgba(10,0,0,0.85)',0,HUD,PW,PH);txt('YOU FELL',128,HUD+50,'#ff4a3a','center',16);
   ['CONTINUE','SAVE AND QUIT'].forEach((s,i)=>{txt(s,128,HUD+92+i*16,i===G.menu?'#ffffff':'#7a6a7a','center');if(i===G.menu&&(G.t>>4)%2===0)ctx.drawImage(HEARTS[2],128-s.length*4-14,HUD+93+i*16)})}
 function drawWin(){px(ctx,'rgba(10,4,16,'+Math.min(0.92,G.winT/60)+')',0,0,W,H);if(G.winT<40)return;
@@ -1803,6 +1890,7 @@ function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
   if(G.mode==='trans'){const tr=G.tr,k=tr.t/32,d=tr.dir;let ox=0,oy=0,nx=0,ny=0;
     if(d===1){ox=-k*PW;nx=(1-k)*PW}else if(d===3){ox=k*PW;nx=-(1-k)*PW}else if(d===2){oy=-k*PH;ny=(1-k)*PH}else{oy=k*PH;ny=-(1-k)*PH}
     ctx.drawImage(tr.old,Math.round(ox),Math.round(oy));ctx.drawImage(G.bg,Math.round(nx),Math.round(ny));drawPlayer(Math.round(nx),Math.round(ny))}
+  else if(G.mode==='golf'&&G.golf)drawGolf();
   else drawWorld();
   ctx.filter='none';ctx.restore();
   drawHUD();
