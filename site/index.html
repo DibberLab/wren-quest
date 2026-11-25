@@ -886,10 +886,10 @@ function updNpcs(){for(const n of G.npcs.slice()){if(n.watch&&Math.hypot(n.x-P.x
 function discLand(s){const tl=tileAt(s.x,s.y),c=Math.floor(s.x/16),w=Math.floor(s.y/16);
   if(tl!==null&&EWALK.has(tl)&&c>=1&&c<=14&&w>=1&&w<=9){G.picks.push({kind:'discdrop',dk:s.dk,x:s.x-4,y:s.y-3,perm:1,rt:300})}else{G.discOut=0;G.floats.push({x:P.x+8,y:P.y-6,s:'DISC RETURNED',t:40,c:'#ffe060'})}}
 const SCORENM={'-3':'ALBATROSS!','-2':'EAGLE!','-1':'BIRDIE!','0':'PAR','1':'BOGEY','2':'DOUBLE BOGEY'};
-function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1;S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
+function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1,dd=h?st-h.par:0,hurt=dd>0;if(hurt)S.hp=Math.max(1,S.hp-2);else S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
   S.putts=(S.putts||0)+1;for(let i=0;i<30;i++)part(b.cx,b.cy,pick(['#ffe060','#ffffff','#7fffd4']),(R()-0.5)*4,(R()-0.5)*4-1,40,2,0.04);
   const d=h?st-h.par:0,label=ace?'ACE!!':h?(SCORENM[String(d)]||(d>0?'+'+d:'')):'CHAINS!';
-  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});G.floats.push({x:b.cx,y:b.cy-2,s:'HEARTS REFILLED',t:120,c:'#ff8090'});
+  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});G.floats.push({x:b.cx,y:b.cy-2,s:hurt?'-1 HEART':'HEARTS REFILLED',t:120,c:hurt?'#c03020':'#ff8090'});
   if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+8,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace')}
   if(h&&!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:110};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
   G.strokes=0;save()}
