@@ -1143,7 +1143,7 @@ function drawGolf(){const g=G.golf,c=g.c,cy=Math.round(g.cam),Y=v=>Math.round(v-
   if(g.ph!=='intro'||g.t>70)ctx.drawImage(heroImg(P.dir,0),Math.round(g.lie.x)-8,Y(g.lie.y)-14);
   if(g.disc&&g.ph==='fly'){const d=g.disc;px(ctx,'rgba(0,0,0,0.3)',Math.round(d.x)-3,Y(d.y)+1,7,2);const sp=(d.t>>1)%2;px(ctx,'#1a1020',Math.round(d.x)-4,Y(d.y-d.z)-2,9,5);px(ctx,'#ff5a3a',Math.round(d.x)-3,Y(d.y-d.z)-1,7,3);px(ctx,'#ffffff',Math.round(d.x)+(sp?-2:1),Y(d.y-d.z)-1,2,1)}
   for(const p of G.parts)px(ctx,p.c,Math.round(p.x),Math.round(p.y),p.s,p.s);
-  px(ctx,'rgba(0,0,0,0.72)',0,0,PW,13);txt('HOLE '+g.h.n+'  PAR '+g.h.par,4,3,'#ffe060');txt('THROW '+(g.strokes+(g.ph==='done'?0:1)),128,3,'#ffffff','center');
+  px(ctx,'rgba(0,0,0,0.72)',0,0,PW,13);txt('PAR '+g.h.par,4,3,'#ffe060');txt('THROW '+(g.strokes+(g.ph==='done'?0:1)),96,3,'#ffffff','center');
   const w=c.wind;txt('WIND',206,3,'#a0d0ff','right');const wx=226,wy=6,wl=3+Math.round(w.s*60);px(ctx,'#a0d0ff',wx-1,wy-1,3,3);for(let i=0;i<wl;i++)px(ctx,'#a0d0ff',Math.round(wx+Math.cos(w.a)*i),Math.round(wy+Math.sin(w.a)*i),1,1);txt(''+Math.round(w.s*60),252,3,'#a0d0ff','right');
   if(g.ph==='aim'||g.ph==='power'||g.ph==='curve'){const by=PH-28;px(ctx,'rgba(0,0,0,0.72)',0,by-14,PW,42);const putt=golfPutt();
     txt(putt?'PUTT':'POWER',6,by,'#ffe060');px(ctx,'#000',52,by,150,7);px(ctx,'#3a3048',53,by+1,148,5);const pf=g.ph==='aim'?0:Math.round(148*g.pw);px(ctx,g.pw>0.92?'#ff5040':'#60d860',53,by+1,pf,5);px(ctx,'#ffffff',53+Math.round(148*0.92),by,1,7);
@@ -1853,7 +1853,7 @@ function drawMap(x0,y0,big){const r=G.room;
   for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y,vis=S.visited.includes(k);px(ctx,vis?'#4a4458':'#1c1824',x0+x*cw,y0+y*chh,cw-(big?1:0),chh-(big?1:0));if(vis&&BASKETS.has(k)&&big)px(ctx,S.bk[k]?'#a0e060':'#ffffff',x0+x*cw+2,y0+y*chh+1,1,1);if(vis&&DSCR[k]===NDUN)px(ctx,S.shards.length>=NSH?'#7fffd4':'#a020ff',x0+x*cw,y0+y*chh,cw,chh);if(vis&&MOUTHAT[k]){const mo=MOUTHAT[k],m=CAVS[mo.cav].mouths[mo.mi];if(m.hide==='none'||S.opened.includes('m:'+k))px(ctx,'#c08040',x0+x*cw,y0+y*chh+(big?1:0),big?2:1,1)}if(k===cur&&(G.t>>3)%2)px(ctx,'#ffffff',x0+x*cw,y0+y*chh,cw,chh)}
   if(S.relics.lens||G.bf.sight>0){const dot=(k,c)=>{const q=k.split(',').map(Number);px(ctx,c,x0+q[0]*cw+(big?1:0),y0+q[1]*chh,big?cw-2:cw,big?chh-1:chh)};for(const k in CAVES){const cv=CAVES[k];if(cv.type==='secret')dot(k,'#ffe060');else if(cv.hidden&&!S.opened.includes(k))dot(k,'#ff60ff')}for(const k in QAT)if(!S.qgot.includes(QAT[k].id))dot(k,'#60e0ff');for(const k in MOUTHAT){const mo=MOUTHAT[k],m=CAVS[mo.cav].mouths[mo.mi];if(m.hide!=='none'&&!S.opened.includes('m:'+k))dot(k,'#c060ff')}if(big)for(const k of BASKETS)dot(k,S.bk[k]?'#a0e060':'#ffffff')}}
 function drawHUD(){px(ctx,'#000',0,0,W,HUD);if(!S)return;
-  txt(areaName(),8,4,'#ffcf9a');txt('-LIFE-',204,4,'#ff5a4a','center');
+  {let an=areaName();if(an.length>21){const m=/^HOLE \d+/.exec(an);an=m?m[0]:an.slice(0,20)+'.'}txt(an,8,4,'#ffcf9a')}txt('-LIFE-',204,4,'#ff5a4a','center');
   drawMap(8,16,false);
   ctx.drawImage(GEM1,87,15);txt(''+S.gems,96,15,'#ffffff');
   ctx.drawImage(KEYI,87,25);txt(G.room&&G.room.kind==='dun'?''+(S.keys[G.dn]||0):'-',96,25,'#ffffff');
@@ -1875,7 +1875,7 @@ function drawPause(){px(ctx,'rgba(8,4,14,0.96)',0,HUD,PW,PH);const y0=HUD;
   else{drawMap(20,y0+16,2);
     const ex=['bigbag','quiver','boots','silver','aegis','storm','regen','inferno','lamp','oremail'].filter(k=>S.items[k]).concat(RELICS.map(r=>r.id).filter(k=>S.relics[k]));const sp=Math.min(17,240/Math.max(1,ex.length));ex.forEach((k,i)=>drawIcon(k,Math.round(128-ex.length*sp/2+i*sp),y0+112));
     if(!ex.length)txt('No upgrades or relics yet',128,y0+116,'#5a4a6a','center');
-    txt('CROWN '+S.shards.length+'/'+NSH+'  SECRETS '+S.secrets.length+'/'+NSEC+'  SWORD LV '+(S.swl||1),128,y0+136,'#ffe0b0','center');txt('HEART PIECES '+(S.hpc||0)+'/4  NEXT LV IN '+(S.swl>=30?'-':(swNeed(S.swl||1)-(S.swx||0))+' KILLS'),128,y0+146,'#ff9ab0','center');txt('HEARTS '+(S.maxHp/2)+'   FALLS '+S.deaths,128,y0+148,'#a99db2','center');txt('BASKETS '+Object.keys(S.bk).length+'/'+NHOLE+'   A: SCORECARD',128,y0+124,'#a0e060','center');txt('Q/E ITEMS   START BACK',128,y0+164,'#5a4a6a','center')}}
+    txt('CROWN '+S.shards.length+'/'+NSH+'  SECRETS '+S.secrets.length+'/'+NSEC,128,y0+134,'#ffe0b0','center');txt('SWORD L'+(S.swl||1)+(S.swl>=30?'  MAX LEVEL':'  NEXT IN '+(swNeed(S.swl||1)-(S.swx||0))+' KILLS'),128,y0+144,'#7fffd4','center');txt('HEARTS '+(S.maxHp/2)+'  PIECES '+(S.hpc||0)+'/4  FALLS '+S.deaths,128,y0+154,'#ff9ab0','center');txt('BASKETS '+Object.keys(S.bk).length+'/'+NHOLE+'   A: SCORECARD',128,y0+124,'#a0e060','center');txt('Q/E ITEMS   START BACK',128,y0+164,'#5a4a6a','center')}}
 function drawOver(){if(G.mode==='dying')return;px(ctx,'rgba(10,0,0,0.85)',0,HUD,PW,PH);txt('YOU FELL',128,HUD+50,'#ff4a3a','center',16);
   ['CONTINUE','SAVE AND QUIT'].forEach((s,i)=>{txt(s,128,HUD+92+i*16,i===G.menu?'#ffffff':'#7a6a7a','center');if(i===G.menu&&(G.t>>4)%2===0)ctx.drawImage(HEARTS[2],128-s.length*4-14,HUD+93+i*16)})}
 function drawWin(){px(ctx,'rgba(10,4,16,'+Math.min(0.92,G.winT/60)+')',0,0,W,H);if(G.winT<40)return;
