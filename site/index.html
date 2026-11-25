@@ -1032,11 +1032,11 @@ function go(dir){const rm=G.room;
   if(rm.kind==='dun'){if(rm.start&&dir===2){exitDungeon();return true}const nb=G.dg.rooms[(rm.x+DIRS[dir][0])+','+(rm.y+DIRS[dir][1])];if(!nb){P.x=clamp(P.x,-2,242);P.y=clamp(P.y,-5,159);return false}nb.t=dunTiles(nb);startTrans(dir,nb);return true}
   if(rm.kind==='cav'){const C=CAVS[rm.cv],nx=rm.gx+DIRS[dir][0],ny=rm.gy+DIRS[dir][1];if(!C.cells.has(nx+','+ny)){P.x=clamp(P.x,-2,242);P.y=clamp(P.y,-5,159);return false}startTrans(dir,genCavScreen(rm.cv,nx,ny));return true}
   exitCave();return true}
-function enterOver(sx,sy,px_,py_){setRoom(genScreen(sx,sy));P.x=px_;P.y=py_;onEnter()}
+function enterOver(sx,sy,px_,py_){sx=clamp(sx|0,0,WW-1);sy=clamp(sy|0,0,WH-1);setRoom(genScreen(sx,sy));P.x=px_;P.y=py_;onEnter()}
 function enterDungeon(d){fadeTo(()=>{S.dun[d]=S.dun[d]||{unl:[],keys:[],item:0,boss:0,hc:0,vis:[]};S.keys[d]=S.keys[d]||0;G.dn=d;G.dg=genDungeon(d);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter();G.banner={s:DUN[d].n.toUpperCase(),t:120};save()})}
 function exitDungeon(){fadeTo(()=>{if(G.dn>=20){const r=G.sideRet;G.lastArea=null;enterOver(r.x,r.y,r.px,r.py);P.dir=2;return}const c=CEN[G.dn];G.lastArea=null;enterOver(c[1],c[2],112,52);P.dir=2})}
 function enterCave(c){if(G.room.cave.type==='secret'){enterSide(G.room.cave,c);return}fadeTo(()=>{G.caveRet={x:G.room.x,y:G.room.y,px:c*16,py:34};setRoom(caveRoom(G.room.cave,G.room.key));P.x=112;P.y=124;P.dir=0;onEnter()},caveTalk)}
-function enterSide(cv,c){fadeTo(()=>{const d=20+cv.sid;G.sideRet={x:G.room.x,y:G.room.y,px:c*16,py:34};S.dun[d]=S.dun[d]||{unl:[],keys:[],item:0,boss:0,hc:0,vis:[]};S.keys[d]=S.keys[d]||0;G.dn=d;G.dg=genSide(d);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter();G.banner={s:'SECRET: '+DUN[d].n.toUpperCase(),t:140};sfx('secret');save()})}
+function enterSide(cv,c){fadeTo(()=>{const d=20+cv.sid;G.sideRet=G.room.kind==='over'?{x:G.room.x,y:G.room.y,px:c*16,py:34}:{x:S.sx,y:S.sy,px:112,py:77};S.dun[d]=S.dun[d]||{unl:[],keys:[],item:0,boss:0,hc:0,vis:[]};S.keys[d]=S.keys[d]||0;G.dn=d;G.dg=genSide(d);const st=G.dg.start;st.t=dunTiles(st);setRoom(st);P.x=112;P.y=124;P.dir=0;onEnter();G.banner={s:'SECRET: '+DUN[d].n.toUpperCase(),t:140};sfx('secret');save()})}
 function exitCave(){fadeTo(()=>{const r=G.caveRet;enterOver(r.x,r.y,r.px,r.py);P.dir=2})}
 
 // ================= PLAYER =================
