@@ -4,7 +4,8 @@ An 8-bit top-down action-adventure in the spirit of classic NES games, with an o
 
 - 864-screen overworld (36x24), 14 shard dungeons plus the Obsidian Throne, 9 secret puzzle dungeons
 - Disc golf: a 27-hole course across the world. Par or better refills your hearts; a bogey or worse costs one; every 9 holes brings a scorecard with a progress report
-- 35-slot inventory: discs, weapons, potions, scrolls, mushrooms; relics and secrets to find
+- 17 underground caverns (15-35 screens each, some connecting regions) with cave-only enemies, darkness, ore to mine, and a unique reward deep in each; a Pick-Shovel to break boulders and dig up hidden entrances and buried treasure
+- 38-slot inventory: discs, weapons, potions, scrolls, mushrooms; relics and secrets to find
 - Champion duels, side quests, NPCs, bounty boards, dojos
 - Keyboard, gamepad and touch controls; Web Audio chiptune music and sound effects
 - Progress saves in the player's browser (localStorage key `wrenquest-save-v3`)
