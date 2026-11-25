@@ -401,7 +401,14 @@ const CAVES={};
   const pat=['shop','quest','fount','hint',['secret',1],'supply',['gift',1],'smith','shop',['secret',0],'fount','supply','dojo','smith',['secret',1],'quest'];
   let sid=0,qid=0,did=0,smid=0;for(let i=0;i<96;i++){const t=pat[i%pat.length];const o={type:Array.isArray(t)?t[0]:t,hidden:Array.isArray(t)?t[1]:0,id:i};if(i===8)o.type='hcshop';if(o.type==='gift'&&i>=48)o.type='hint';if(o.type==='secret'&&sid>=9){o.type=sid%2?'gems':'proshop';if(o.type==='proshop')o.hidden=0;sid++}else if(o.type==='secret')o.sid=sid++;if(o.type==='quest')o.q=qid++;if(o.type==='dojo')o.dj=did++;if(o.type==='smith')o.sm=smid++;CAVES[cand[i]]=o}
   CAVES[START.join(',')]={type:'intro',hidden:0,id:99}})();
-const BASKETS=new Set([START.join(',')]);for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y;if(!DSCR[k]&&h2(x,y,77)<0.08)BASKETS.add(k)}
+const NHOLE=27,HOLES=[],HOLEOF={};
+(()=>{const r=rng(SEED+2727),byReg=CEN.map(()=>[]);for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y;if(DSCR[k]||k===START.join(','))continue;byReg[regMap[y][x]].push([x,y])}
+  const picks=[START.slice()],has=p=>picks.some(q=>q[0]===p[0]&&q[1]===p[1]);
+  for(let i=1;i<CEN.length;i++){const L=byReg[i];if(L.length)picks.push(L[Math.floor(r()*L.length)])}
+  const big=byReg.map((L,i)=>[L.length,i]).sort((a,b)=>b[0]-a[0]);let j=0;while(picks.length<NHOLE&&j<500){const L=byReg[big[j%3][1]];const c=L[Math.floor(r()*L.length)];if(!has(c))picks.push(c);j++}
+  picks.sort((a,b)=>Math.hypot(a[0]-START[0],a[1]-START[1])-Math.hypot(b[0]-START[0],b[1]-START[1]));
+  picks.forEach((p,i)=>{const k=p[0]+','+p[1],q=h2(p[0],p[1],27),h={key:k,n:i+1,par:i===0?2:q<0.2?4:q<0.3?2:3,nm:CEN[regMap[p[1]][p[0]]][3]};HOLES.push(h);HOLEOF[k]=h})})();
+const BASKETS=new Set(HOLES.map(h=>h.key));
 const ARENA=new Set();for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y;if(k!==START.join(',')&&!DSCR[k]&&!CAVES[k]&&!BASKETS.has(k)&&regMap[y][x]!==0&&h2(x,y,99)<0.12)ARENA.add(k)}
 
 const FORT=['Your fortune: a bat will bite you. Today. Maybe twice.','Your fortune: you will find something you lost. Then lose it again.','Your fortune: the next chest holds... a chest. No wait. Treasure.','Your fortune: avoid the color red. Except hearts. And lava. Okay, avoid lava.','Your fortune is unclear. The spirits are on lunch break.'];
@@ -529,7 +536,7 @@ const RELICS=[
  {id:'hourglass',n:'SLOW HOURGLASS',d:'Enemy shots slower',msg:'SLOW HOURGLASS! Enemy shots crawl through the air.'},
  {id:'whistle',n:'WIND WHISTLE',d:'Warp to dungeons',msg:'WIND WHISTLE! Select it like an item to warp to any dungeon door you have found.'}];
 const RELM={};RELICS.forEach(r=>RELM[r.id]=r);
-const NSEC=14;
+const NSEC=15;
 const SIDES=[['Whisper Grotto','grave2','block'],['Sunken Vault','lake2','crystals'],['Ember Cellar','volcano','braziers'],['Silent Hall','snow2','silence'],['Echo Mine','mountain2','block'],['Frozen Attic','snow','crystals'],['Sand Crypt','desert2','braziers'],['Prism Burrow','swamp2','crystals'],['Ashen Den','grave','block']];
 SIDES.forEach((q,i)=>{const th=THM[q[1]];DUN[20+i]={n:q[0],f:th[0],f2:th[1],w:th[2],w2:th[3],liq:th[4],en:ENB[q[1].replace('2','')],item:RELICS[i].id,side:1,puz:q[2],lvl:1+Math.floor(i*0.8)}});
 const dlvlS=d=>DUN[d]&&DUN[d].lvl!==undefined?DUN[d].lvl:dlvl(d);
@@ -750,13 +757,13 @@ for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thu
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
 const HINTS=['Fourteen dungeons hide fourteen Ember Shards. Dungeon doors show orange on your map once found.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:2,q:{},gone:[],qgot:[],tk:{},kills:{},bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:2,bk:{},champs:0,q:{},gone:[],qgot:[],tk:{},kills:{},bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY)||localStorage.getItem('emberwake-save-v3');return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
 
 // ================= ROOMS =================
-function setRoom(room){G.trail=[];G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
+function setRoom(room){G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
 function reachCells(){const sc=clamp(Math.floor((P.x+8)/16),0,15),sw=clamp(Math.floor((P.y+11)/16),0,10),seen=new Set([sw*16+sc]),q=[[sc,sw]],out=[];
   while(q.length){const [c,w]=q.shift();if(c>=1&&c<=14&&w>=1&&w<=9&&EWALK.has(G.room.t[w*16+c]))out.push([c,w]);for(const d of DIRS){const nc=c+d[0],nw=w+d[1];if(nc<0||nc>15||nw<0||nw>10)continue;const k=nw*16+nc;if(seen.has(k)||!WALK.has(G.room.t[k]))continue;seen.add(k);q.push([nc,nw])}}return out}
 function spawnList(types,n,lvl){const far=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8&&Math.hypot(c*16-P.x,w*16-P.y)>76);for(let i=0;i<n&&far.length;i++){const [c,w]=far.splice(ri(far.length),1)[0];G.ents.push(makeEnemy(pick(types),c*16,w*16,lvl))}}
@@ -832,7 +839,7 @@ function updDuel(){const D=G.duel;D.t++;if(G.flash>0)G.flash--;
   if(D.comboT>0&&--D.comboT===0)D.combo=0;return false}
 function duelWin(e){const D=G.duel;D.phase='ko';D.t=0;D.ex=ecx(e);D.ey=ecy(e);G.shots=[];G.ents.forEach(o=>o.dead=1);sfx('boom');G.shake=16;play(null);jingle('get',null)}
 function endDuel(){const D=G.duel;G.room.t=D.saved;G.bg=buildBg(G.room);G.npcs=D.npcs;G.ents=[];G.shots=[];G.duel=null;G.lastDuelT=G.t;
-  if(D.phase==='ko'){const n=6+D.lvl;for(let i=0;i<n;i++)G.picks.push({kind:i%4===3?'heart':'gem5',x:D.ex-4+(R()-0.5)*40,y:D.ey-4+(R()-0.5)*30,z:0,vz:2+R()*2,t:900});G.picks.push({kind:'mush',mt:pickShroom(),x:D.ex,y:D.ey,z:0,vz:3,t:900});addSecret('champ');
+  if(D.phase==='ko'){const n=6+D.lvl;for(let i=0;i<n;i++)G.picks.push({kind:i%4===3?'heart':'gem5',x:D.ex-4+(R()-0.5)*40,y:D.ey-4+(R()-0.5)*30,z:0,vz:2+R()*2,t:900});G.picks.push({kind:'mush',mt:pickShroom(),x:D.ex,y:D.ey,z:0,vz:3,t:900});addSecret('champ');S.champs=(S.champs||0)+1;
     if(D.dojo!==undefined&&!S.caves.includes(D.dojo)){S.caves.push(D.dojo);S.gems=Math.min(999,S.gems+150);G.floats.push({x:128,y:60,s:'+150 GEMS',t:90,c:'#7fffd4'});const w=['axe','spear','hammer','fan'].find(x=>!S.items[x]);if(w){ITEMS[w].give();giveItem(w,'The master gives you a gift. '+ITEMS[w].msg)}}}
   else{P.inv=120}
   play(G.room.kind==='over'?'over':'cave');save()}
@@ -876,10 +883,14 @@ function updNpcs(){for(const n of G.npcs.slice()){if(n.watch&&Math.hypot(n.x-P.x
   if(G.room.kind==='over'&&['grave','volcano','snow'].includes(G.room.bn)&&R()<1/700)G.floats.push({x:20+R()*216,y:30+R()*120,s:pick(['...wren...','behind you','it sees you','so cold','hello?','not alone']),t:120,c:'#9a9ac8'})}
 function discLand(s){const tl=tileAt(s.x,s.y),c=Math.floor(s.x/16),w=Math.floor(s.y/16);
   if(tl!==null&&EWALK.has(tl)&&c>=1&&c<=14&&w>=1&&w<=9){G.picks.push({kind:'discdrop',dk:s.dk,x:s.x-4,y:s.y-3,perm:1,rt:300})}else{G.discOut=0;G.floats.push({x:P.x+8,y:P.y-6,s:'DISC RETURNED',t:40,c:'#ffe060'})}}
-function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const dist=Math.hypot(s.ox-b.cx,s.oy-b.cy),ace=dist>120;S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
+const SCORENM={'-3':'ALBATROSS!','-2':'EAGLE!','-1':'BIRDIE!','0':'PAR','1':'BOGEY','2':'DOUBLE BOGEY'};
+function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1;S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
   S.putts=(S.putts||0)+1;for(let i=0;i<30;i++)part(b.cx,b.cy,pick(['#ffe060','#ffffff','#7fffd4']),(R()-0.5)*4,(R()-0.5)*4-1,40,2,0.04);
-  G.floats.push({x:b.cx,y:b.cy-18,s:ace?'ACE!!':'CHAINS!',t:110,c:ace?'#ff80ff':'#ffe060'});G.floats.push({x:b.cx,y:b.cy-6,s:'HEARTS REFILLED',t:110,c:'#ff8090'});
-  if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+6,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace')}save()}
+  const d=h?st-h.par:0,label=ace?'ACE!!':h?(SCORENM[String(d)]||(d>0?'+'+d:'')):'CHAINS!';
+  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});G.floats.push({x:b.cx,y:b.cy-2,s:'HEARTS REFILLED',t:120,c:'#ff8090'});
+  if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+8,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace')}
+  if(h&&!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(n/9),t:110};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
+  G.strokes=0;save()}
 function bossLoot(rm){const ds=S.dun[rm.d];if(!ds.hc)G.picks.push({kind:'heartc',x:84,y:110,w:12,h:12,perm:1});if(!S.shards.includes(rm.d)&&!DUN[rm.d].boss.final)G.picks.push({kind:'shard',x:160,y:110,perm:1})}
 function roomRewards(rm,ann){const ds=S.dun[rm.d],rk=rm.x+','+rm.y;let got=0;
   if(rm.key&&!ds.keys.includes(rk)&&!G.picks.some(p=>p.kind==='key')){G.picks.push({kind:'key',x:124,y:84,perm:1,z:0,vz:ann?3:0,rk});got=1}
@@ -988,7 +999,7 @@ function useItem(){const k=S.sel;if(!k)return;const d=DIRS[P.dir],x=P.x+8,y=P.y+
   if(k.startsWith('m_')){const t=k.slice(2);if((S.bag[t]||0)<=0){cycleItem(1);return}S.bag[t]--;eatShroom(t);P.icd=20;if(S.bag[t]<=0){cycleItem(1);if(S.sel===k)S.sel=usable()[0]||null}save();return}
   if(CONS[k]){if((S.inv[k]||0)<=0){cycleItem(1);return}if(k==='s_return'&&(G.duel||G.bossDie)){sfx('tink');return}S.inv[k]--;useCons(k);P.icd=24;if(S.inv[k]<=0){cycleItem(1);if(S.sel===k)S.sel=usable()[0]||null}save();return}
   if(k.startsWith('disc_')){const D=ITEMS[k];if(G.discOut){sfx('tink');G.floats.push({x:P.x+8,y:P.y-4,s:'DISC IS OUT',t:40,c:'#ffe060'});return}let vx=IN.x,vy=IN.y;if(!vx&&!vy){vx=d[0];vy=d[1]}const l=Math.hypot(vx,vy);
-    G.shots.push({kind:'disc',dk:k,x,y,ox:x,oy:y,vx:vx/l*D.sp,vy:vy/l*D.sp,r:4,from:'p',t:0,maxT:D.t,fade:D.fade,dmg:D.dmg*(G.bf.iron>0?2:1),pierce:D.pierce||0,glow:D.glow,hit:new Set(),life:999,z:0,col:D.col});G.discOut=1;sfx('chak');P.icd=14;return}
+    G.shots.push({kind:'disc',dk:k,x,y,ox:x,oy:y,vx:vx/l*D.sp,vy:vy/l*D.sp,r:4,from:'p',t:0,maxT:D.t,fade:D.fade,dmg:D.dmg*(G.bf.iron>0?2:1),pierce:D.pierce||0,glow:D.glow,hit:new Set(),life:999,z:0,col:D.col});G.discOut=1;if(G.basket&&!G.basket.made)G.strokes=(G.strokes||0)+1;sfx('chak');P.icd=14;return}
   if(k==='boomerang'){if(G.shots.some(s=>s.kind==='brang'))return;let vx=IN.x,vy=IN.y;if(!vx&&!vy){vx=d[0];vy=d[1]}const l=Math.hypot(vx,vy);G.shots.push({kind:'brang',x,y,vx:vx/l*4.4,vy:vy/l*4.4,r:5,from:'p',t:0,ret:0,hit:new Set(),dmg:1+(swordLv()>2?1:0),life:999});sfx('chak');P.icd=10;return}
   if(k==='knives'){for(const o of [-0.22,0,0.22]){const a=Math.atan2(d[1],d[0])+o;G.shots.push({kind:'knife',x,y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,r:3,from:'p',dmg:1*(G.bf.iron>0?2:1),life:40})}sfx('arrow');P.icd=22;return}
   if(k==='thunder'){const tg=G.ents.filter(e=>!e.dead&&!e.spawn&&!e.invuln).sort((a,b)=>pdist(a)-pdist(b)).slice(0,3);if(!tg.length){sfx('tink');G.floats.push({x:P.x+8,y:P.y-4,s:'NO TARGET',t:40,c:'#ffe060'});return}
@@ -1169,6 +1180,7 @@ function updTitle(){if(AU.ctx&&AU.name!=='title'&&!AU.song)play('title');const o
   for(const e of G.tem){e.x+=e.vx+Math.sin((G.t+e.y)*0.03)*0.2;e.y+=e.vy;e.a=clamp(e.y/H,0,1)}G.tem=G.tem.filter(e=>e.y>-4);
   if(G.t>20&&(IN.pa||IN.pst)){auInit();sfx('sel');play(null);if(o[G.menu]==='CONTINUE'){const s=loadSave();if(s){S=Object.assign(newState(),s);S.wv=s.wv||0;startLoaded();return}}newGame()}}
 function updPause(){if(IN.pst||IN.pb){G.mode='play';sfx('sel');return}if(IN.pl||IN.pr){G.ppage=G.ppage?0:1;sfx('sel')}
+  if(G.ppage&&IN.pa){const n=Object.keys(S.bk).length;openCard(Math.max(1,Math.ceil(n/9)),'pause');return}
   if(!G.ppage){const NI=INV.length;let c=G.pcur||0;if(IN.pL)c=(c+NI-1)%NI;if(IN.pR)c=(c+1)%NI;if(IN.pu)c=(c+NI-7)%NI;if(IN.pd)c=(c+7)%NI;if(c!==G.pcur){G.pcur=c;sfx('text')}
     if(IN.pa||IN.pi){const k=INV[G.pcur];if(owned(k)){S.sel=k;sfx('sel')}else sfx('tink')}}}
 function updDying(){G.dieT--;if(G.dieT%6===0)P.dir=(P.dir+1)%4;updParts();if(G.dieT<=0){G.mode='over';G.menu=0}}
@@ -1181,7 +1193,7 @@ function updatePlay(){
   if(G.duel&&updDuel()){updParts();return}
   S.time+=1/60;
   for(const k in G.bf)if(k!=='bubble'&&G.bf[k]>0)G.bf[k]--;if(G.flash>0)G.flash--;
-  updPuzzle();if(G.glowT>0)G.glowT--;
+  updPuzzle();if(G.glowT>0)G.glowT--;if(G.cardPending&&--G.cardPending.t<=0&&G.mode==='play'){openCard(G.cardPending.n);G.cardPending=null;return}
   if(G.bf.vigor>0&&G.t%120===0&&S.hp<S.maxHp)S.hp++;if(G.reveal>0)G.reveal--;for(const b of G.bolts)b.t--;G.bolts=G.bolts.filter(b=>b.t>0);
   if(G.bossDie)updBossDie();else updPlayer();
   if(G.mode!=='play'&&G.mode!=='dialog'&&G.mode!=='hold')return;
@@ -1209,6 +1221,7 @@ function tick(){poll();G.t++;
   case'dying':updDying();break;
   case'over':updOver();break;
   case'win':updWin();break;
+  case'card':updCard();break;
   case'warp':updWarp();break}}
 
 // ================= RENDER =================
@@ -1358,7 +1371,30 @@ function drawBasket(b){const x=b.x,y=b.y,lit=b.made,gl=lit?'#ffe060':'#f0c040';
   for(let i=0;i<5;i++)px(ctx,(G.t>>3)%2&&lit?'#ffffff':'#c8c8d8',x+3+i*2+(i>2?1:0),y+1,1,5);
   px(ctx,'#1a1020',x+1,y+6,14,5);px(ctx,'#6a6a7a',x+2,y+7,12,3);px(ctx,gl,x+2,y+7,12,1);
   if(lit){px(ctx,'rgba(255,230,120,0.25)',x-6,y-8,28,28);if(G.t%5===0)part(x+8,y,'#ffe060',(R()-0.5)*0.8,-0.6,24,1,0)}
-  if(!lit&&Math.hypot(P.x-x,P.y-y)<40&&(G.t>>4)%2===0)txt('PUTT!',x+8,y-14,'#ffe060','center')}
+  const hh=HOLEOF[G.room.key];if(Math.hypot(P.x-x,P.y-y)<48&&hh){txt('HOLE '+hh.n+'  PAR '+hh.par,x+8,y-22,'#ffe060','center');if(G.strokes)txt('THROWS '+G.strokes,x+8,y-12,'#ffffff','center');else if(!lit&&(G.t>>4)%2===0)txt('PUTT!',x+8,y-12,'#ffffff','center')}}
+function openCard(n,from){G.card={n:Math.min(3,Math.max(1,n)),t:0,from:from||'play'};G.mode='card';sfx('secret')}
+function updCard(){const c=G.card;c.t++;const tot=Math.max(1,Math.ceil(Object.keys(S.bk).length/9));if(IN.pL&&c.n>1){c.n--;sfx('sel')}if(IN.pR&&c.n<tot){c.n++;sfx('sel')}
+  if(c.t>40&&(IN.pa||IN.pst||IN.pb)){G.mode=c.from==='pause'?'pause':'play';G.card=null;sfx('sel')}}
+function progress(){const dn=[];for(let d=1;d<=NDUN;d++)if(S.dun[d]&&S.dun[d].boss)dn.push(d);let sd=0;for(let d=20;d<29;d++)if(S.dun[d]&&S.dun[d].solved)sd++;
+  const q=S.q,qd=(q.cat===3)+(q.bones===2)+(q.shroom===2)+(q.letter===3),bt=Object.values(S.bounty).filter(b=>b.done).length,m=Math.floor(S.time/3600),mm=Math.floor(S.time/60)%60;
+  return[['SHARDS',S.shards.length+'/'+NSH],['SECRETS',S.secrets.length+'/'+NSEC],['DUNGEONS',dn.length+'/'+NDUN],['HIDDEN',sd+'/9'],['EXPLORED',Math.round(100*S.visited.length/(WW*WH))+'%'],['ITEMS',usable().length+'/'+INV.length],['HEARTS',(S.maxHp/2)+'/16'],['QUESTS',qd+'/4'],['BOUNTIES',bt+'/12'],['CHAMPIONS',''+(S.champs||0)],['TIME',m+':'+String(mm).padStart(2,'0')],['FALLS',''+S.deaths]]}
+function drawCard(){const c=G.card,ink='#2a2018',paper='#f2e8d0',line='#b8a888';px(ctx,'rgba(0,0,0,0.7)',0,0,W,H);
+  const off=Math.max(0,24-c.t*2);px(ctx,'#1a1020',3,3+off,250,226);px(ctx,paper,4,4+off,248,224);const Y=4+off;
+  px(ctx,'#2f6a3a',4,Y,248,18);txt('WREN QUEST DISC GOLF',10,Y+5,'#f2e8d0');txt('CARD '+c.n+'/3',246,Y+5,'#ffe060','right');
+  const list=Object.entries(S.bk).sort((a,b)=>a[1].o-b[1].o).slice((c.n-1)*9,c.n*9);
+  const rowY=[Y+24,Y+36,Y+48],x0=8;
+  ['HOLE','PAR','SCORE'].forEach((l,i)=>{px(ctx,i%2?'#e8dcc0':paper,x0,rowY[i],240,12);txt(l,x0+1,rowY[i]+2,ink)});
+  let tp=0,ts=0;for(let i=0;i<9;i++){const cx=x0+42+i*22,e=list[i],h=e&&HOLEOF[e[0]];px(ctx,line,cx-2,rowY[0],1,36);
+    if(h){const sc=e[1].s,d=sc-h.par;tp+=h.par;ts+=sc;txt(''+h.n,cx+9,rowY[0]+2,ink,'center');txt(''+h.par,cx+9,rowY[1]+2,ink,'center');txt(''+sc,cx+9,rowY[2]+2,sc===1?'#c020c0':d<0?'#1a6ad0':d>0?'#c03020':ink,'center');if(d<0){ctx.strokeStyle='#1a6ad0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+9.5,rowY[2]+5.5,6,0,6.28);ctx.stroke()}}
+    else{txt('-',cx+9,rowY[0]+2,line,'center');txt('-',cx+9,rowY[2]+2,line,'center')}}
+  px(ctx,ink,x0,rowY[2]+12,240,1);const diff=ts-tp;
+  txt('TOTAL '+ts+(tp?'  PAR '+tp:''),x0+2,Y+66,ink);if(tp)txt(diff===0?'EVEN':diff>0?'+'+diff:''+diff,246,Y+66,diff<0?'#1a6ad0':diff>0?'#c03020':ink,'right');
+  txt('ACES '+(S.aces||0)+'   BASKETS '+Object.keys(S.bk).length+'/'+NHOLE,x0+2,Y+78,'#5a4a3a');
+  px(ctx,'#2f6a3a',4,Y+92,248,14);txt('PROGRESS REPORT',128,Y+95,'#f2e8d0','center');
+  progress().forEach(([k,v],i)=>{const cx=i%2?132:10,cy=Y+112+Math.floor(i/2)*13;txt(k,cx,cy,'#5a4a3a');txt(v,cx+116,cy,ink,'right')});
+  const pct=Math.round(100*(S.shards.length/NSH*0.5+S.visited.length/(WW*WH)*0.2+S.secrets.length/NSEC*0.15+Object.keys(S.bk).length/NHOLE*0.15));
+  txt('ADVENTURE '+pct+'% COMPLETE',128,Y+192,'#2f6a3a','center');
+  if(c.t>40&&(G.t>>4)%2)txt((Math.ceil(Object.keys(S.bk).length/9)>1?'< > CARDS   ':'')+'A: CONTINUE',128,Y+208,'#8a6a4a','center')}
 function drawPuzzle(){const z=G.puz;if(!z)return;
   if(z.type==='crystals')for(const k in G.room.cs){const ci=G.room.cs[k];if(z.lit.includes(ci)){const [c,w]=k.split(',').map(Number);px(ctx,['rgba(255,80,80,0.55)','rgba(80,140,255,0.55)','rgba(80,220,100,0.55)','rgba(255,210,70,0.55)'][ci],c*16+2,w*16+1,12,12);if(G.t%5===0)part(c*16+8,w*16+4,'#ffffff',0,-0.5,14,1,0)}}
   if(z.type==='braziers')BZPOS.forEach(([c,w],i)=>{const v=z.bz[i];if(v>0){const f=(G.t>>2)%3,hgt=v<150&&(G.t>>3)%2?4:8;px(ctx,'#ff5a20',c*16+5,w*16+6-hgt-f,6,hgt+f);px(ctx,'#ffd040',c*16+7,w*16+7-hgt+2-f,2,hgt-2);px(ctx,'#ff7a2f',c*16+2,w*16+15,Math.round(12*v/720),1)}});
@@ -1405,7 +1441,7 @@ function drawPause(){px(ctx,'rgba(8,4,14,0.96)',0,HUD,PW,PH);const y0=HUD;
   else{drawMap(20,y0+16,2);
     const ex=['bigbag','quiver','boots','silver','aegis','storm','regen','inferno'].filter(k=>S.items[k]).concat(RELICS.map(r=>r.id).filter(k=>S.relics[k]));const sp=Math.min(17,240/Math.max(1,ex.length));ex.forEach((k,i)=>drawIcon(k,Math.round(128-ex.length*sp/2+i*sp),y0+112));
     if(!ex.length)txt('No upgrades or relics yet',128,y0+116,'#5a4a6a','center');
-    txt('SHARDS '+S.shards.length+'/'+NSH+'  SECRETS '+S.secrets.length+'/'+NSEC,128,y0+136,'#ffe0b0','center');txt('HEARTS '+(S.maxHp/2)+'   FALLS '+S.deaths,128,y0+148,'#a99db2','center');txt('Q/E ITEMS   START BACK',128,y0+164,'#5a4a6a','center')}}
+    txt('SHARDS '+S.shards.length+'/'+NSH+'  SECRETS '+S.secrets.length+'/'+NSEC,128,y0+136,'#ffe0b0','center');txt('HEARTS '+(S.maxHp/2)+'   FALLS '+S.deaths,128,y0+148,'#a99db2','center');txt('BASKETS '+Object.keys(S.bk).length+'/'+NHOLE+'   A: SCORECARD',128,y0+124,'#a0e060','center');txt('Q/E ITEMS   START BACK',128,y0+164,'#5a4a6a','center')}}
 function drawOver(){if(G.mode==='dying')return;px(ctx,'rgba(10,0,0,0.85)',0,HUD,PW,PH);txt('YOU FELL',128,HUD+50,'#ff4a3a','center',16);
   ['CONTINUE','SAVE AND QUIT'].forEach((s,i)=>{txt(s,128,HUD+92+i*16,i===G.menu?'#ffffff':'#7a6a7a','center');if(i===G.menu&&(G.t>>4)%2===0)ctx.drawImage(HEARTS[2],128-s.length*4-14,HUD+93+i*16)})}
 function drawWin(){px(ctx,'rgba(10,4,16,'+Math.min(0.92,G.winT/60)+')',0,0,W,H);if(G.winT<40)return;
@@ -1426,6 +1462,7 @@ function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
   if(G.mode==='pause')drawPause();
   if(G.mode==='over')drawOver();
   if(G.mode==='win')drawWin();
+  if(G.mode==='card')drawCard();
   if(G.mode==='fade'){const f=G.fade.t;px(ctx,'rgba(0,0,0,'+(f<20?f/20:(40-f)/20)+')',0,HUD,PW,PH)}}
 
 // ================= LOOP & UI =================
