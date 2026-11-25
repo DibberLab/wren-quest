@@ -85,6 +85,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;width
         <dt>L / C / Shift</dt><dd>Dodge roll</dd>
         <dt>Q / E</dt><dd>Switch item</dd>
         <dt>Enter / Esc</dt><dd>Inventory and map</dd>
+        <dt>Enter, E, J</dt><dd>Disc golf scorecard (from the map page)</dd>
         <dt>M</dt><dd>Music on or off</dd>
       </dl>
     </div>
@@ -98,6 +99,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;width
         <dt>Y</dt><dd>Jump</dd>
         <dt>LB / RB</dt><dd>Switch item</dd>
         <dt>Start</dt><dd>Inventory and map</dd>
+        <dt>Start, RB, A</dt><dd>Disc golf scorecard (from the map page)</dd>
       </dl>
     </div>
     <div class="card">
@@ -884,12 +886,12 @@ function updNpcs(){for(const n of G.npcs.slice()){if(n.watch&&Math.hypot(n.x-P.x
 function discLand(s){const tl=tileAt(s.x,s.y),c=Math.floor(s.x/16),w=Math.floor(s.y/16);
   if(tl!==null&&EWALK.has(tl)&&c>=1&&c<=14&&w>=1&&w<=9){G.picks.push({kind:'discdrop',dk:s.dk,x:s.x-4,y:s.y-3,perm:1,rt:300})}else{G.discOut=0;G.floats.push({x:P.x+8,y:P.y-6,s:'DISC RETURNED',t:40,c:'#ffe060'})}}
 const SCORENM={'-3':'ALBATROSS!','-2':'EAGLE!','-1':'BIRDIE!','0':'PAR','1':'BOGEY','2':'DOUBLE BOGEY'};
-function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1;S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
+function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.room.key],st=Math.max(1,G.strokes||1),ace=st===1,dd=h?st-h.par:0,hurt=dd>0;if(hurt)S.hp=Math.max(1,S.hp-2);else S.hp=S.maxHp;G.glowT=150;G.flash=12;G.flashC=null;G.shake=4;sfx('chains');jingle('get');
   S.putts=(S.putts||0)+1;for(let i=0;i<30;i++)part(b.cx,b.cy,pick(['#ffe060','#ffffff','#7fffd4']),(R()-0.5)*4,(R()-0.5)*4-1,40,2,0.04);
   const d=h?st-h.par:0,label=ace?'ACE!!':h?(SCORENM[String(d)]||(d>0?'+'+d:'')):'CHAINS!';
-  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});G.floats.push({x:b.cx,y:b.cy-2,s:'HEARTS REFILLED',t:120,c:'#ff8090'});
+  G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});G.floats.push({x:b.cx,y:b.cy-2,s:hurt?'-1 HEART':'HEARTS REFILLED',t:120,c:hurt?'#c03020':'#ff8090'});
   if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+8,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace')}
-  if(h&&!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(n/9),t:110};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
+  if(h&&!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:110};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
   G.strokes=0;save()}
 function bossLoot(rm){const ds=S.dun[rm.d];if(!ds.hc)G.picks.push({kind:'heartc',x:84,y:110,w:12,h:12,perm:1});if(!S.shards.includes(rm.d)&&!DUN[rm.d].boss.final)G.picks.push({kind:'shard',x:160,y:110,perm:1})}
 function roomRewards(rm,ann){const ds=S.dun[rm.d],rk=rm.x+','+rm.y;let got=0;
@@ -1180,7 +1182,7 @@ function updTitle(){if(AU.ctx&&AU.name!=='title'&&!AU.song)play('title');const o
   for(const e of G.tem){e.x+=e.vx+Math.sin((G.t+e.y)*0.03)*0.2;e.y+=e.vy;e.a=clamp(e.y/H,0,1)}G.tem=G.tem.filter(e=>e.y>-4);
   if(G.t>20&&(IN.pa||IN.pst)){auInit();sfx('sel');play(null);if(o[G.menu]==='CONTINUE'){const s=loadSave();if(s){S=Object.assign(newState(),s);S.wv=s.wv||0;startLoaded();return}}newGame()}}
 function updPause(){if(IN.pst||IN.pb){G.mode='play';sfx('sel');return}if(IN.pl||IN.pr){G.ppage=G.ppage?0:1;sfx('sel')}
-  if(G.ppage&&IN.pa){const n=Object.keys(S.bk).length;openCard(Math.max(1,Math.ceil(n/9)),'pause');return}
+  if(G.ppage&&IN.pa){const nx=nextHole();openCard(nx?Math.ceil(nx.n/9):1,'pause');return}
   if(!G.ppage){const NI=INV.length;let c=G.pcur||0;if(IN.pL)c=(c+NI-1)%NI;if(IN.pR)c=(c+1)%NI;if(IN.pu)c=(c+NI-7)%NI;if(IN.pd)c=(c+7)%NI;if(c!==G.pcur){G.pcur=c;sfx('text')}
     if(IN.pa||IN.pi){const k=INV[G.pcur];if(owned(k)){S.sel=k;sfx('sel')}else sfx('tink')}}}
 function updDying(){G.dieT--;if(G.dieT%6===0)P.dir=(P.dir+1)%4;updParts();if(G.dieT<=0){G.mode='over';G.menu=0}}
@@ -1372,8 +1374,9 @@ function drawBasket(b){const x=b.x,y=b.y,lit=b.made,gl=lit?'#ffe060':'#f0c040';
   px(ctx,'#1a1020',x+1,y+6,14,5);px(ctx,'#6a6a7a',x+2,y+7,12,3);px(ctx,gl,x+2,y+7,12,1);
   if(lit){px(ctx,'rgba(255,230,120,0.25)',x-6,y-8,28,28);if(G.t%5===0)part(x+8,y,'#ffe060',(R()-0.5)*0.8,-0.6,24,1,0)}
   const hh=HOLEOF[G.room.key];if(Math.hypot(P.x-x,P.y-y)<48&&hh){txt('HOLE '+hh.n+'  PAR '+hh.par,x+8,y-22,'#ffe060','center');if(G.strokes)txt('THROWS '+G.strokes,x+8,y-12,'#ffffff','center');else if(!lit&&(G.t>>4)%2===0)txt('PUTT!',x+8,y-12,'#ffffff','center')}}
+function nextHole(){return HOLES.find(h=>!S.bk[h.key])}
 function openCard(n,from){G.card={n:Math.min(3,Math.max(1,n)),t:0,from:from||'play'};G.mode='card';sfx('secret')}
-function updCard(){const c=G.card;c.t++;const tot=Math.max(1,Math.ceil(Object.keys(S.bk).length/9));if(IN.pL&&c.n>1){c.n--;sfx('sel')}if(IN.pR&&c.n<tot){c.n++;sfx('sel')}
+function updCard(){const c=G.card;c.t++;const tot=3;if(IN.pL&&c.n>1){c.n--;sfx('sel')}if(IN.pR&&c.n<tot){c.n++;sfx('sel')}
   if(c.t>40&&(IN.pa||IN.pst||IN.pb)){G.mode=c.from==='pause'?'pause':'play';G.card=null;sfx('sel')}}
 function progress(){const dn=[];for(let d=1;d<=NDUN;d++)if(S.dun[d]&&S.dun[d].boss)dn.push(d);let sd=0;for(let d=20;d<29;d++)if(S.dun[d]&&S.dun[d].solved)sd++;
   const q=S.q,qd=(q.cat===3)+(q.bones===2)+(q.shroom===2)+(q.letter===3),bt=Object.values(S.bounty).filter(b=>b.done).length,m=Math.floor(S.time/3600),mm=Math.floor(S.time/60)%60;
@@ -1381,20 +1384,21 @@ function progress(){const dn=[];for(let d=1;d<=NDUN;d++)if(S.dun[d]&&S.dun[d].bo
 function drawCard(){const c=G.card,ink='#2a2018',paper='#f2e8d0',line='#b8a888';px(ctx,'rgba(0,0,0,0.7)',0,0,W,H);
   const off=Math.max(0,24-c.t*2);px(ctx,'#1a1020',3,3+off,250,226);px(ctx,paper,4,4+off,248,224);const Y=4+off;
   px(ctx,'#2f6a3a',4,Y,248,18);txt('WREN QUEST DISC GOLF',10,Y+5,'#f2e8d0');txt('CARD '+c.n+'/3',246,Y+5,'#ffe060','right');
-  const list=Object.entries(S.bk).sort((a,b)=>a[1].o-b[1].o).slice((c.n-1)*9,c.n*9);
+  const list=HOLES.slice((c.n-1)*9,c.n*9);
   const rowY=[Y+24,Y+36,Y+48],x0=8;
   ['HOLE','PAR','SCORE'].forEach((l,i)=>{px(ctx,i%2?'#e8dcc0':paper,x0,rowY[i],240,12);txt(l,x0+1,rowY[i]+2,ink)});
-  let tp=0,ts=0;for(let i=0;i<9;i++){const cx=x0+42+i*22,e=list[i],h=e&&HOLEOF[e[0]];px(ctx,line,cx-2,rowY[0],1,36);
-    if(h){const sc=e[1].s,d=sc-h.par;tp+=h.par;ts+=sc;txt(''+h.n,cx+9,rowY[0]+2,ink,'center');txt(''+h.par,cx+9,rowY[1]+2,ink,'center');txt(''+sc,cx+9,rowY[2]+2,sc===1?'#c020c0':d<0?'#1a6ad0':d>0?'#c03020':ink,'center');if(d<0){ctx.strokeStyle='#1a6ad0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+9.5,rowY[2]+5.5,6,0,6.28);ctx.stroke()}}
-    else{txt('-',cx+9,rowY[0]+2,line,'center');txt('-',cx+9,rowY[2]+2,line,'center')}}
+  let tp=0,ts=0;for(let i=0;i<9;i++){const cx=x0+42+i*22,h=list[i],e=h&&S.bk[h.key];px(ctx,line,cx-2,rowY[0],1,36);if(h){txt(''+h.n,cx+9,rowY[0]+2,ink,'center');txt(''+h.par,cx+9,rowY[1]+2,ink,'center')}
+    if(e){const sc=e.s,d=sc-h.par;tp+=h.par;ts+=sc;txt(''+sc,cx+9,rowY[2]+2,sc===1?'#c020c0':d<0?'#1a6ad0':d>0?'#c03020':ink,'center');if(d<0){ctx.strokeStyle='#1a6ad0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+9.5,rowY[2]+5.5,6,0,6.28);ctx.stroke()}}
+    else txt('-',cx+9,rowY[2]+2,line,'center')}
   px(ctx,ink,x0,rowY[2]+12,240,1);const diff=ts-tp;
   txt('TOTAL '+ts+(tp?'  PAR '+tp:''),x0+2,Y+66,ink);if(tp)txt(diff===0?'EVEN':diff>0?'+'+diff:''+diff,246,Y+66,diff<0?'#1a6ad0':diff>0?'#c03020':ink,'right');
-  txt('ACES '+(S.aces||0)+'   BASKETS '+Object.keys(S.bk).length+'/'+NHOLE,x0+2,Y+78,'#5a4a3a');
+  let cp=0,cs=0;for(const h of HOLES){const e=S.bk[h.key];if(e){cp+=h.par;cs+=e.s}}const cd=cs-cp;
+  txt('COURSE '+(cp?(cd===0?'EVEN':cd>0?'+'+cd:''+cd):'-')+'  HOLES '+Object.keys(S.bk).length+'/'+NHOLE,x0+2,Y+78,'#5a4a3a');txt('ACES '+(S.aces||0),246,Y+78,'#5a4a3a','right');
   px(ctx,'#2f6a3a',4,Y+92,248,14);txt('PROGRESS REPORT',128,Y+95,'#f2e8d0','center');
   progress().forEach(([k,v],i)=>{const cx=i%2?132:10,cy=Y+112+Math.floor(i/2)*13;txt(k,cx,cy,'#5a4a3a');txt(v,cx+116,cy,ink,'right')});
   const pct=Math.round(100*(S.shards.length/NSH*0.5+S.visited.length/(WW*WH)*0.2+S.secrets.length/NSEC*0.15+Object.keys(S.bk).length/NHOLE*0.15));
   txt('ADVENTURE '+pct+'% COMPLETE',128,Y+192,'#2f6a3a','center');
-  if(c.t>40&&(G.t>>4)%2)txt((Math.ceil(Object.keys(S.bk).length/9)>1?'< > CARDS   ':'')+'A: CONTINUE',128,Y+208,'#8a6a4a','center')}
+  if(c.t>40&&(G.t>>4)%2)txt('< > CARDS   A: CONTINUE',128,Y+208,'#8a6a4a','center')}
 function drawPuzzle(){const z=G.puz;if(!z)return;
   if(z.type==='crystals')for(const k in G.room.cs){const ci=G.room.cs[k];if(z.lit.includes(ci)){const [c,w]=k.split(',').map(Number);px(ctx,['rgba(255,80,80,0.55)','rgba(80,140,255,0.55)','rgba(80,220,100,0.55)','rgba(255,210,70,0.55)'][ci],c*16+2,w*16+1,12,12);if(G.t%5===0)part(c*16+8,w*16+4,'#ffffff',0,-0.5,14,1,0)}}
   if(z.type==='braziers')BZPOS.forEach(([c,w],i)=>{const v=z.bz[i];if(v>0){const f=(G.t>>2)%3,hgt=v<150&&(G.t>>3)%2?4:8;px(ctx,'#ff5a20',c*16+5,w*16+6-hgt-f,6,hgt+f);px(ctx,'#ffd040',c*16+7,w*16+7-hgt+2-f,2,hgt-2);px(ctx,'#ff7a2f',c*16+2,w*16+15,Math.round(12*v/720),1)}});
@@ -1417,8 +1421,8 @@ function drawMap(x0,y0,big){const r=G.room;
       if(ds.vis.includes(k))px(ctx,o.boss?'#a03030':'#5a6a8a',vx,vy,cw-1,chh-1);else if(o.boss)px(ctx,'#4a1a1a',vx,vy,cw-1,chh-1);
       if(o===r&&(G.t>>3)%2)px(ctx,'#7fffd4',vx+1,vy+1,cw-3,chh-3)}return}
   const cw=big?6:2,chh=big?3:1,cur=r.kind==='over'?r.key:(G.caveRet?G.caveRet.x+','+G.caveRet.y:'');
-  for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y,vis=S.visited.includes(k);px(ctx,vis?'#4a4458':'#1c1824',x0+x*cw,y0+y*chh,cw-(big?1:0),chh-(big?1:0));if(vis&&BASKETS.has(k)&&big)px(ctx,'#a0e060',x0+x*cw+2,y0+y*chh+1,1,1);if(vis&&DSCR[k])px(ctx,S.shards.includes(DSCR[k])?'#7fffd4':'#ff7a2f',x0+x*cw,y0+y*chh,cw,chh);if(k===cur&&(G.t>>3)%2)px(ctx,'#ffffff',x0+x*cw,y0+y*chh,cw,chh)}
-  if(S.relics.lens||G.bf.sight>0){const dot=(k,c)=>{const q=k.split(',').map(Number);px(ctx,c,x0+q[0]*cw+(big?1:0),y0+q[1]*chh,big?cw-2:cw,big?chh-1:chh)};for(const k in CAVES){const cv=CAVES[k];if(cv.type==='secret')dot(k,'#ffe060');else if(cv.hidden&&!S.opened.includes(k))dot(k,'#ff60ff')}for(const k in QAT)if(!S.qgot.includes(QAT[k].id))dot(k,'#60e0ff');if(big)for(const k of BASKETS)dot(k,'#a0e060')}}
+  for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y,vis=S.visited.includes(k);px(ctx,vis?'#4a4458':'#1c1824',x0+x*cw,y0+y*chh,cw-(big?1:0),chh-(big?1:0));if(vis&&BASKETS.has(k)&&big)px(ctx,S.bk[k]?'#a0e060':'#ffffff',x0+x*cw+2,y0+y*chh+1,1,1);if(vis&&DSCR[k])px(ctx,S.shards.includes(DSCR[k])?'#7fffd4':'#ff7a2f',x0+x*cw,y0+y*chh,cw,chh);if(k===cur&&(G.t>>3)%2)px(ctx,'#ffffff',x0+x*cw,y0+y*chh,cw,chh)}
+  if(S.relics.lens||G.bf.sight>0){const dot=(k,c)=>{const q=k.split(',').map(Number);px(ctx,c,x0+q[0]*cw+(big?1:0),y0+q[1]*chh,big?cw-2:cw,big?chh-1:chh)};for(const k in CAVES){const cv=CAVES[k];if(cv.type==='secret')dot(k,'#ffe060');else if(cv.hidden&&!S.opened.includes(k))dot(k,'#ff60ff')}for(const k in QAT)if(!S.qgot.includes(QAT[k].id))dot(k,'#60e0ff');if(big)for(const k of BASKETS)dot(k,S.bk[k]?'#a0e060':'#ffffff')}}
 function drawHUD(){px(ctx,'#000',0,0,W,HUD);if(!S)return;
   txt(areaName(),8,4,'#ffcf9a');txt('-LIFE-',204,4,'#ff5a4a','center');
   drawMap(8,16,false);
