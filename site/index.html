@@ -143,31 +143,31 @@ function midi(n){const m=/^([A-G])([#b]?)(-?\d)$/.exec(n);return NI[m[1]]+(m[2]=
 const fq=m=>440*Math.pow(2,(m-69)/12);
 function chordNotes(n){const m=/^([A-G])([#b]?)(m?)$/.exec(n);const r=NI[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0);return[r,r+(m[3]?3:4),r+7]}
 const SONGS={
-  title:{bpm:92,loop:1,arp:1,lw:0.25,drum:'k.......s.......',chords:'G|Em|C|D|G|C|Am D|G',
-    lead:'G4:4 D5:4 G5:6 F#5:2 | E5:4 D5:4 B4:8 | C5:4 E5:4 A5:6 G5:2 | F#5:8 D5:8 | G5:4 A5:4 B5:6 A5:2 | G5:4 E5:4 C5:8 | A4:4 C5:4 F#5:4 E5:4 | G5:16'},
-  over:{bpm:132,loop:1,pad:1,lw:0.5,drum:'k.h.s.h.k.h.s.hs',chords:'D|D|G|A|D|G|D A|D|G|D|Em|A|G|D Bm|A|D',
-    lead:'D5:6 A4:2 D5:3 E5:1 F#5:2 G5:2 | A5:8 F#5:4 D5:4 | G5:6 F#5:2 E5:3 D5:1 E5:2 F#5:2 | E5:12 .:4 | D5:6 A4:2 D5:3 E5:1 F#5:2 A5:2 | B5:8 A5:4 G5:4 | F#5:3 G5:1 A5:4 E5:3 F#5:1 G5:4 | D5:12 .:4 | B5:6 A5:2 G5:4 B5:4 | A5:6 G5:2 F#5:4 D5:4 | G5:3 A5:1 B5:4 C#6:3 D6:1 E6:4 | C#6:12 A5:4 | B5:6 A5:2 G5:4 E5:4 | F#5:6 E5:2 D5:4 B4:4 | E5:3 F#5:1 G5:4 A5:3 B5:1 C#6:4 | D6:12 .:4'},
-  dun:{bpm:112,loop:1,arp:1,lw:0.5,drum:'k.......k...s...',chords:'Dm|Dm|Bb|A|Dm|Dm|A|Dm|Dm|A|Dm Gm|A',
-    lead:'D5:2 .:2 F5:2 .:2 E5:2 D5:2 C#5:4 | D5:4 A4:4 .:8 | Bb4:2 .:2 D5:2 .:2 C5:2 Bb4:2 A4:4 | G4:4 A4:4 .:8 | D5:2 F5:2 A5:2 G5:2 F5:2 E5:2 D5:2 C#5:2 | D5:6 E5:2 F5:4 G5:4 | A5:4 G5:2 F5:2 E5:4 C#5:4 | D5:8 .:8 | A4:2 .:2 C5:2 .:2 D5:2 .:2 F5:4 | E5:4 D5:4 C#5:8 | D5:2 E5:2 F5:2 G5:2 A5:4 Bb5:4 | A5:8 .:8'},
-  boss:{bpm:168,loop:1,arp:1,lw:0.125,drum:'k.hks.hkk.hks.hs',chords:'Em|Em|C|B|C|B|Em|Em',
-    lead:'E5:2 E5:2 G5:2 E5:2 A5:2 E5:2 B5:2 A5:2 | G5:2 F#5:2 E5:2 D5:2 E5:8 | E5:2 E5:2 G5:2 E5:2 C6:2 B5:2 A5:2 G5:2 | F#5:2 G5:2 A5:2 B5:2 B5:8 | C6:4 B5:4 A5:4 G5:4 | A5:4 G5:4 F#5:4 D#5:4 | E5:2 G5:2 B5:2 E6:2 D6:2 B5:2 G5:2 B5:2 | E6:4 B5:4 E5:8'},
-  duel:{bpm:176,loop:1,arp:1,lw:0.25,drum:'k.hsk.hsk.hskshs',chords:'Em|Em|Em|Em|Am|D|G C|B',
+  title:{bpm:78,loop:1,pad:1,doom:1,pow:1,lw:0.25,drum:'K...............t.......K...T.t.c...............t...t...K.......',chords:'Dm|Bb|C|A|Dm|Gm|Bb A|Dm',
+    lead:'D5:8 A4:4 D5:4 | F5:6 E5:2 D5:4 Bb4:4 | C5:6 D5:2 E5:4 G5:4 | A5:12 .:4 | D6:6 C6:2 A5:4 F5:4 | G5:6 F5:2 D5:4 Bb4:4 | D5:4 F5:4 E5:4 C#5:4 | D5:16'},
+  over:{bpm:120,loop:1,gal:1,pow:1,lw:0.5,drum:'k.h.s.hkk.h.s.h.k.h.s.hkk.h.sTtt',chords:'Dm|Dm|Bb|C|Dm|Dm|Gm|A|F|C|Dm|Bb|Gm|A|Dm|A',
+    lead:'D5:4 A4:2 D5:2 F5:4 E5:2 D5:2 | A5:8 G5:4 F5:4 | Bb5:4 A5:2 G5:2 F5:4 D5:4 | E5:8 C5:4 E5:4 | D5:4 A4:2 D5:2 F5:4 G5:2 A5:2 | D6:8 C6:4 A5:4 | Bb5:4 A5:2 G5:2 A5:4 F5:4 | E5:12 C#5:4 | F5:4 G5:2 A5:2 C6:4 A5:4 | G5:4 E5:4 C5:8 | D5:4 F5:2 A5:2 D6:4 A5:4 | Bb5:6 A5:2 G5:4 F5:4 | G5:4 Bb5:4 D6:4 Bb5:4 | A5:4 G5:2 F5:2 E5:4 C#5:4 | D5:4 F5:2 A5:2 D6:6 C6:2 | A5:8 E5:4 C#5:4'},
+  dun:{bpm:90,loop:1,doom:1,pow:1,arp:1,lw:0.5,drum:'K.......t.......K.......t...c...',chords:'Dm|Eb|Dm|C|Dm|Eb|Bb|A',
+    lead:'D5:4 .:2 Eb5:2 D5:8 | G5:4 F5:4 Eb5:8 | D5:2 .:2 F5:2 .:2 A5:4 G5:4 | F5:4 Eb5:4 C5:8 | D5:4 .:2 Eb5:2 F5:4 G5:4 | Bb5:6 A5:2 G5:4 Eb5:4 | F5:4 D5:4 Bb4:8 | A4:8 C#5:4 E5:4'},
+  boss:{bpm:150,loop:1,gal:1,pow:1,doom:1,lw:0.125,drum:'K.hks.hkK.hks.hsK.hks.hkK.TtTtc.',chords:'Em|C|Am|B|Em|C|D|B',
+    lead:'E5:2 E5:2 B4:2 E5:2 G5:4 F#5:2 E5:2 | G5:2 G5:2 E5:2 G5:2 C6:4 B5:2 A5:2 | A5:2 A5:2 E5:2 A5:2 C6:4 B5:2 A5:2 | B5:8 D#5:4 F#5:4 | E6:4 D6:2 B5:2 G5:4 E5:4 | C6:4 B5:2 A5:2 G5:4 E5:4 | D6:4 C6:2 A5:2 F#5:4 D5:4 | B5:4 A5:2 G5:2 F#5:4 D#5:4'},
+  duel:{bpm:164,loop:1,gal:1,pow:1,lw:0.25,drum:'K.hsk.hsK.hskshsK.hsk.hsK.hsTtTc',chords:'Em|Em|Em|Em|Am|D|G C|B',
     lead:'B4:2 E5:2 B4:2 E5:2 G5:2 F#5:2 E5:2 D5:2 | E5:4 B4:2 E5:2 G5:4 A5:4 | B5:2 A5:2 G5:2 F#5:2 G5:2 F#5:2 E5:2 D5:2 | E5:8 B4:4 E5:4 | C6:2 B5:2 A5:2 G5:2 A5:2 G5:2 F#5:2 E5:2 | F#5:4 D5:4 A5:4 F#5:4 | G5:2 A5:2 B5:2 C6:2 D6:2 C6:2 B5:2 A5:2 | B5:8 D#5:4 F#5:4'},
-  deep:{bpm:84,loop:1,arp:1,lw:0.5,drum:'k.......h.......',chords:'Am|Am|F|E|Am|Dm|E|Am',
-    lead:'A4:4 .:2 C5:2 E5:4 D5:4 | C5:4 B4:4 A4:8 | F4:4 .:2 A4:2 C5:4 B4:4 | G#4:8 E4:8 | A4:2 C5:2 E5:2 A5:2 G5:4 E5:4 | F5:4 E5:4 D5:4 C5:4 | B4:4 D5:4 F5:4 E5:4 | A4:16'},
+  deep:{bpm:70,loop:1,doom:1,arp:1,lw:0.5,drum:'K...............t.......t.t.....',chords:'Am|Bb|Am|G|Am|F|E|Am',
+    lead:'A4:8 C5:4 E5:4 | F5:6 E5:2 D5:4 Bb4:4 | A4:4 E5:4 A5:8 | G5:6 F5:2 E5:4 D5:4 | C5:4 E5:4 A5:4 G5:4 | F5:8 C5:8 | E5:4 G#5:4 B5:4 G#5:4 | A5:16'},
   cave:{bpm:100,loop:1,arp:1,lw:0.25,drum:'k...h...k...h...',chords:'C|F|C G|C',
     lead:'E5:2 G5:2 C6:4 B5:2 G5:2 E5:4 | F5:2 A5:2 D6:4 C6:2 A5:2 F5:4 | E5:2 G5:2 C6:2 E6:2 D6:4 B5:4 | C6:12 .:4'},
   get:{bpm:160,dbl:1,lead:'C5:2 E5:2 G5:2 C6:4 .:2 G5:2 C6:10'},
   shard:{bpm:150,dbl:1,lead:'G4:2 B4:2 D5:2 G5:2 A4:2 C#5:2 E5:2 A5:2 B5:2 D6:2 F#6:14'},
-  over_:{bpm:100,dbl:1,lead:'E5:4 D5:4 C5:4 B4:4 A4:4 G#4:4 A4:16'},
+  over_:{bpm:80,dbl:1,lead:'A4:4 G4:4 F4:4 E4:4 D4:4 C#4:4 D4:16'},
   win:{bpm:140,dbl:1,lead:'C5:2 E5:2 G5:2 C6:4 G5:2 C6:2 E6:4 D6:2 C6:2 D6:2 E6:14'}
 };
 function buildSong(s){
   let t=0;const lead=[];
   s.lead.split(/[\s|]+/).filter(Boolean).forEach(tok=>{const p=tok.split(':');const dd=+p[1];if(p[0]!=='.')lead.push([t,midi(p[0]),dd]);t+=dd});
   s.len=t;s.ev=Array.from({length:t},()=>[]);
-  for(const [tt,m,d] of lead){s.ev[tt].push(['L',m,d]);if(s.dbl)s.ev[tt].push(['T',m-12,d])}
-  if(s.chords)s.chords.split('|').forEach((bar,bi)=>{const cs=bar.trim().split(/\s+/),span=16/cs.length;cs.forEach((c,ci)=>{const nt=chordNotes(c),st=bi*16+ci*span;for(let i=0;i<span;i+=2){const tt=st+i;if(tt>=t)break;const k=i/2;s.ev[tt].push(['B',48+nt[0]+(k%2?12:0),2]);if(s.arp)s.ev[tt].push(['A',60+nt[k%3],2])}if(s.pad)s.ev[st].push(['H',60+nt[1]+(nt[1]<5?12:0),span])})});
+  for(const [tt,m,d] of lead){s.ev[tt].push(['L',m,d]);if(s.dbl)s.ev[tt].push(['T',m-12,d]);if(s.pow)s.ev[tt].push(['P',m-7,d])}
+  if(s.chords)s.chords.split('|').forEach((bar,bi)=>{const cs=bar.trim().split(/\s+/),span=16/cs.length;cs.forEach((c,ci)=>{const nt=chordNotes(c),st=bi*16+ci*span;if(s.doom&&st<t)s.ev[st].push(['S',36+nt[0],Math.min(span,t-st)]);if(s.gal)for(let b=0;b<span;b+=4)for(const [o,dd] of [[0,2],[2,1],[3,1]]){const tt=st+b+o;if(tt<t)s.ev[tt].push(['G',(nt[0]<5?48:36)+nt[0],dd])}for(let i=0;i<span;i+=2){const tt=st+i;if(tt>=t)break;const k=i/2;if(!s.gal)s.ev[tt].push(['B',48+nt[0]+(k%2?12:0),2]);if(s.arp)s.ev[tt].push(['A',60+nt[k%3],2])}if(s.pad)s.ev[st].push(['H',60+nt[1]+(nt[1]<5?12:0),span])})});
   if(s.drum)for(let i=0;i<t;i++){const c=s.drum[i%s.drum.length];if(c!=='.')s.ev[i].push(['D',c])}
 }
 Object.values(SONGS).forEach(buildSong);
@@ -188,7 +188,13 @@ function playEv(ev,t,sp,s){const d=AU.mus;switch(ev[0]){
   case'B':tone(t,fq(ev[1]),ev[2]*sp*0.85,'triangle',0.3,d);break;
   case'A':tone(t,fq(ev[1]),ev[2]*sp*0.5,0.125,0.04,d);break;
   case'H':tone(t,fq(ev[1]),ev[2]*sp*0.9,0.25,0.045,d);break;
-  case'D':if(ev[1]==='k')kick(t,d,0.5);else if(ev[1]==='s'){nz(t,0.12,0.2,1500,d);tone(t,190,0.06,'triangle',0.15,d,{slide:120})}else nz(t,0.03,0.07,7000,d);break}}
+  case'P':tone(t,fq(ev[1]),ev[2]*sp*0.9,0.25,0.05,d);break;
+  case'G':tone(t,fq(ev[1]),ev[2]*sp*0.8,0.5,0.075,d);tone(t,fq(ev[1]-12),ev[2]*sp*0.8,'triangle',0.22,d);break;
+  case'S':drone(t,fq(ev[1]),ev[2]*sp,d);break;
+  case'D':if(ev[1]==='K'){kick(t,d,0.85);nz(t,0.18,0.12,70,d)}else if(ev[1]==='t')tone(t,150,0.22,'triangle',0.3,d,{slide:65});else if(ev[1]==='T')tone(t,230,0.18,'triangle',0.26,d,{slide:110});else if(ev[1]==='c')nz(t,1.1,0.13,5000,d);else if(ev[1]==='k')kick(t,d,0.5);else if(ev[1]==='s'){nz(t,0.12,0.2,1500,d);tone(t,190,0.06,'triangle',0.15,d,{slide:120})}else nz(t,0.03,0.07,7000,d);break}}
+function drone(t,f,dur,dest){const a=AU.ctx,lp=a.createBiquadFilter(),g=a.createGain();lp.type='lowpass';lp.frequency.setValueAtTime(260,t);lp.frequency.linearRampToValueAtTime(520,t+dur*0.5);lp.frequency.linearRampToValueAtTime(260,t+dur);lp.Q.value=4;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.09,t+0.04);g.gain.setValueAtTime(0.09,t+dur*0.9);g.gain.linearRampToValueAtTime(0,t+dur);lp.connect(g);g.connect(dest);
+  for(const dt of [-6,6,0]){const o=a.createOscillator();o.type=dt?'sawtooth':'square';o.frequency.setValueAtTime(dt?f:f/2,t);o.detune.value=dt;o.connect(lp);o.start(t);o.stop(t+dur+0.02)}}
 function tone(t,f,dur,type,vol,dest,o){const a=AU.ctx;o=o||{};const os=a.createOscillator(),g=a.createGain();
   if(typeof type==='number')os.setPeriodicWave(AU.waves[type]);else os.type=type;
   os.frequency.setValueAtTime(f,t);if(o.slide)os.frequency.exponentialRampToValueAtTime(o.slide,t+dur);
@@ -782,7 +788,7 @@ const AI={
     if(e.st===1){if(--e.jt<=0){e.st=2;e.jt=22;const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*2.3;e.vy=Math.sin(a)*2.3;e.face=e.vx<0;sfx('roar')}return}
     if(e.st===0&&(e.gt=(e.gt||0)+1)%220===0)gooAt(ecx(e),ecy(e)+6,0);
     const a=Math.atan2(P.y-e.y,P.x-e.x),cl=pdist(e)<110,mx=cl?Math.cos(a)*e.sp:DIRS[e.dir][0]*e.sp*0.6,my=cl?Math.sin(a)*e.sp:DIRS[e.dir][1]*e.sp*0.6;if(emove(e,mx,my)||R()<0.01)e.dir=ri(4);if(Math.abs(mx)>0.05)e.face=mx<0;
-    if(e.t>0)e.t--;else if(pdist(e)<64){if(!e.charmChk){e.charmChk=1;if(G.room.kind==='over'&&!G.duel&&!G.duelPending&&swordLv()&&G.t-(G.lastDuelT||-1e9)>1800&&R()<0.3){e.dead=1;e.noCount=1;puff(ecx(e),ecy(e),'#ff80c0',16,1.6);G.floats.push({x:ecx(e),y:ecy(e)-12,s:'SHE IS SMITTEN!',t:70,c:'#ff80c0'});G.duelPending='marebear';G.duelLvl=G.room.lvl;return}}e.st=1;e.jt=34;e.face=P.x<e.x}},
+    if(e.t>0)e.t--;else if(pdist(e)<64){if(!e.charmChk){e.charmChk=1;if(G.room.kind==='over'&&!G.duel&&!G.duelPending&&swordLv()&&G.t-(G.lastDuelT||-1e9)>(S.mareHearts>0?900:1800)&&R()<(S.mareHearts>0?0.6:0.3)){e.dead=1;e.noCount=1;puff(ecx(e),ecy(e),'#ff80c0',16,1.6);G.floats.push({x:ecx(e),y:ecy(e)-12,s:S.mareHearts>0?'SHE HAS YOUR HEART!':'SHE IS SMITTEN!',t:70,c:'#ff80c0'});G.duelPending='marebear';G.duelLvl=G.room.lvl;return}}e.st=1;e.jt=34;e.face=P.x<e.x}},
   toad(e){if(e.z>0||e.vz>0){e.z+=e.vz;e.vz-=0.25;emove(e,e.vx,e.vy);if(e.z<=0){e.z=0;e.vz=0;e.t=40+ri(50)}return}if(e.t--<=0){const a=pdist(e)<120&&R()<0.7?Math.atan2(P.y-e.y,P.x-e.x):R()*6.28;e.vx=Math.cos(a)*1.3;e.vy=Math.sin(a)*1.3;e.vz=3;e.z=0.1;e.face=e.vx<0}},
   thornback(e){if(e.st===2){if(emove(e,e.vx,0))e.vx*=-1;if(emove(e,0,e.vy))e.vy*=-1;if(--e.jt<=0){e.st=3;e.jt=50}return}
     if(e.st===1){if(--e.jt<=0){e.st=2;e.jt=70;const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*2.4;e.vy=Math.sin(a)*2.4;sfx('roll')}return}
@@ -1011,7 +1017,7 @@ for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thu
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
 const HINTS=['Fourteen dungeons hide fourteen Ember Shards. Dungeon doors show orange on your map once found.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:2,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:2,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY)||localStorage.getItem('emberwake-save-v3');return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
@@ -1106,8 +1112,8 @@ function duelWin(e){const D=G.duel;D.phase='ko';D.t=0;D.ex=ecx(e);D.ey=ecy(e);G.
 function endDuel(){const D=G.duel;G.room.t=D.saved;G.bg=buildBg(G.room);G.npcs=D.npcs;G.ents=[];G.shots=[];G.duel=null;G.lastDuelT=G.t;unstick();
   if(D.phase==='ko'){const n=3+Math.ceil(D.lvl/2);for(let i=0;i<n;i++)G.picks.push({kind:i%4===3?'heart':'gem5',x:D.ex-4+(R()-0.5)*40,y:D.ey-4+(R()-0.5)*30,z:0,vz:2+R()*2,t:900});G.picks.push({kind:'mush',mt:pickShroom(),x:D.ex,y:D.ey,z:0,vz:3,t:900});addSecret('champ');S.champs=(S.champs||0)+1;
     if(D.dojo!==undefined&&!S.caves.includes(D.dojo)){S.caves.push(D.dojo);S.gems=Math.min(999,S.gems+150);G.floats.push({x:128,y:60,s:'+150 GEMS',t:90,c:'#7fffd4'});const w=['axe','spear','hammer','fan'].find(x=>!S.items[x]);if(w){ITEMS[w].give();giveItem(w,'The master gives you a gift. '+ITEMS[w].msg)}}}
-  else{P.inv=120;if(D.lovelost){S.maxHp=Math.max(6,S.maxHp-2);S.hp=Math.min(Math.max(S.hp,2),S.maxHp);save();setTimeout(()=>{if(G.mode==='play')say('You fell head over heels for the Marebear. She ambles off into the woods with one of your heart containers. (Max life down one heart.)')},300)}}
-  if(D.type==='marebear'&&D.phase==='ko')gooAt(D.ex,D.ey+4,1)
+  else{P.inv=120;if(D.lovelost){const took=S.maxHp>6;S.maxHp=Math.max(6,S.maxHp-2);S.hp=Math.min(Math.max(S.hp,2),S.maxHp);if(took)S.mareHearts=(S.mareHearts||0)+1;save();setTimeout(()=>{if(G.mode==='play')say(took?'You fell head over heels for the Marebear. She ambles off into the woods with one of your heart containers. Beat a Marebear in a duel to win it back. (Max life down one heart.)':'You fell head over heels for the Marebear... but your heart is too small to take. She sighs and wanders off.')},300)}}
+  if(D.type==='marebear'&&D.phase==='ko'){gooAt(D.ex,D.ey+4,1);if(S.mareHearts>0){S.mareHearts--;giveHeart('You won your HEART back from the Marebear! It is a little sticky.')}}
   play(G.room.kind==='over'?'over':'cave');save()}
 // ---- mushrooms ----
 function useCons(k){const fl=(s,c)=>G.floats.push({x:P.x+8,y:P.y-8,s,t:70,c:c||'#ffe0b0'});
@@ -1741,7 +1747,7 @@ function drawDuelHUD(){const D=G.duel,ch=G.ents.find(e=>e.champ);px(ctx,'rgba(0,
   txt('VS',128,4,'#ffe060','center');
   if(D.combo>=2)txt(D.combo+' HIT COMBO!',128,PH-14,'#ffe060','center');
   const big=(s,c)=>{px(ctx,'rgba(0,0,0,0.6)',0,70,PW,30);txt(s,128,s.length>15?81:77,c,'center',s.length>15?8:16)};
-  if(D.phase==='ready'){if(D.t<50)big(D.dojo!==undefined?'DOJO DUEL':D.type==='marebear'?'A MAREBEAR IS SMITTEN!':'A CHAMPION APPEARS!'.slice(0,Math.floor(D.t/2)),'#ff6040');else if(D.t<90)big(CHAMPS[D.type].n,'#ffe0b0');else big('FIGHT!','#ffe060')}
+  if(D.phase==='ready'){if(D.t<50)big(D.dojo!==undefined?'DOJO DUEL':D.type==='marebear'?(S.mareHearts>0?'WIN YOUR HEART BACK!':'A MAREBEAR IS SMITTEN!'):'A CHAMPION APPEARS!'.slice(0,Math.floor(D.t/2)),'#ff6040');else if(D.t<90)big(CHAMPS[D.type].n,'#ffe0b0');else big('FIGHT!','#ffe060')}
   if(D.phase==='ko')big('K.O.!','#ffe060');if(D.phase==='lost')big(D.lovelost?'SMITTEN...':'DEFEATED...',D.lovelost?'#ff80c0':'#ff4040');
   if(D.type==='marebear'){const l=Math.round(D.love||0);px(ctx,'rgba(0,0,0,0.7)',96,16,64,9);txt('LOVE',99,17,'#ff80c0');px(ctx,'#000',122,18,35,5);px(ctx,'#3a1028',123,19,33,3);px(ctx,l>70&&(G.t>>3)%2?'#ffffff':'#ff5aa0',123,19,Math.round(33*l/100),3)}}
 function drawBuffs(){if(G.room&&(G.mode==='play'||G.mode==='hold')){const mx=stMax();if(P.st<mx-0.5){const w=14,f=Math.round(w*P.st/mx),x=Math.round(P.x+1),y=Math.round(P.y-6-(P.z||0));px(ctx,'#000',x-1,y-1,w+2,4);px(ctx,P.winded?((G.t>>3)%2?'#ff5040':'#a03020'):P.st>100?'#f4f4ec':'#60d860',x,y,f,2)}}if(S.relics.echo&&S.echoLeft>0){relicIcon('echo',3,PH-44);txt(''+S.echoLeft,20,PH-40,'#7fffd4')}let i=0;for(const [k,c,m] of [['swift','#3070ff',1200],['iron','#ff8030',1200],['giant','#9040c0',900],['ghost','#e8e8f8',600],['tiny','#ff80ff',600],['flip','#ff80ff',420],['rainbow','#ff80ff',600],['chill','#80d0ff',150],['sticky','#e8e4c8',30]]){const v=G.bf[k];if(v>0){const y=PH-8-i*6;px(ctx,'#000',4,y,34,4);px(ctx,c,5,y+1,Math.round(32*v/m),2);i++}}}

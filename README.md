@@ -5,13 +5,13 @@ An 8-bit top-down action-adventure in the spirit of classic NES games, with an o
 - 864-screen overworld (36x24), 14 shard dungeons plus the Obsidian Throne, 9 secret puzzle dungeons
 - Disc golf: a 27-hole course across the world. Par or better refills your hearts; a bogey or worse costs one; every 9 holes brings a scorecard with a progress report
 - 17 underground caverns (15-35 screens each, some connecting regions) with cave-only enemies, dim lighting, ore to mine, and a unique reward deep in each; a Pick-Shovel to break boulders and dig up hidden entrances and buried treasure
-- 30 kinds of monster (15 added in this update), from the common Marebear, who oozes sticky white goo and sometimes gets smitten and starts a charm duel (fill her love meter and she walks off with a heart container), to gem-stealing ravens, rolling thornbacks and sleeping boulderkin
+- 30 kinds of monster (15 added in this update), from the common Marebear, who oozes sticky white goo and sometimes gets smitten and starts a charm duel (fill her love meter and she walks off with a heart container; beat a Marebear in the next duel to win it back), to gem-stealing ravens, rolling thornbacks and sleeping boulderkin
 - Stamina: tap B to roll, hold it to sprint; jumping, rolling, sprinting, spin attacks and heavy swings use stamina, which refills quickly; run dry and you're winded for a moment
 - Jump places: hurdles to leap, rune stones to land on (they sink stone pillars), and treasure islands in moats (wide moats need a sprinting jump)
 - People of the land wander the overworld: talkers, sages, traders, gift-givers, thieves you can chase across screens, bandits, and challengers who start duels
 - 34-slot inventory: discs, weapons, potions, scrolls, and only the rare high-powered mushrooms (most mushrooms take effect when you pick them up); relics and secrets to find
 - Champion duels, side quests, NPCs, bounty boards, dojos
-- Keyboard, gamepad and touch controls; Web Audio chiptune music and sound effects
+- Keyboard, gamepad and touch controls; Web Audio chiptune music (epic, doomy minor-key themes with drones, galloping bass and toms) and sound effects
 - Progress saves in the player's browser (localStorage key `wrenquest-save-v3`)
 
 ## How it runs
