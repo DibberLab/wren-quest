@@ -13,6 +13,7 @@ An 8-bit top-down action-adventure game (original IP: hero Wren, the Ember Crown
 - World generation is seeded (`SEED`), so the map is the same for every player. Changing `SEED`, `WW`/`WH`, `CEN`, or the cave pattern reshuffles the world and old saves will point at different places: bump `SKEY` when you do that.
 - Saves live in the player's localStorage under `SKEY` (currently `wrenquest-save-v3`). `loadSave()` also reads the pre-rename key `emberwake-save-v3`, so keep that fallback. New state fields go in `newState()`; loading does `Object.assign(newState(), save)`, so new fields get defaults on old saves.
 - Music and sound effects are synthesized with Web Audio (`SONGS`, `sfx()`). Keep the music original; do not reproduce melodies from existing games.
+- Disc golf: `HOLES`/`HOLEOF`/`BASKETS` define the 27-hole course (seeded, one per region in `CEN` plus 3, numbered by distance from `START`). Strokes are counted per screen visit in `G.strokes`; first-time results are saved in `S.bk`. Every 9 holes `openCard()` shows the scorecard (`drawCard()`, stats from `progress()`).
 - Sprites are pixel strings in `SPR`; palettes are swapped per enemy tier. The hero's floppy cap is drawn procedurally in `drawCap()`.
 - Test in a browser before shipping: start a new game, walk a few screens, open the inventory (Enter), enter a dungeon, and check the console is clean.
 

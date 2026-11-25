@@ -3,7 +3,7 @@
 An 8-bit top-down action-adventure in the spirit of classic NES games, with an original hero, world and chiptune soundtrack. Live at **https://quest.dibberlab.me**.
 
 - 864-screen overworld (36x24), 14 shard dungeons plus the Obsidian Throne, 9 secret puzzle dungeons
-- Disc golf: throw discs, sink them in baskets across the world to refill your hearts
+- Disc golf: a 27-hole course across the world. Sinking a basket refills your hearts; every 9 holes brings a scorecard with a progress report
 - 35-slot inventory: discs, weapons, potions, scrolls, mushrooms; relics and secrets to find
 - Champion duels, side quests, NPCs, bounty boards, dojos
 - Keyboard, gamepad and touch controls; Web Audio chiptune music and sound effects
