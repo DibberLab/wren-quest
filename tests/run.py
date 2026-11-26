@@ -213,6 +213,18 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  g3.t=60;press('KeyJ');step(Q.G.golf&&Q.G.golf.match&&Q.G.golf.match.ks===0&&Q.G.golf.strokes===0,'A replays a tie straight away');
  const g4=Q.G.golf;g4.ph='aim';g4.match.kin=0;g4.strokes=g4.c.par+3;g4.disc={x:g4.lie.x,y:g4.lie.y};Q.golfAfter();for(let i=0;i<600&&g4.ph!=='mres';i++)T(1);step(g4.ph==='mres'&&g4.match.res==='lose','par + 3 without holing out gives the match away');
  Q.G.golf=null;Q.G.mode='play'}
+// medals and records: best score per hole, medals, replays from a won basket (no hearts at stake), all-birdie card bonus
+{fresh();const h=Q.HOLES[3];Q.S.bk={};step(Q.recordScore(h,h.par)==='new'&&Q.medalOf(h)==='bronze','par is a bronze medal');
+ step(Q.recordScore(h,h.par+1)===''&&Q.S.bk[h.key].s===h.par,'a worse score never replaces the best');step(Q.recordScore(h,h.par-1)==='best'&&Q.medalOf(h)==='silver','a birdie lifts it to silver');
+ Q.recordScore(h,h.par-2);step(Q.medalOf(h)==='gold','an eagle is gold');const h2=Q.HOLES[1];Q.recordScore(h2,1);step(Q.medalOf(h2)==='gold','an ace is gold');
+ fresh();go(18,23);Q.S.bk={};Q.S.shards=[Q.HD0+4];Q.recordScore(h,h.par);const mh=Q.S.maxHp;Q.startReplay(4);const g=Q.G.golf;step(g&&g.replay&&!g.admin,'a won hole can be replayed');
+ g.ph='aim';for(let k=0;k<3;k++){g.strokes=g.c.par;Q.golfAfter();step(g.ph==='retry','over par on a replay asks to go again');Q.golfReset()}step(Q.S.maxHp===mh,'missing a replay three times costs no heart');
+ g.strokes=g.c.par-1;g.made=1;g.ph='done';g.t=120;press('KeyJ');step(!Q.G.golf&&Q.S.bk[h.key].s===h.par-1&&Q.G.banner&&/SILVER/.test(Q.G.banner.s),'a better replay sets the best and shows the new medal');
+ Q.startReplay(4);Q.G.golf.ph='retry';Q.G.golf.t=60;press('KeyL');step(!Q.G.golf&&Q.G.mode==='play','B leaves a replay');
+ fresh();Q.S.bk={};Q.S.cardGold=[];Q.G.heartQ=null;for(const hh of Q.HOLES.slice(0,8))Q.recordScore(hh,hh.par-1);step(!Q.G.heartQ,'eight birdies are not a full card');Q.recordScore(Q.HOLES[8],Q.HOLES[8].par-1);
+ step(Q.G.heartQ&&Q.S.cardGold.includes(1),'birdie or better on all nine holes of card 1 earns a heart container');Q.G.heartQ=null;Q.recordScore(Q.HOLES[0],1);step(!Q.G.heartQ,'the card bonus is paid once');
+ fresh();Q.S.bk={};const h4=Q.HOLES[3],[x4,y4]=h4.key.split(',').map(Number);Q.S.shards=[Q.HD0+4];Q.recordScore(h4,h4.par);go(x4,y4);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.npcs=[];
+ if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(3);step(Q.G.mode==='dialog'&&Q.G.dlg.opts&&/Replay hole 4/.test(Q.G.dlg.pages.flat().join(' ')),'sinking a won hole\'s basket offers a replay')}Q.G.mode='play';Q.G.dlg=null}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -248,6 +260,9 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+const rshot=(name,f)=>shot('replay '+name,()=>{worst();go(18,23);Q.S.bk={};Q.recordScore(Q.HOLES[26],12);Q.startReplay(27);T(3);const g=Q.G.golf;g.tries=12;g.strokes=9;f(g)});
+rshot('intro',g=>{g.ph='intro';g.t=20});rshot('retry',g=>{g.ph='retry';g.t=80;g.failed=1});rshot('done',g=>{g.ph='done';g.made=1;g.t=50});
+shot('scorecard with medals',()=>{worst();go(18,23);Q.S.bk={};Q.HOLES.forEach((h,i)=>Q.recordScore(h,i%3===0?1:i%3===1?h.par-1:h.par+2));Q.openCard(1);Q.G.card.t=60});
 const mshot=(name,f)=>shot('match '+name,()=>{worst();go(18,23);Q.startMatch(2);T(3);const g=Q.G.golf;g.strokes=9;g.match.ks=12;f(g)});
 mshot('intro',g=>{g.ph='intro';g.t=20});mshot('aim',g=>{g.ph='aim';g.t=200});mshot('kestrel throws',g=>{g.ph='rival';g.ra={pts:[g.c.tee.x,g.c.tee.y,g.c.tee.x,g.c.tee.y-40],i:2,msg:'KESTREL: INTO AN OPEN GRAVE! +1',t:1,then:()=>{}};g.msg={s:g.ra.msg,c:'#ff9a70',t:60}});
 mshot('win',g=>{g.ph='mres';g.t=80;g.match.res='win'});mshot('lose',g=>{g.ph='mres';g.t=80;g.match.res='lose';g.strokes=99});

@@ -1092,13 +1092,13 @@ for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thu
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
 const HINTS=['27 baskets hide 27 dungeons and 27 crown pieces. After each boss, sink the ghostly hole in par or better: aim, lock power, then lock the curve. Watch the wind.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],cast:{},rival:{won:[],pend:[]},upg:{},golfLost:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],cast:{},cardGold:[],rival:{won:[],pend:[]},upg:{},golfLost:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY);return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
 
 // ================= ROOMS =================
-function setRoom(room){G.slicks=[];G.mt=null;G.capHint=0;G.gateHint=0;G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
+function setRoom(room){G.slicks=[];G.mt=null;G.replayQ=0;G.capHint=0;G.gateHint=0;G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
 function reachCells(){const sc=clamp(Math.floor((P.x+8)/16),0,15),sw=clamp(Math.floor((P.y+11)/16),0,10),seen=new Set([sw*16+sc]),q=[[sc,sw]],out=[];
   while(q.length){const [c,w]=q.shift();if(c>=1&&c<=14&&w>=1&&w<=9&&EWALK.has(G.room.t[w*16+c]))out.push([c,w]);for(const d of DIRS){const nc=c+d[0],nw=w+d[1];if(nc<0||nc>15||nw<0||nw>10)continue;const k=nw*16+nc;if(seen.has(k)||!WALK.has(G.room.t[k]))continue;seen.add(k);q.push([nc,nw])}}return out}
 function spawnList(types,n,lvl){const far=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8&&Math.hypot(c*16-P.x,w*16-P.y)>76);for(let i=0;i<n&&far.length;i++){const [c,w]=far.splice(ri(far.length),1)[0];G.ents.push(makeEnemy(pick(types),c*16,w*16,lvl))}}
@@ -1238,9 +1238,9 @@ function golfEnd(how){const g=G.golf,c=g.c,d=g.disc;g.strokes++;
 function golfLie(x,y){const g=G.golf,c=g.c;for(const t of c.trees){const q=Math.hypot(x-t.x,y-t.y);if(q<t.r+4){x=t.x+(x-t.x)/(q||1)*(t.r+5);y=t.y+(y-t.y)/(q||1)*(t.r+5)}}
   for(const w of c.water)if(x>=w.x&&x<=w.x+w.w&&y>=w.y&&y<=w.y+w.h){y=y<w.y+w.h/2?w.y-3:w.y+w.h+3}
   g.lie={x:clamp(x,8,248),y:clamp(y,8,c.L-8)};g.prev={x:g.lie.x,y:g.lie.y};const left=Math.round(golfDist());if(!g.msg||g.msg.t<20)golfMsg(left<=PUTT_FT?left+' FT - PUTT!':left+' FT TO GO','#ffffff',70)}
-function golfHeartsLeft(g){return g.admin||g.tut?0:TUNE.golf.heartsPerHole-((S.golfLost||{})[g.h.n]||0)}
+function golfHeartsLeft(g){return g.admin||g.tut||g.replay?0:TUNE.golf.heartsPerHole-((S.golfLost||{})[g.h.n]||0)}
 // Walk away from a hole challenge: back to the surface; the keeper stays down and the basket waits in its chamber.
-function golfLeave(){const g=G.golf;G.golf=null;G.mode='play';G.parts=[];S.hp=Math.max(S.hp,2);save();play(null);say('You walk away from hole '+g.h.n+' for now. The keeper stays down; the ghostly basket will wait in its chamber.',()=>exitDungeon())}
+function golfLeave(){const g=G.golf;if(g.replay){replayEnd();return}G.golf=null;G.mode='play';G.parts=[];S.hp=Math.max(S.hp,2);save();play(null);say('You walk away from hole '+g.h.n+' for now. The keeper stays down; the ghostly basket will wait in its chamber.',()=>exitDungeon())}
 function golfAfter(){const g=G.golf;if(g.match){matchNext();return}if(g.strokes>=g.c.par){g.fails++;g.failed=1;g.ph='retry';g.t=0;sfx('hurt');
     if(!g.tut&&g.fails%TUNE.golf.failsPerHeart===0&&golfHeartsLeft(g)>0){const took=S.maxHp>6;S.maxHp=Math.max(6,S.maxHp-2);S.hp=Math.min(Math.max(S.hp,2),S.maxHp);g.heartLost=took?1:2;if(took){S.golfLost=S.golfLost||{};S.golfLost[g.h.n]=(S.golfLost[g.h.n]||0)+1}save()}return}
   g.disc=null;if(golfDist()<=PUTT_FT)startPutt();else{g.ph='aim';golfHome()}}
@@ -1271,12 +1271,13 @@ function drawPutt(){const g=G.golf,p=g.pt,bx=128+p.ox*88,by=78+p.oy*52,zw=p.hw*8
   px(ctx,'rgba(0,0,0,0.72)',0,0,PW,13);txt('PUTT  '+Math.round(p.d)+' FT',4,3,'#ffe060');txt('THROW '+(g.strokes+1)+' / PAR '+g.h.par,250,3,'#ffffff','right');
   const hint=p.ph==='x'?'A: LOCK LEFT/RIGHT':p.ph==='y'?'A: LOCK UP/DOWN':'';if(hint)txt(hint,128,PH-30,'#ffffff','center');if(p.ph==='miss')txt(p.res,128,PH-30,'#ffb060','center')}
 function golfFinish(){const g=G.golf,h=g.h,ds=S.dun[G.dn];G.golf=null;G.mode='play';G.parts=[];
+  if(g.replay){areaMusic();const old=medalOf(h),r=recordScore(h,g.strokes),m=medalOf(h);save();G.floats.push({x:P.x+8,y:P.y-14,s:r==='best'?'NEW BEST: '+g.strokes:'BEST STAYS '+S.bk[h.key].s,t:120,c:r==='best'?'#7fffd4':'#ffe0b0'});if(m&&m!==old)G.banner={s:'HOLE '+h.n+': '+MEDAL[m][0]+' MEDAL!',t:180};return}
   if(g.tut){areaMusic();S.beats=S.beats||[];if(!S.beats.includes('practice'))S.beats.push('practice');S.hp=S.maxHp;save();say(g.made?'From the cave door the old groundskeeper waves you over. "Not bad, sleepyhead! Come inside, quick." His cave is right here on this screen.':'The old groundskeeper calls from his cave: "Enough practice! Come inside, quick." His cave is right here on this screen.');return}
-  if(g.admin){areaMusic();if(!g.made)return;const d=HD0+h.n,st=g.strokes,dd=st-h.par;S.dun[d]=Object.assign(S.dun[d]||{unl:[],keys:[],item:0,hc:0,vis:[]},{boss:1,golf:1});if(!S.shards.includes(d))S.shards.push(d);if(!S.bk[h.key])S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};S.hp=S.maxHp;save();
+  if(g.admin){areaMusic();if(!g.made)return;const d=HD0+h.n,st=g.strokes,dd=st-h.par;S.dun[d]=Object.assign(S.dun[d]||{unl:[],keys:[],item:0,hc:0,vis:[]},{boss:1,golf:1});if(!S.shards.includes(d))S.shards.push(d);recordScore(h,st);S.hp=S.maxHp;save();
     giveItem('shard',(st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!',''))+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'!');if(dd<0)heartPiece('Under par!');storyBeat();return}
   P.x=112;P.y=110;P.dir=0;
   const st=g.strokes,dd=st-h.par;ds.boss=1;ds.golf=1;G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');
-  if(!S.shards.includes(G.dn))S.shards.push(G.dn);if(!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:200};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
+  if(!S.shards.includes(G.dn))S.shards.push(G.dn);if(recordScore(h,st)==='new'){const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:200};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
   if(st===1){S.aces=(S.aces||0)+1;addSecret('ace')}S.hp=S.maxHp;save();
   const nm=st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!','');
   giveItem('shard',nm+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'! '+(S.shards.length>=NSH?'The seal on the Obsidian Throne is broken. Go to the far northeast!':'The stairs will take you back to the surface.'));
@@ -1331,11 +1332,12 @@ function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();retu
   const big=(a,b,col,b2)=>{px(ctx,'rgba(0,0,0,0.7)',0,56,PW,b2?60:48);txt(a,128,62,col,'center',16);if(b)txt(b,128,84,'#ffffff','center');if(b2)txt(b2,128,98,'#a0d0ff','center')};
   if(g.ph==='intro'&&g.match)big('KESTREL VS WREN','HOLE '+g.h.n+'  PAR '+g.h.par,'#ff9a70','LOWEST SCORE WINS');
   else if(g.ph==='mres'){const m=g.match,w=m.res==='win';big(w?'YOU WIN!':m.res==='tie'?'A TIE!':'KESTREL WINS',(g.strokes>=99?'YOU GAVE UP':'YOU '+g.strokes)+'  -  KESTREL '+m.ks,w?'#7fffd4':'#ff9a70',g.t>50?(w?'A: CONTINUE':'A: REMATCH   B: LATER'):'')}
-  else if(g.ph==='intro')g.tut?big('PRACTICE HOLE','NOTHING TO LOSE HERE','#7fffd4'):big('HOLE '+g.h.n+'  PAR '+g.h.par,holeCourse(g.h).nm,'#ffe060',g.admin?'SINK IT IN PAR OR BETTER':'PAR OR BETTER  B: WALK AWAY');
+  else if(g.ph==='intro')g.tut?big('PRACTICE HOLE','NOTHING TO LOSE HERE','#7fffd4'):big('HOLE '+g.h.n+'  PAR '+g.h.par,holeCourse(g.h).nm,'#ffe060',g.admin?'SINK IT IN PAR OR BETTER':g.replay?'REPLAY  BEST '+S.bk[g.h.key].s+'  B: LEAVE':'PAR OR BETTER  B: WALK AWAY');
   if(g.ph==='retry'&&g.tut)big('OVER PAR','NO HARM DONE IN PRACTICE','#ff6040',g.t>50?'A: AGAIN   B: SKIP':'');
+  else if(g.ph==='retry'&&g.replay)big('OVER PAR','NO HEARTS AT STAKE ON A REPLAY','#ff6040',g.t>50?'A: AGAIN   B: LEAVE':'');
   else if(g.ph==='retry'){const left=TUNE.golf.failsPerHeart-(g.fails%TUNE.golf.failsPerHeart);big('OVER PAR',g.heartLost===1?'YOU LOST A HEART CONTAINER!':g.heartLost===2?'3 MISSES, BUT YOUR HEART HOLDS':golfHeartsLeft(g)<=0?'NO MORE HEARTS AT STAKE HERE':left+' TR'+(left>1?'IES':'Y')+' LEFT, THEN A HEART','#ff6040',g.t>50?'A: PLAY IT AGAIN   B: '+(g.admin?'QUIT':'LEAVE'):'')}
   if(g.ph==='done'&&g.tut)big('IN THE CHAINS!',g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  PRACTICE DONE','#7fffd4');
-  else if(g.ph==='done'){const dd=g.strokes-g.h.par;big(g.strokes===1?'ACE!!':(SCORENM[String(dd)]||'PAR'),g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  CROWN PIECE!','#7fffd4')}
+  else if(g.ph==='done'){const dd=g.strokes-g.h.par;big(g.strokes===1?'ACE!!':(SCORENM[String(dd)]||'PAR'),g.strokes+' THROW'+(g.strokes>1?'S':'')+(g.replay?'  -  REPLAY':'  -  CROWN PIECE!'),'#7fffd4')}
   if(g.msg)txt(g.msg.s,128,18,g.msg.c,'center')}
 
 
@@ -1417,6 +1419,19 @@ function drawScene(){const sc=G.scene;if(!sc)return;const pg=sc.pages[Math.min(s
   px(ctx,'#000',0,150,W,82);px(ctx,'#ff7a2f',4,152,W-8,1);let y=158;if(pg[1]){txt(pg[1],10,y,'#ff9a50');y+=12}
   const lines=paginate(pg[2])[0].concat(paginate(pg[2]).slice(1).flat()),n=Math.floor(sc.ch);let used=0;for(const ln of lines){const sh=ln.slice(0,Math.max(0,n-used));used+=ln.length+1;txt(sh,10,y,'#ffffff');y+=11}
   txt((sc.i+1)+'/'+sc.pages.length,250,4,'#6a5a7a','right');txt('START: SKIP',6,4,'#6a5a7a');if(sc.ch>=pg[2].length&&(G.t>>4)%2)px(ctx,'#ff7a2f',242,222,6,4)}
+
+// ================= MEDALS AND RECORDS =================
+// S.bk[key].s is the best challenge score for a hole. Medals: par bronze, birdie silver, eagle or better gold, an ace gold too.
+// Won holes can be replayed from their map basket (no crown piece, no hearts at stake) to chase a better medal.
+const MEDAL={bronze:['BRONZE','#c07830'],silver:['SILVER','#c8d0e0'],gold:['GOLD','#ffd040']};
+function medalOf(h){const e=S.bk[h.key];if(!e)return null;const d=e.s-h.par;return e.s===1||d<=-2?'gold':d===-1?'silver':d===0?'bronze':null}
+function medalCount(){const c={gold:0,silver:0,bronze:0};for(const h of HOLES){const m=medalOf(h);if(m)c[m]++}return c}
+// record a challenge score; returns 'new' (first), 'best' (beat the old best) or ''. Then check the all-birdie card bonus.
+function recordScore(h,st){const e=S.bk[h.key];let r='';if(!e){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};r='new'}else if(st<e.s){e.s=st;r='best'}cardBonus();return r}
+function cardBonus(){S.cardGold=S.cardGold||[];for(let c=1;c<=3;c++){if(S.cardGold.includes(c))continue;const L=HOLES.slice((c-1)*9,c*9);if(L.every(h=>{const m=medalOf(h);return m==='silver'||m==='gold'})){S.cardGold.push(c);G.heartQ='Birdie or better on every hole of card '+c+'! A HEART CONTAINER!';save()}}}
+function startReplay(n){startGolf(n);const g=G.golf;g.admin=false;g.replay=1}
+function replayEnd(){G.golf=null;G.mode='play';G.parts=[];areaMusic()}
+function replayOffer(n){const h=HOLES[n-1],e=S.bk[h.key],m=medalOf(h);ask('Replay hole '+n+' for a better medal? Best: '+(e?e.s+(m?' ('+MEDAL[m][0]+')':''):'-')+'. No hearts at stake.',[['Play it.',()=>startReplay(n)],['Not now.',()=>{}]])}
 
 // ================= KESTREL'S MATCHES =================
 // After holes 9, 18 and 27 Kestrel challenges Wren to the same hole, head to head. She tees off first and turns alternate.
@@ -1648,7 +1663,7 @@ function basketMade(s){const b=G.basket;b.made=1;G.discOut=0;const h=HOLEOF[G.ro
   G.floats.push({x:b.cx,y:b.cy-22,s:label,t:120,c:ace?'#ff80ff':d<0?'#7fffd4':'#ffe060'});if(h)G.floats.push({x:b.cx,y:b.cy-12,s:'HOLE '+h.n+'  '+st+' THROW'+(st>1?'S':''),t:120,c:'#ffffff'});
   if(h&&!won&&!S.items.sword){S.hp=S.maxHp;if(!(S.beats||[]).includes('practice')){G.floats.push({x:b.cx,y:b.cy-2,s:'PRACTICE HOLE!',t:120,c:'#7fffd4'});G.tutEnter=90}else G.floats.push({x:b.cx,y:b.cy-2,s:'SEE THE GROUNDSKEEPER',t:120,c:'#ff9a40'})}
   else if(h&&!won){G.floats.push({x:b.cx,y:b.cy-2,s:'THE GROUND OPENS...',t:120,c:'#ff9a40'});G.holeEnter={n:h.n,t:110};G.shake=14}
-  else{S.hp=S.maxHp;G.floats.push({x:b.cx,y:b.cy-2,s:'HEARTS REFILLED',t:120,c:'#ff8090'})}
+  else{S.hp=S.maxHp;G.floats.push({x:b.cx,y:b.cy-2,s:'HEARTS REFILLED',t:120,c:'#ff8090'});if(h&&won&&S.bk[h.key])G.replayQ=h.n}
   if(ace){S.aces=(S.aces||0)+1;S.gems=Math.min(999,S.gems+25);G.floats.push({x:b.cx,y:b.cy+8,s:'+25 GEMS',t:110,c:'#7fffd4'});addSecret('ace');if(h){S.aceH=S.aceH||[];if(!S.aceH.includes(h.n)){S.aceH.push(h.n);heartPiece('An ACE on hole '+h.n+'!')}}}
   G.strokes=0;save()}
 function bossLoot(rm){const ds=S.dun[rm.d],D=DUN[rm.d];if(!ds.hc&&(!D.hole||D.hole%2===1))G.picks.push({kind:'heartc',x:84,y:110,w:12,h:12,perm:1});if(!D.hole&&!S.shards.includes(rm.d)&&!D.boss.final)G.picks.push({kind:'shard',x:160,y:110,perm:1})}
@@ -2030,6 +2045,7 @@ function updatePlay(){
   updPuzzle();if(G.glowT>0)G.glowT--;if(G.cardPending&&--G.cardPending.t<=0&&G.mode==='play'){openCard(G.cardPending.n);G.cardPending=null;return}
   if(G.bf.vigor>0&&G.t%120===0&&S.hp<S.maxHp)S.hp++;if(G.reveal>0)G.reveal--;for(const b of G.bolts)b.t--;G.bolts=G.bolts.filter(b=>b.t>0);
   if(G.heartQ&&G.mode==='play'){const m=G.heartQ;G.heartQ=null;giveHeart(m);return}
+  if(G.replayQ&&!G.sceneQ&&!G.heartQ&&!G.rivalQ&&G.mode==='play'){const n=G.replayQ;G.replayQ=0;replayOffer(n);return}
   if(G.rivalQ&&!G.sceneQ&&!G.heartQ&&G.mode==='play'){const i=G.rivalQ-1;G.rivalQ=0;rivalOffer(i);return}
   if(G.sceneQ&&G.mode==='play'){const b=G.sceneQ;G.sceneQ=null;playScene(b,b==='nine'?()=>say('Dusk falls over the land. Foes see better in the dark than you do.'):b==='eighteen'?()=>say('Night covers the land. Only the baskets still glow.'):null);return}
   if(G.golfWait&&G.mode==='play'&&--G.golfWait<=0){G.golfWait=0;const h=HOLES[DUN[G.dn].hole-1];say('The ghostly basket still waits. HOLE '+h.n+', PAR '+h.par+'.',()=>startGolf());return}
@@ -2239,12 +2255,12 @@ function drawCard(){const c=G.card,ink='#2a2018',paper='#f2e8d0',line='#b8a888';
   const rowY=[Y+24,Y+36,Y+48],x0=8;
   ['HOLE','PAR','SCORE'].forEach((l,i)=>{px(ctx,i%2?'#e8dcc0':paper,x0,rowY[i],240,12);txt(l,x0+1,rowY[i]+2,ink)});
   let tp=0,ts=0;for(let i=0;i<9;i++){const cx=x0+42+i*22,h=list[i],e=h&&S.bk[h.key];px(ctx,line,cx-2,rowY[0],1,36);if(h){txt(''+h.n,cx+9,rowY[0]+2,ink,'center');txt(''+h.par,cx+9,rowY[1]+2,ink,'center')}
-    if(e){const sc=e.s,d=sc-h.par;tp+=h.par;ts+=sc;txt(''+sc,cx+9,rowY[2]+2,sc===1?'#c020c0':d<0?'#1a6ad0':d>0?'#c03020':ink,'center');if(d<0){ctx.strokeStyle='#1a6ad0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+9.5,rowY[2]+5.5,6,0,6.28);ctx.stroke()}}
+    if(e){const sc=e.s,d=sc-h.par;tp+=h.par;ts+=sc;txt(''+sc,cx+9,rowY[2]+2,sc===1?'#c020c0':d<0?'#1a6ad0':d>0?'#c03020':ink,'center');if(d<0){ctx.strokeStyle='#1a6ad0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+9.5,rowY[2]+5.5,6,0,6.28);ctx.stroke()}const md=medalOf(h);if(md){px(ctx,'#2a2018',cx+16,rowY[2]+1,5,5);px(ctx,MEDAL[md][1],cx+17,rowY[2]+2,3,3)}}
     else txt('-',cx+9,rowY[2]+2,line,'center')}
   px(ctx,ink,x0,rowY[2]+12,240,1);const diff=ts-tp;
   txt('TOTAL '+ts+(tp?'  PAR '+tp:''),x0+2,Y+66,ink);if(tp)txt(diff===0?'EVEN':diff>0?'+'+diff:''+diff,246,Y+66,diff<0?'#1a6ad0':diff>0?'#c03020':ink,'right');
   let cp=0,cs=0;for(const h of HOLES){const e=S.bk[h.key];if(e){cp+=h.par;cs+=e.s}}const cd=cs-cp;
-  txt('COURSE '+(cp?(cd===0?'EVEN':cd>0?'+'+cd:''+cd):'-')+' ('+Object.keys(S.bk).length+'/'+NHOLE+')',x0+2,Y+78,'#5a4a3a');txt('ACES '+(S.aces||0),246,Y+78,'#5a4a3a','right');
+  txt('COURSE '+(cp?(cd===0?'EVEN':cd>0?'+'+cd:''+cd):'-')+' ('+Object.keys(S.bk).length+'/'+NHOLE+')',x0+2,Y+78,'#5a4a3a');{const mc=medalCount();[['gold','G'],['silver','S'],['bronze','B']].forEach(([k,l],q)=>{const x=160+q*30;px(ctx,'#2a2018',x,Y+78,7,7);px(ctx,MEDAL[k][1],x+1,Y+79,5,5);txt(l+mc[k],x+9,Y+78,'#5a4a3a')})}
   px(ctx,'#2f6a3a',4,Y+92,248,14);txt('PROGRESS REPORT',128,Y+95,'#f2e8d0','center');
   progress().forEach(([k,v],i)=>{const cx=i%2?132:10,cy=Y+112+Math.floor(i/2)*13;txt(k,cx,cy,'#5a4a3a');txt(v,cx+116,cy,ink,'right')});
   const pct=Math.round(100*(S.shards.length/NSH*0.5+S.visited.length/(WW*WH)*0.2+S.secrets.length/NSEC*0.15+Object.keys(S.bk).length/NHOLE*0.15));
