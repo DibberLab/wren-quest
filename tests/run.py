@@ -34,8 +34,9 @@ def build_copy():
 PRE = """const Q=window.__WQ,T=n=>{for(let i=0;i<n;i++)Q.tick()},K=Q.K,
 press=k=>{K[k]=1;T(1);K[k]=0;T(1)},
 adv=()=>{for(let i=0;i<120&&['dialog','hold','fade'].includes(Q.G.mode);i++){K.KeyJ=1;T(1);K.KeyJ=0;T(20)}},
-fresh=()=>{Q.S=Q.newState();Q.G.bf={};Q.S.items.sword=1;Q.S.items.disc_putt=1;Q.S.maxHp=20;Q.S.hp=20;Q.G.mode='play';Q.G.dlg=null;Q.G.duel=null;Q.G.golf=null},
-go=(x,y)=>{const rm=Q.genScreen(x,y);Q.setRoom(rm);Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.G.picks=[];Q.G.banner=null;Q.G.floats=[];return rm};"""
+fresh=()=>{Q.S=Q.newState();Q.G.bf={};Q.S.items.sword=1;Q.S.items.disc_putt=1;Q.S.maxHp=20;Q.S.hp=20;Q.G.mode='play';Q.G.dlg=null;Q.G.duel=null;Q.G.golf=null;Q.G.lastDuelT=1e12;Q.G.duelPending=0},  // lastDuelT in the future: no random duels in tests
+waitDun=()=>{for(let i=0;i<400&&Q.G.room.kind!=='dun';i++){if(['dialog','hold'].includes(Q.G.mode))adv();T(1)}for(let i=0;i<80&&Q.G.mode!=='play';i++){adv();T(1)}},
+go=(x,y)=>{const rm=Q.genScreen(x,y);Q.setRoom(rm);Q.G.duelPending=0;Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.G.picks=[];Q.G.banner=null;Q.G.floats=[];return rm};"""
 
 WORLD = PRE + r"""
 const bad=[],WALK=Q.WALK;
@@ -78,7 +79,7 @@ const bad=[],ck=(c,m)=>{if(!c)bad.push(m)};let n=0;const step=(c,m)=>{n++;ck(c,m
 step(Q.HOLES.every(h=>h.par===3||h.par===4),'pars are 3 or 4');
 // hole loop: sink basket -> dungeon -> boss -> golf -> over par replays -> par gives crown + stairs -> exit to basket screen
 fresh();const h=Q.HOLES[0],[hx,hy]=h.key.split(',').map(Number);go(hx,hy);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
-step(!!Q.G.basket,'hole 1 basket exists');if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(130);for(let i=0;i<80&&Q.G.mode!=='play';i++)T(1)}
+step(!!Q.G.basket,'hole 1 basket exists');if(Q.G.basket){Q.G.strokes=2;Q.basketMade();waitDun()}
 step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+1,'sinking hole 1 enters its dungeon');
 const b=Q.G.dg.boss;b.t=Q.dunTiles(b);Q.setRoom(b);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);const boss=Q.G.ents.find(e=>e.boss);step(!!boss,'boss spawns');
 if(boss){boss.inv=0;Q.hitEnemy(boss,99999,boss.x,boss.y);T(140);adv()}step(Q.G.mode==='golf'&&!Q.G.golf.admin,'boss death starts the golf challenge');step(Q.S.items.disc_mid===1,'hole 1 keeper drops the Midrange');
@@ -102,7 +103,7 @@ Q.G.golf=null;Q.G.mode='play';step(!Q.shopStock({type:'proshop'},0).some(o=>/^di
 {const p3=Q.HOLES.filter(h=>h.par===3),early=p3.find(h=>h.n<=2),late=p3.find(h=>h.n>=3);step(Q.golfCourse(early).L===341&&Q.golfCourse(late).L>Q.golfCourse(early).L,'par 3s are 341 ft with the Midrange and grow once the Driver is in reach')}
 // walk away: B at the retry screen goes back to the surface; the boss room resumes the challenge with no refight
 fresh();{const h2=Q.HOLES[1],[x2,y2]=h2.key.split(',').map(Number);go(x2,y2);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
- if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(130);for(let i=0;i<80&&Q.G.mode!=='play';i++)T(1)}const d=Q.G.dn,bb=Q.G.dg.boss;bb.t=Q.dunTiles(bb);Q.setRoom(bb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);
+ if(Q.G.basket){Q.G.strokes=2;Q.basketMade();waitDun()}const d=Q.G.dn,bb=Q.G.dg.boss;bb.t=Q.dunTiles(bb);Q.setRoom(bb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);
  const bs=Q.G.ents.find(e=>e.boss);if(bs){bs.inv=0;Q.hitEnemy(bs,99999,bs.x,bs.y);T(140);adv()}step(Q.G.mode==='golf','hole 2 challenge starts');
  const g2=Q.G.golf;g2.strokes=g2.c.par;g2.ph='land';g2.lt=1;T(3);T(60);press('KeyL');T(2);step(Q.G.mode==='dialog'&&!Q.G.golf,'B on the retry screen walks away');adv();T(80);adv();
  step(Q.G.room.kind==='over'&&Q.G.room.key===h2.key,'walking away returns to the basket screen');step(!Q.S.shards.includes(Q.HD0+2),'walking away gives no crown piece');
@@ -126,10 +127,13 @@ fresh();go(18,23);Q.winGame();step(Q.G.mode==='scene'&&Q.G.scene.name==='ending'
 fresh();go(18,23);Q.S.shards=[];for(let i=1;i<=18;i++)Q.S.shards.push(Q.HD0+i);step(Q.sceneEra()===2,'the land darkens after 18 pieces');
 // admin menu is hidden without the flag
 fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin');
+// a random duel cannot start while the ground is opening; the drop still happens
+fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
+ if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
 // ambush: duel mid-ambush restores the ambush and clearing opens the gates
 fresh();const ak=[...Q.ARENA][0].split(',').map(Number);go(ak[0],ak[1]);Q.P.x=112;Q.P.y=80;Q.onEnter();Q.G.mode='play';T(60);
 Q.startDuel('duelist',{lvl:1});T(115);Q.G.duel.phase='ko';Q.G.duel.t=200;T(3);step(!!Q.G.arena,'ambush survives a duel');
-for(let w=0;w<3;w++){for(const e of Q.G.ents)if(!e.dead){e.inv=0;e.spawn=0;Q.hitEnemy(e,999,e.x,e.y)}T(120)}step(!Q.G.arena&&![...Q.G.room.t].includes(17),'clearing the ambush opens the gates');
+for(let w=0;w<8&&Q.G.arena;w++){for(const e of Q.G.ents)if(!e.dead){e.inv=0;e.spawn=0;Q.hitEnemy(e,999,e.x,e.y)}T(120)}step(!Q.G.arena&&![...Q.G.room.t].includes(17),'clearing the ambush opens the gates');
 // sword levels and heart pieces
 fresh();Q.swordXP(5000);step(Q.S.swl===30,'sword reaches level 30');const mh2=Q.S.maxHp;Q.S.hpc=0;for(let i=0;i<4;i++)Q.heartPiece('t');Q.G.mode='play';T(2);adv();step(Q.S.maxHp===mh2+2,'four heart pieces make a container');
 // old save migration (wv 2, three old shards)

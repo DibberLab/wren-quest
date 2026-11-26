@@ -808,7 +808,7 @@ const AI={
     if(e.st===1){if(--e.jt<=0){e.st=2;e.jt=22;const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*2.3;e.vy=Math.sin(a)*2.3;e.face=e.vx<0;sfx('roar')}return}
     if(e.st===0&&(e.gt=(e.gt||0)+1)%220===0)gooAt(ecx(e),ecy(e)+6,0);
     const a=Math.atan2(P.y-e.y,P.x-e.x),cl=pdist(e)<110,mx=cl?Math.cos(a)*e.sp:DIRS[e.dir][0]*e.sp*0.6,my=cl?Math.sin(a)*e.sp:DIRS[e.dir][1]*e.sp*0.6;if(emove(e,mx,my)||R()<0.01)e.dir=ri(4);if(Math.abs(mx)>0.05)e.face=mx<0;
-    if(e.t>0)e.t--;else if(pdist(e)<64){if(!e.charmChk){e.charmChk=1;if(G.room.kind==='over'&&!G.duel&&!G.duelPending&&!G.arena&&!G.needClear&&swordLv()&&G.t-(G.lastDuelT||-1e9)>(S.mareHearts>0?900:1800)&&R()<(S.mareHearts>0?TUNE.charm.chanceOwed:TUNE.charm.chance)){e.dead=1;e.noCount=1;puff(ecx(e),ecy(e),'#ff80c0',16,1.6);G.floats.push({x:ecx(e),y:ecy(e)-12,s:S.mareHearts>0?'SHE HAS YOUR HEART!':'SHE IS SMITTEN!',t:70,c:'#ff80c0'});G.duelPending='marebear';G.duelLvl=G.room.lvl;return}}e.st=1;e.jt=34;e.face=P.x<e.x}},
+    if(e.t>0)e.t--;else if(pdist(e)<64){if(!e.charmChk){e.charmChk=1;if(G.room.kind==='over'&&!G.duel&&!G.duelPending&&!G.arena&&!G.needClear&&!countingDown()&&swordLv()&&G.t-(G.lastDuelT||-1e9)>(S.mareHearts>0?900:1800)&&R()<(S.mareHearts>0?TUNE.charm.chanceOwed:TUNE.charm.chance)){e.dead=1;e.noCount=1;puff(ecx(e),ecy(e),'#ff80c0',16,1.6);G.floats.push({x:ecx(e),y:ecy(e)-12,s:S.mareHearts>0?'SHE HAS YOUR HEART!':'SHE IS SMITTEN!',t:70,c:'#ff80c0'});G.duelPending='marebear';G.duelLvl=G.room.lvl;return}}e.st=1;e.jt=34;e.face=P.x<e.x}},
   toad(e){if(e.z>0||e.vz>0){e.z+=e.vz;e.vz-=0.25;emove(e,e.vx,e.vy);if(e.z<=0){e.z=0;e.vz=0;e.t=40+ri(50)}return}if(e.t--<=0){const a=pdist(e)<120&&R()<0.7?Math.atan2(P.y-e.y,P.x-e.x):R()*6.28;e.vx=Math.cos(a)*1.3;e.vy=Math.sin(a)*1.3;e.vz=3;e.z=0.1;e.face=e.vx<0}},
   thornback(e){if(e.st===2){if(emove(e,e.vx,0))e.vx*=-1;if(emove(e,0,e.vy))e.vy*=-1;if(--e.jt<=0){e.st=3;e.jt=50}return}
     if(e.st===1){if(--e.jt<=0){e.st=2;e.jt=70;const a=Math.atan2(P.y-e.y,P.x-e.x);e.vx=Math.cos(a)*2.4;e.vy=Math.sin(a)*2.4;sfx('roll')}return}
@@ -1427,7 +1427,7 @@ function onClear(){const rm=G.room;
 function roomLogic(){
   if(G.pendingShut&&pInside()){G.pendingShut=0;if(G.ents.some(e=>!e.noCount&&!e.dead)||G.bossPending){shut(true);sfx('door')}}
   if(G.pendingArena&&pInside()){G.pendingArena=0;lockArena(true);sfx('door')}
-  if(G.duelPending&&pInside()){const t=G.duelPending;G.duelPending=0;startDuel(t,{lvl:Math.max(1,G.room.lvl)})}
+  if(G.duelPending&&pInside()&&!countingDown()){const t=G.duelPending;G.duelPending=0;startDuel(t,{lvl:Math.max(1,G.room.lvl)})}
   if(G.bossPending&&!G.pendingShut){if(--G.bossPending<=0){G.bossPending=0;const b=makeBoss(DUN[G.dn].boss);G.ents.push(b);play('boss');sfx('roar');G.shake=20;G.banner={s:DUN[G.dn].boss.n,t:120}}}
   if(G.needClear&&!G.ents.some(e=>!e.noCount&&!e.dead)){G.needClear=0;onClear()}}
 function caveSetup(rm){const cv=rm.cv,ty=cv.type,taken=S.caves.includes(cv.id);
@@ -1764,6 +1764,8 @@ function updPause(){if(IN.pst||IN.pb){G.mode='play';sfx('sel');return}if(IN.pl||
 function updDying(){G.dieT--;if(G.dieT%6===0)P.dir=(P.dir+1)%4;updParts();if(G.dieT<=0){G.mode='over';G.menu=0}}
 function updOver(){if(IN.pu||IN.pd){G.menu^=1;sfx('sel')}if(IN.pa||IN.pst){sfx('sel');if(G.menu===0)respawn();else{S.hp=S.maxHp;save();G.hasSave=true;G.mode='title';G.menu=0;play(null)}}}
 function updWin(){G.winT++;if(G.winT>150&&(IN.pa||IN.pst)){G.hasSave=true;G.mode='title';G.menu=0;play(null)}}
+// No random duel may start while the ground is opening, a practice hole is starting or a hole challenge is resuming.
+function countingDown(){return !!(G.holeEnter||G.tutEnter||G.golfWait)}
 function updatePlay(){
   if(G.hitstop>0){G.hitstop--;return}
   if(IN.pst&&!G.bossDie){G.mode='pause';G.ppage=0;const i=INV.indexOf(S.sel);G.pcur=i>=0?i:0;sfx('sel');return}
