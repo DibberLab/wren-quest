@@ -55,16 +55,18 @@ return {checks:Q.WW*Q.WH+dl.length+Q.CAVS.length,bad};"""
 GOLF = PRE + r"""
 const bad=[],out=[];
 const aimFor=(lie,mk,cv)=>{const Tg=Math.hypot(mk.x-lie.x,mk.y-lie.y),base=Math.atan2(mk.y-lie.y,mk.x-lie.x);let a=base,D=Tg;for(let i=0;i<5;i++){const e=Q.golfPath(lie.x,lie.y,a,D,cv),ch=Math.hypot(e.x-lie.x,e.y-lie.y)||1;a-=Math.atan2(e.y-lie.y,e.x-lie.x)-base;D*=Tg/ch}return{a,D}};
-const fly=(c,lie,a,D,cv)=>{const v0=Math.sqrt(2*0.05*Math.max(1,D));let x=lie.x,y=lie.y,v=v0,t=0;const Tt=v0/0.05,zm=Math.min(18,6+12*D/Q.GOLF_MAX);let hit=0;
-  while(v>0){const sp=v/v0;a+=cv*0.022*(0.25+(1-sp)*1.2);x+=Math.cos(a)*v+c.wind.x;y+=Math.sin(a)*v+c.wind.y;v-=0.05;t++;const z=zm*Math.sin(Math.PI*Math.min(1,t/Tt));
+const fly=(c,lie,a,D,cv,gd)=>{const wk=gd.wind;const v0=Math.sqrt(2*0.05*Math.max(1,D));let x=lie.x,y=lie.y,v=v0,t=0;const Tt=v0/0.05,zm=Math.min(18,6+12*D/Q.GOLF_MAX);let hit=0;
+  while(v>0){const sp=v/v0;a+=cv*0.022*(0.25+(1-sp)*1.2);x+=Math.cos(a)*v+c.wind.x*wk;y+=Math.sin(a)*v+c.wind.y*wk;v-=0.05;t++;const z=zm*Math.sin(Math.PI*Math.min(1,t/Tt));
     if(Math.hypot(x-c.bk.x,y-c.bk.y)<7&&z<10){if(sp<0.85)return{in:1};if(!hit){hit=1;v*=0.3;a+=Math.PI}}
-    for(const tr of c.trees)if(z<13&&Math.hypot(x-tr.x,y-tr.y)<tr.r+2)return{x:x-Math.cos(a)*4,y:y-Math.sin(a)*4};if(x<4||x>252||y<4||y>c.L-4)return{ob:1}}
+    for(const tr of c.trees)if(z<13&&Math.hypot(x-tr.x,y-tr.y)<tr.r+2){const sx=x-Math.cos(a)*4,sy=y-Math.sin(a)*4;if(c.water.some(w=>sx>=w.x&&sx<=w.x+w.w&&sy>=w.y&&sy<=w.y+w.h))return{ob:1};return{x:sx,y:sy}}if(x<4||x>252||y<4||y>c.L-4)return{ob:1}}
   if(c.water.some(w=>x>=w.x&&x<=w.x+w.w&&y>=w.y&&y<=w.y+w.h))return{ob:1};return{x,y}};
-const choose=(c,lie)=>{let best=null,bd=1e9;const dB=Math.hypot(c.bk.x-lie.x,c.bk.y-lie.y);
-  for(let r=Math.min(Q.GOLF_MAX,dB+10);r>=20;r-=Math.max(10,r*0.12))for(let da=-0.9;da<=0.9;da+=0.08){const ang=Math.atan2(c.bk.y-lie.y,c.bk.x-lie.x)+da,mk={x:lie.x+Math.cos(ang)*r,y:lie.y+Math.sin(ang)*r};
-    for(const cv of [-0.75,0,0.75]){const s=aimFor(lie,mk,cv),res=fly(c,lie,s.a,s.D,cv);if(res.ob)continue;const d=res.in?-1:Math.hypot(c.bk.x-res.x,c.bk.y-res.y);if(d<bd){bd=d;best=res}}}return best};
+// the bot only carries the discs a player has by that hole (putter, plus each keeper's drop up to it)
+const bagFor=n=>['disc_putt'].concat(Object.entries(Q.TUNE.golf.discAt).filter(([k])=>+k<=n).map(([,d])=>d)).map(k=>Q.TUNE.golf.discs[k]);
+const choose=(c,lie,bag)=>{let best=null,bd=1e9;const dB=Math.hypot(c.bk.x-lie.x,c.bk.y-lie.y);
+  for(const gd of bag)for(let r=Math.min(gd.max,dB+10);r>=20;r-=Math.max(10,r*0.12))for(let da=-0.9;da<=0.9;da+=0.08){const ang=Math.atan2(c.bk.y-lie.y,c.bk.x-lie.x)+da,mk={x:lie.x+Math.cos(ang)*r,y:lie.y+Math.sin(ang)*r};
+    for(const sh of [-0.75,0,0.75]){const cv=sh*gd.cv+(gd.turn||0),s=aimFor(lie,mk,cv),res=fly(c,lie,s.a,s.D,cv,gd);if(res.ob)continue;const d=res.in?-1:Math.hypot(c.bk.x-res.x,c.bk.y-res.y);if(d<bd){bd=d;best=res}}}return best};
 for(const h of Q.HOLES){if(h.par<3||h.par>4)bad.push('hole '+h.n+' is par '+h.par);const c=Q.golfCourse(h);let lie={x:c.tee.x,y:c.tee.y},st=0,done=0;
-  while(st<h.par&&!done){if(Math.hypot(c.bk.x-lie.x,c.bk.y-lie.y)<=Q.PUTT_FT){st++;done=1;break}const r=choose(c,lie);st++;if(!r){break}if(r.in){done=1;break}lie={x:r.x,y:r.y}}
+  while(st<h.par&&!done){if(Math.hypot(c.bk.x-lie.x,c.bk.y-lie.y)<=Q.PUTT_FT){st++;done=1;break}const r=choose(c,lie,bagFor(h.n));st++;if(!r){break}if(r.in){done=1;break}lie={x:r.x,y:r.y}}
   out.push(h.n+':'+(done?st:'X')+'/'+h.par);if(!done||st>h.par)bad.push('hole '+h.n+' not makeable in par by perfect play')}
 return {checks:Q.HOLES.length,bad,info:out.join(' ')};"""
 
@@ -79,7 +81,7 @@ fresh();const h=Q.HOLES[0],[hx,hy]=h.key.split(',').map(Number);go(hx,hy);Q.P.x=
 step(!!Q.G.basket,'hole 1 basket exists');if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(130);for(let i=0;i<80&&Q.G.mode!=='play';i++)T(1)}
 step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+1,'sinking hole 1 enters its dungeon');
 const b=Q.G.dg.boss;b.t=Q.dunTiles(b);Q.setRoom(b);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);const boss=Q.G.ents.find(e=>e.boss);step(!!boss,'boss spawns');
-if(boss){boss.inv=0;Q.hitEnemy(boss,99999,boss.x,boss.y);T(140);adv()}step(Q.G.mode==='golf'&&!Q.G.golf.admin,'boss death starts the golf challenge');
+if(boss){boss.inv=0;Q.hitEnemy(boss,99999,boss.x,boss.y);T(140);adv()}step(Q.G.mode==='golf'&&!Q.G.golf.admin,'boss death starts the golf challenge');step(Q.S.items.disc_mid===1,'hole 1 keeper drops the Midrange');
 let g=Q.G.golf;if(g){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);step(g.ph==='retry'&&!Q.G.ents.some(e=>e.boss&&!e.dead),'over par replays with no boss');T(60);press('KeyJ');step(g.ph==='aim'&&g.tries===2&&g.strokes===0,'replay restarts the hole');
   // three fails cost one heart container
   const mh=Q.S.maxHp;for(let k=0;k<2;k++){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);T(60);press('KeyJ')}step(Q.S.maxHp===mh-2,'third failed try costs a heart container');
@@ -90,6 +92,14 @@ let g=Q.G.golf;if(g){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);step(g.ph==='retr
   T(270);adv();T(5)}
 step(Q.S.shards.includes(Q.HD0+1)&&[...Q.G.room.t].includes(Q.ST),'par gives the crown piece and opens the stairs');
 Q.exitDungeon();T(60);adv();step(Q.G.room.kind==='over'&&Q.G.room.key===h.key,'stairs return to the basket screen');
+// disc bag: Q/E picks a disc, range follows the disc, the shortest disc that reaches is picked at each lie, pro shop sells no discs
+fresh();go(18,23);Q.S.items.disc_mid=1;Q.S.items.disc_drive=1;Q.S.items.disc_glow=1;Q.startGolf(5);T(3);{const g=Q.G.golf;g.ph='aim';g.t=200;
+ step(g.bag.length===4,'the bag holds every disc owned');const d0=Q.golfDist();step(Q.gDisc().max>=d0-Q.PUTT_FT*0.5||Q.gDisc().max===280,'the tee picks a disc that reaches');
+ const before=g.di;press('KeyE');step(g.di===(before+1)%4,'E picks the next disc');press('KeyQ');step(g.di===before,'Q picks the previous disc');
+ g.di=0;g.mk={x:g.lie.x,y:g.lie.y-200};g.pv=null;press('KeyQ');press('KeyE');g.di=0;press('ArrowUp');step(Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y)<=120.5,'the putter cannot mark past 120 ft');
+ g.lie={x:g.c.bk.x,y:g.c.bk.y+100};Q.golfHome();step(Q.gDisc().nm==='PUTTER','close in, the putter is picked')}
+Q.G.golf=null;Q.G.mode='play';step(!Q.shopStock({type:'proshop'},0).some(o=>/^disc_/.test(o.item)),'the pro shop sells no discs');
+{const p3=Q.HOLES.filter(h=>h.par===3),early=p3.find(h=>h.n<=2),late=p3.find(h=>h.n>=3);step(Q.golfCourse(early).L===341&&Q.golfCourse(late).L>Q.golfCourse(early).L,'par 3s are 341 ft with the Midrange and grow once the Driver is in reach')}
 // walk away: B at the retry screen goes back to the surface; the boss room resumes the challenge with no refight
 fresh();{const h2=Q.HOLES[1],[x2,y2]=h2.key.split(',').map(Number);go(x2,y2);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(130);for(let i=0;i<80&&Q.G.mode!=='play';i++)T(1)}const d=Q.G.dn,bb=Q.G.dg.boss;bb.t=Q.dunTiles(bb);Q.setRoom(bb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);
@@ -145,6 +155,7 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+shot('golf full bag',()=>{worst();go(18,23);for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;Q.startGolf(27);T(5);const g=Q.G.golf;g.ph='aim';g.t=200;g.di=g.bag.indexOf('disc_crystal');g.tries=12;g.strokes=9;g.shape=2});
 const prac=(name,f)=>shot('practice '+name,()=>{worst();go(18,23);Q.startGolf(0,1);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.fails=11;f(g)});
 prac('intro',g=>{g.ph='intro';g.t=20});prac('aim',g=>{g.ph='aim';g.t=200});prac('power',g=>{g.ph='power';g.pw=1.1});prac('release',g=>{g.ph='rel';g.pw=1;g.rel=0.9});
 prac('putt',g=>{g.lie={x:g.c.bk.x,y:g.c.bk.y+25};Q.startPutt()});prac('retry',g=>{g.ph='retry';g.t=80;g.failed=1});prac('done',g=>{g.ph='done';g.made=1;g.t=50});
