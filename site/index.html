@@ -1928,7 +1928,7 @@ function drawBuffs(){if(G.room&&(G.mode==='play'||G.mode==='hold')){const mx=stM
 function drawWarp(){const w=G.warp;px(ctx,'rgba(8,10,24,0.94)',20,10,216,156);txt('WIND WHISTLE: WARP TO',128,18,'#a0e0ff','center');const st=Math.max(0,Math.min(w.i-5,w.o.length-11));w.o.slice(st,st+11).forEach((o,j)=>{const i=st+j;txt(o.n,40,36+j*11,i===w.i?'#ffffff':'#7a8aaa');if(i===w.i)txt('>',28,36+j*11,'#7fffd4')})}
 function drawDialog(){const d=G.dlg,top=P.y>80,by=top?6:PH-64;px(ctx,'#000',6,by,244,58);ctx.strokeStyle='#ff7a2f';ctx.lineWidth=2;ctx.strokeRect(7,by+1,242,56);
   const lines=d.pages[d.pi];let n=Math.floor(d.ch);for(let i=0;i<lines.length;i++){const s=lines[i].slice(0,Math.max(0,n));n-=lines[i].length;txt(s,14,by+8+i*12,'#ffffff')}
-  if(d.ch>=d.len&&(G.t>>4)%2)txt('>',236,by+46,'#ff7a2f')}
+  if(d.ch>=d.len&&(G.t>>4)%2)txt('>',240,by+46,'#ff7a2f')}
 function drawMap(x0,y0,big){const r=G.room;
   if(r.kind==='cav'){const C=CAVS[r.cv],cw=big?16:8,chh=big?8:5,ox=x0+((big?216:72)-9*cw)/2;for(const k of C.cells.keys()){const q=k.split(',').map(Number),vis=S.cvis.includes('c'+r.cv+':'+k);if(vis)px(ctx,'#5a4a3a',ox+q[0]*cw,y0+q[1]*chh,cw-1,chh-1);
       if(vis&&C.mouths.some(m=>m.gx===q[0]&&m.gy===q[1]))px(ctx,'#a0e060',ox+q[0]*cw+1,y0+q[1]*chh+1,2,2);if((S.items.lamp||S.relics.lens)&&C.rwc[0]===q[0]&&C.rwc[1]===q[1]&&!S.cavr.includes(r.cv))px(ctx,'#ffe060',ox+q[0]*cw+cw-3,y0+q[1]*chh+1,2,2);
