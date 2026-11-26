@@ -139,6 +139,18 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
   step(!Q.G.basket.made&&Q.G.picks.some(p=>p.kind==='discdrop'),'a short marker throw lands where Wren can pick it up')}
  const b3=mtAt(6);if(b3){Q.S.sel='disc_putt';{const fe=Q.makeEnemy(Object.keys(Q.EN)[0],Q.P.x+20,Q.P.y,1);fe.spawn=0;Q.G.ents.push(fe)}Q.P.icd=0;press('KeyK');step(Q.G.mode==='play'&&Q.G.shots.some(s=>s.kind==='disc'&&!s.pts),'with a foe close by, the disc is a quick throw');Q.G.ents=[];Q.G.shots=[];Q.G.discOut=0}
  fresh();go(18,23);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.P.x=16;Q.P.y=140;Q.S.sel='disc_putt';Q.P.icd=0;if(Math.hypot(Q.G.basket.cx-24,Q.G.basket.cy-150)>Q.TUNE.golf.mapRange){press('KeyK');step(Q.G.mode==='play','far from the basket, the disc is a quick throw')}}
+// disc gates on moat islands: Ember burns thorns, Crystal wakes the eye; nothing else opens them, jumps can't clear them, they stay open
+{const gs={ember:[],crystal:[]};for(let y=0;y<Q.WH;y++)for(let x=0;x<Q.WW;x++){const rm=Q.genScreen(x,y);if(rm.jf&&rm.jf.gate)gs[rm.jf.gate].push([x,y])}
+ step(gs.ember.length>=3&&gs.crystal.length>=3,'the world has a few disc gates (ember '+gs.ember.length+', crystal '+gs.crystal.length+')');
+ if(gs.ember.length){fresh();const [x,y]=gs.ember[0];const rm=go(x,y);const th=[...rm.t].indexOf(Q.TH);step(th>=0,'an ember gate has thorns');
+  Q.gateHit({x:0,y:0,dk:'disc_mid'},Q.TH);step([...Q.G.room.t].includes(Q.TH),'a plain disc does not burn thorns');
+  Q.P.z=8;step(!Q.freeP((th%16)*16,(th>>4)*16-6),'a jump cannot clear thorns');Q.P.z=0;
+  Q.gateHit({x:0,y:0,dk:'disc_glow',glow:1},Q.TH);step(![...Q.G.room.t].includes(Q.TH)&&Q.S.opened.includes('e:'+x+','+y),'the Ember disc burns the thorns away');
+  const again=go(x,y);step(![...again.t].includes(Q.TH),'burnt thorns stay gone')}
+ if(gs.crystal.length){fresh();const [x,y]=gs.crystal[0];const rm=go(x,y);step([...rm.t].includes(Q.EY)&&[...rm.t].includes(Q.SG),'a crystal gate has a seal and an eye');
+  Q.gateHit({x:0,y:0,dk:'disc_drive'},Q.EY);step([...Q.G.room.t].includes(Q.SG),'another disc does not wake the eye');
+  Q.gateHit({x:0,y:0,dk:'disc_crystal'},Q.EY);step(![...Q.G.room.t].includes(Q.SG)&&![...Q.G.room.t].includes(Q.EY),'the Crystal disc opens the seal');
+  const again=go(x,y);step(![...again.t].includes(Q.SG),'an opened seal stays open')}}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -172,6 +184,7 @@ shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
 const mts=(name,f)=>shot('map throw '+name,()=>{worst();for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;const h=Q.HOLES[3],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.ents=[];Q.G.npcs=[];const b=Q.G.basket;Q.P.x=b.cx-8;Q.P.y=Math.min(150,b.cy+60);Q.startMT('disc_drive');f(Q.G.mt)});
+shot('disc gate hint',()=>{worst();const L=[];for(let y=0;y<Q.WH&&!L.length;y++)for(let x=0;x<Q.WW&&!L.length;x++){const rm=Q.genScreen(x,y);if(rm.jf&&rm.jf.gate==='ember')L.push([x,y])}go(L[0][0],L[0][1]);Q.G.gateHint=0;Q.gateHit({x:120,y:80,dk:'disc_mid'},Q.TH)});
 mts('aim',m=>{m.ph='aim'});mts('aim panel top',m=>{m.ph='aim';m.lie.y=150});mts('power',m=>{m.ph='power';m.pw=1.1});mts('release',m=>{m.ph='rel';m.pw=1;m.rel=0.9});
 shot('golf full bag',()=>{worst();go(18,23);for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;Q.startGolf(27);T(5);const g=Q.G.golf;g.ph='aim';g.t=200;g.di=g.bag.indexOf('disc_crystal');g.tries=12;g.strokes=9;g.shape=2});
 const prac=(name,f)=>shot('practice '+name,()=>{worst();go(18,23);Q.startGolf(0,1);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.fails=11;f(g)});
