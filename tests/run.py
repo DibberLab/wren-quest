@@ -111,7 +111,7 @@ return {checks:n,bad};"""
 
 # Layout: screens drawn with worst-case values; any text drawn over other text fails.
 LAYOUT = PRE + r"""
-const res=[];const shot=(name,setup)=>{try{fresh();setup();Q.G.floats=[];Q.G.banner=null;const L=window.__frameText(),ov=window.__overlaps(L),off=window.__offscreen(L);res.push({name,n:L.length,ov,off})}catch(e){res.push({name,n:0,ov:['THREW '+e.message],off:[]})}};
+const res=[];const shot=(name,setup)=>{try{fresh();setup();Q.G.floats=[];Q.G.banner=null;const t0=Q.G.t,ov=new Set(),off=new Set();let n=0;for(let k=0;k<48;k+=4){Q.G.t=t0+k;const L=window.__frameText();n=Math.max(n,L.length);window.__overlaps(L).forEach(x=>ov.add(x+' @t+'+k));window.__offscreen(L).forEach(x=>off.add(x+' @t+'+k))}Q.G.t=t0;res.push({name,n,ov:[...ov],off:[...off]})}catch(e){res.push({name,n:0,ov:['THREW '+e.message],off:[]})}};
 const worst=()=>{const S=Q.S;S.maxHp=32;S.hp=31;S.gems=999;S.bombs=99;S.swl=30;S.swx=0;S.hpc=3;S.deaths=123;S.secrets=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'];S.shards=[];for(let n=1;n<=27;n++)S.shards.push(Q.HD0+n);
   for(const k in Q.ITEMS)S.items[k]=1;for(const k of Q.CONSK)S.inv[k]=9;for(const k of ['giant','boom','frost'])S.bag[k]=9;for(const hh of Q.HOLES)S.bk[hh.key]={s:hh.par+3,o:hh.n};S.aces=12;S.putts=99};
 for(const [x,y] of [[18,23],[0,0],[35,23],[35,0]])shot('overworld HUD '+x+','+y,()=>{worst();go(x,y)});
