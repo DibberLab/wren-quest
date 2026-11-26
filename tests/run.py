@@ -238,6 +238,23 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  const mhw=Q.S.maxHp;Q.lmTalk(ws[11].id);adv();T(5);adv();T(5);step((Q.G.heartQ||Q.S.maxHp===mhw+2)&&Q.S.secrets.includes('wardens'),'the twelfth Warden Stone gives a heart container and a secret');Q.G.heartQ=null;Q.G.mode='play';
  step(Q.progress().some(r=>r[0]==='LANDMARKS'&&r[1]==='12/60'),'the progress report counts landmarks');
  fresh();const nl=L[5],[x5,y5]=nl.key.split(',').map(Number);go(x5,y5);Q.G.banner=null;Q.placeExtras(Q.G.room);step(Q.G.banner&&Q.G.banner.s===nl.nm,'a new landmark shows its name')}
+// dungeon rooms: one theme puzzle per hole dungeon, traps that never block the cross corridor, floor styles
+{fresh();let one=0,match=0,quiet=0,corr=0,trapRooms=0,fls=new Set();for(const h of Q.HOLES){const d=Q.HD0+h.n;Q.S.dun[d]=Q.S.dun[d]||{unl:[],keys:[],item:0,hc:0,vis:[]};const dg=Q.genDungeon(d),pz=dg.list.filter(o=>o.puz);
+   if(pz.length===1)one++;if(pz[0]&&pz[0].puz===Q.HOLE_PUZ[Q.holeBiome(h)])match++;if(pz[0]&&!pz[0].en.length)quiet++;
+   for(const o of dg.list){fls.add(o.fl);if(!o.trap)continue;trapRooms++;const tt=Q.dunTiles(o);let ok=true;for(let i=0;i<176;i++){const c=i%16,w=i>>4;if((c===7||c===8||w===5)&&(tt[i]===Q.SPK||tt[i]===Q.CF))ok=false}if(ok)corr++}}
+ step(one===27&&match===27&&quiet===27,'every hole dungeon has one puzzle room, of its biome\'s kind, with no foes');step(trapRooms>=20&&corr===trapRooms,'traps ('+trapRooms+' rooms) never touch the cross corridor');step(fls.size===4,'rooms use all four floor styles');
+ // spikes hurt only while up
+ const hs=Q.HOLES.find(h=>{const dg=Q.genDungeon(Q.HD0+h.n);return dg.list.some(o=>o.trap==='spikes')}),ds=Q.HD0+hs.n;Q.enterDungeon(ds);T(60);adv();Q.G.mode='play';const so=Q.G.dg.list.find(o=>o.trap==='spikes');so.t=Q.dunTiles(so);Q.setRoom(so);Q.G.ents=[];Q.G.mode='play';
+ const si=[...Q.G.room.t].indexOf(Q.SPK),sc=si%16,sw=si>>4;Q.P.x=sc*16;Q.P.y=sw*16-4;Q.P.inv=0;Q.S.hp=Q.S.maxHp;let tt0=0;while(Q.spikeUp(sc)&&tt0++<200)T(1);const h0=Q.S.hp;Q.P.x=sc*16;Q.P.y=sw*16-4;T(2);step(Q.S.hp===h0,'lowered spikes are safe');
+ let tt1=0;while(!Q.spikeUp(sc)&&tt1++<200){Q.P.x=sc*16;Q.P.y=sw*16-4;T(1)}Q.P.inv=0;Q.P.x=sc*16;Q.P.y=sw*16-4;T(2);step(Q.S.hp<h0,'raised spikes hurt');
+ // crumbling floor gives way and drops Wren back to safe ground
+ const hc=Q.HOLES.find(h=>Q.genDungeon(Q.HD0+h.n).list.some(o=>o.trap==='crumble'));Q.enterDungeon(Q.HD0+hc.n);T(60);adv();Q.G.mode='play';const co=Q.G.dg.list.find(o=>o.trap==='crumble');co.t=Q.dunTiles(co);Q.setRoom(co);Q.G.ents=[];Q.G.mode='play';
+ const ci=[...Q.G.room.t].indexOf(Q.CF),cc=ci%16,cw=ci>>4;Q.P.safe=[112,124];Q.P.inv=0;for(let i=0;i<40&&Q.G.room.t[ci]===Q.CF;i++){Q.P.x=cc*16;Q.P.y=cw*16-4;T(1)}step(Q.G.room.t[ci]===Q.BL&&Math.abs(Q.P.x-112)<20,'cracked floor gives way and drops Wren back')
+ // the plates puzzle and its chest
+ const hp=Q.HOLES.find(h=>Q.HOLE_PUZ[Q.holeBiome(h)]==='plates'&&h.n>14)||Q.HOLES.find(h=>Q.HOLE_PUZ[Q.holeBiome(h)]==='plates');fresh();Q.enterDungeon(Q.HD0+hp.n);T(60);adv();Q.G.mode='play';const po=Q.G.dg.list.find(o=>o.puz);po.t=Q.dunTiles(po);Q.setRoom(po);Q.onEnter();Q.G.ents=[];Q.G.mode='play';Q.G.dlg=null;
+ step(Q.G.puz&&Q.G.puz.type==='plates','the plates puzzle starts');for(const [c,w] of Q.PLPOS){Q.P.x=c*16;Q.P.y=w*16-4;T(2)}step(Q.G.puz.done&&Q.S.dun[Q.HD0+hp.n].hps===1,'stepping on all four plates in time solves it');
+ const ch=Q.G.picks.find(p=>p.content==='hpuz');step(!!ch,'solving it brings out the puzzle chest');if(ch){const g0=Q.S.gems,hp0=Q.S.hpc,mh0=Q.S.maxHp;Q.openChest(ch);adv();T(3);adv();step(hp.n>14?(Q.S.hpc!==hp0||Q.S.maxHp>mh0):Q.S.gems===g0+50,'the chest pays '+(hp.n>14?'a heart piece':'50 gems'));
+   Q.setRoom(po);Q.onEnter();Q.G.mode='play';step(!Q.G.picks.some(p=>p.content==='hpuz')&&!Q.G.puz,'a solved puzzle room stays solved and its chest stays opened')}}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -273,6 +290,7 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+shot('puzzle sign plates',()=>{worst();go(18,23);Q.say('Four stones remember a footstep. Wake them all before they forget.');Q.G.dlg.ch=999});
 shot('landmark lore',()=>{worst();const l=Q.LMS.find(q=>q.nm==='BURIED COLOSSUS');const [x,y]=l.key.split(',').map(Number);go(x,y);Q.S.lm=[l.id];Q.lmTalk(l.id);const d=Q.G.dlg;d.ch=999});
 shot('warden stone',()=>{worst();const l=Q.LMS.find(q=>q.kind==='warden');const [x,y]=l.key.split(',').map(Number);go(x,y);Q.lmTalk(l.id);const d=Q.G.dlg;d.ch=999});
 shot('landmark banner',()=>{worst();go(18,23);Q.G.banner={s:'BURIED COLOSSUS',t:100}});
