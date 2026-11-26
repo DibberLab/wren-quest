@@ -83,12 +83,22 @@ if(boss){boss.inv=0;Q.hitEnemy(boss,99999,boss.x,boss.y);T(140);adv()}step(Q.G.m
 let g=Q.G.golf;if(g){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);step(g.ph==='retry'&&!Q.G.ents.some(e=>e.boss&&!e.dead),'over par replays with no boss');T(60);press('KeyJ');step(g.ph==='aim'&&g.tries===2&&g.strokes===0,'replay restarts the hole');
   // three fails cost one heart container
   const mh=Q.S.maxHp;for(let k=0;k<2;k++){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);T(60);press('KeyJ')}step(Q.S.maxHp===mh-2,'third failed try costs a heart container');
+  for(let k=0;k<3;k++){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);T(60);press('KeyJ')}step(Q.S.maxHp===mh-2,'a hole never takes a second heart container');
   // putting mini-game: lock inside the chains
   g.lie={x:g.c.bk.x,y:g.c.bk.y+20};g.strokes=0;g.ph='land';g.lt=1;T(3);step(g.ph==='putt','within 30 ft starts the putting mini-game');
   const p=g.pt;T(12);p.x=p.ox;press('KeyJ');T(7);p.y=p.oy;press('KeyJ');T(45);step(g.made===1&&g.ph==='done','putt inside the chains is made');
   T(270);adv();T(5)}
 step(Q.S.shards.includes(Q.HD0+1)&&[...Q.G.room.t].includes(Q.ST),'par gives the crown piece and opens the stairs');
 Q.exitDungeon();T(60);adv();step(Q.G.room.kind==='over'&&Q.G.room.key===h.key,'stairs return to the basket screen');
+// walk away: B at the retry screen goes back to the surface; the boss room resumes the challenge with no refight
+fresh();{const h2=Q.HOLES[1],[x2,y2]=h2.key.split(',').map(Number);go(x2,y2);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
+ if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(130);for(let i=0;i<80&&Q.G.mode!=='play';i++)T(1)}const d=Q.G.dn,bb=Q.G.dg.boss;bb.t=Q.dunTiles(bb);Q.setRoom(bb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);
+ const bs=Q.G.ents.find(e=>e.boss);if(bs){bs.inv=0;Q.hitEnemy(bs,99999,bs.x,bs.y);T(140);adv()}step(Q.G.mode==='golf','hole 2 challenge starts');
+ const g2=Q.G.golf;g2.strokes=g2.c.par;g2.ph='land';g2.lt=1;T(3);T(60);press('KeyL');T(2);step(Q.G.mode==='dialog'&&!Q.G.golf,'B on the retry screen walks away');adv();T(80);adv();
+ step(Q.G.room.kind==='over'&&Q.G.room.key===h2.key,'walking away returns to the basket screen');step(!Q.S.shards.includes(Q.HD0+2),'walking away gives no crown piece');
+ Q.enterDungeon(d);T(60);adv();Q.G.mode='play';const b3=Q.G.dg.boss;b3.t=Q.dunTiles(b3);Q.setRoom(b3);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(60);
+ step(!Q.G.ents.some(e=>e.boss),'coming back: the keeper stays down');adv();step(Q.G.mode==='golf'&&Q.G.golf.h.n===2,'coming back resumes the hole challenge');
+ Q.G.golf.ph='intro';Q.G.golf.t=30;press('KeyL');T(2);step(!Q.G.golf,'B at the tee walks away too');adv();T(80);adv()}
 // story: opening plays on a new game, beats at 1/9/18/27 pieces, throne talk, ending then the win screen
 Q.newGame();step(Q.G.mode==='scene'&&Q.G.scene.name==='opening','new game opens with the story');for(let i=0;i<20&&Q.G.mode==='scene';i++){K.Enter=1;T(1);K.Enter=0;T(30)}step(Q.G.mode==='dialog','skipping the opening leads to the first line');
 // one-minute opening: putter in hand, first sink on hole 1 opens a practice hole (no heart cost), then the groundskeeper
@@ -145,6 +155,7 @@ golf('power',g=>{g.ph='power';g.pw=1.1});
 golf('release',g=>{g.ph='rel';g.pw=1;g.rel=0.9});
 golf('retry heart lost',g=>{g.ph='retry';g.t=80;g.heartLost=1;g.failed=1});
 golf('retry',g=>{g.ph='retry';g.t=80;g.heartLost=0;g.fails=1;g.failed=1});
+golf('retry no hearts at stake',g=>{g.ph='retry';g.t=80;g.heartLost=0;g.fails=4;g.failed=1;Q.S.golfLost={27:1}});golf('intro leave',g=>{g.ph='intro';g.t=40;g.admin=false});
 golf('done',g=>{g.ph='done';g.t=50;g.made=1;g.strokes=1});
 golf('message',g=>{g.ph='aim';g.msg={s:'OUT OF BOUNDS! +1',c:'#fff',t:50}});
 for(const ph of ['x','y','miss'])golf('putt '+ph,g=>{g.lie={x:g.c.bk.x,y:g.c.bk.y+30};Q.startPutt();g.pt.ph=ph;g.pt.t=10;g.pt.res='SHORT! HITS THE CAGE'});

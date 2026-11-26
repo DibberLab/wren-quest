@@ -119,7 +119,7 @@ const TUNE={
   sword:{needBase:5,needPerLevel:2,dmgPerLevel:0.25,foeHpPerLevel:0.15,foeSpeedPerLevel:0.008,foeDmgBumpAt:15,bossHpPerLevel:0.1},
   stamina:{roll:28,jump:24,sprint:0.55,spin:34,axe:12,hammer:18,pick:6,regen:1.2,regenWinded:0.9},
   golf:{maxThrow:210,puttFt:30,par3Len:340,par4Len:500,powerSpeed:0.03,releaseSpeed:0.06,releaseAim:0.28,releaseCurve:0.35,
-        puttZone:0.22,puttZonePerFt:0.0055,puttZoneMin:0.05,puttSpeed:0.02,puttSpeedPerFt:0.0008,failsPerHeart:3},
+        puttZone:0.22,puttZonePerFt:0.0055,puttZoneMin:0.05,puttSpeed:0.02,puttSpeedPerFt:0.0008,failsPerHeart:3,heartsPerHole:1},
   charm:{chance:0.3,chanceOwed:0.6},           // Marebear charm duel chance (owed = while she holds one of your hearts)
   folk:0.22                                     // share of eligible overworld screens with a wandering person
 };
@@ -1033,13 +1033,13 @@ for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thu
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
 const HINTS=['27 baskets hide 27 dungeons and 27 crown pieces. After each boss, sink the ghostly hole in par or better: aim, lock power, then lock the curve. Watch the wind.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:3,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:3,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],golfLost:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY)||localStorage.getItem('emberwake-save-v3');return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
 
 // ================= ROOMS =================
-function setRoom(room){G.slicks=[];G.holeEnter=null;G.tutEnter=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
+function setRoom(room){G.slicks=[];G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
 function reachCells(){const sc=clamp(Math.floor((P.x+8)/16),0,15),sw=clamp(Math.floor((P.y+11)/16),0,10),seen=new Set([sw*16+sc]),q=[[sc,sw]],out=[];
   while(q.length){const [c,w]=q.shift();if(c>=1&&c<=14&&w>=1&&w<=9&&EWALK.has(G.room.t[w*16+c]))out.push([c,w]);for(const d of DIRS){const nc=c+d[0],nw=w+d[1];if(nc<0||nc>15||nw<0||nw>10)continue;const k=nw*16+nc;if(seen.has(k)||!WALK.has(G.room.t[k]))continue;seen.add(k);q.push([nc,nw])}}return out}
 function spawnList(types,n,lvl){const far=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8&&Math.hypot(c*16-P.x,w*16-P.y)>76);for(let i=0;i<n&&far.length;i++){const [c,w]=far.splice(ri(far.length),1)[0];G.ents.push(makeEnemy(pick(types),c*16,w*16,lvl))}}
@@ -1055,7 +1055,7 @@ function onEnter(){const rm=G.room;unstick();
     const bell=S.relics.silence?0.11:0.05;if(!rm.arena&&!rm.dn&&rm.lvl>=1&&swordLv()&&!NPCAT[rm.key]&&G.t-(G.lastDuelT||-1e9)>2400&&R()<bell){const pool=['duelist','witch','brute'];if(rm.lvl>=4||R()<0.2)pool.push('shadow');G.duelPending=pick(pool)}
     save()}
   else if(rm.kind==='dun'){const ds=S.dun[rm.d],rk=rm.x+','+rm.y;if(!ds.vis.includes(rk))ds.vis.push(rk);G.puz=null;if(rm.puz)initPuzzle(rm);
-    if(rm.boss){if(!ds.boss){G.pendingShut=1;G.bossPending=80;play(null);if(rm.d===NDUN&&!(S.beats||[]).includes('throne')){(S.beats=S.beats||[]).push('throne');G.sceneQ='throne'}}else{play('dun');bossLoot(rm)}}
+    if(rm.boss){if(!ds.boss&&ds.bossDown&&DUN[rm.d].hole){G.golfWait=50;play(null)}else if(!ds.boss){G.pendingShut=1;G.bossPending=80;play(null);if(rm.d===NDUN&&!(S.beats||[]).includes('throne')){(S.beats=S.beats||[]).push('throne');G.sceneQ='throne'}}else{play('dun');bossLoot(rm)}}
     else{play('dun');if(!rm.cleared&&rm.en.length){spawnList(rm.en,Math.max(1,Math.ceil(rm.en.length*TUNE.spawn.dungeon)),dlvlS(rm.d));G.needClear=1;if(rm.shut)G.pendingShut=1}else{rm.cleared=1;roomRewards(rm,false)}
       if(rm.turrets){for(const c of [1,14]){const tt=makeEnemy('turret',c*16,16,rm.d);tt.spawn=0;tt.ox=1;tt.oy=1;tt.w=14;tt.h=14;G.ents.push(tt)}}}}
   else if(rm.kind==='cave'){play('cave');caveSetup(rm)}
@@ -1120,7 +1120,7 @@ function updGolf(){const g=G.golf;if(!g)return;const c=g.c;g.t++;if(G.shake>0)G.
   if(g.z===undefined){g.z=tz;g.cy=ty}g.z+=(tz-g.z)*0.1;g.cy+=(ty-g.cy)*(g.ph==='fly'?0.18:0.12);
   for(const p of G.parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.t--}G.parts=G.parts.filter(p=>p.t>0);
   switch(g.ph){
-  case'intro':if(g.t>150||(g.t>30&&IN.pa)){g.ph=golfDist()<=PUTT_FT?'aim':'aim';g.t=0}break;
+  case'intro':if(!g.admin&&!g.tut&&g.t>20&&IN.pb){golfLeave();break}if(g.t>150||(g.t>30&&IN.pa)){g.ph=golfDist()<=PUTT_FT?'aim':'aim';g.t=0}break;
   case'aim':{if(IN.x||IN.y){g.held++;const sp=0.9+Math.min(2.6,g.held*0.06);let nx=clamp(g.mk.x+IN.x*sp,6,250),ny=clamp(g.mk.y+IN.y*sp,6,c.L-6);const dx=nx-g.lie.x,dy=ny-g.lie.y,dd=Math.hypot(dx,dy);if(dd>GOLF_MAX){nx=g.lie.x+dx/dd*GOLF_MAX;ny=g.lie.y+dy/dd*GOLF_MAX}g.mk.x=nx;g.mk.y=ny;g.pv=null}else g.held=0;
     if(IN.pb){g.shape=(g.shape+1)%3;g.pv=null;sfx('text')}if(IN.pa&&Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y)>4){g.ph='power';g.pw=0;g.pd=1;sfx('sel')}break}
   case'power':g.pw+=g.pd*TUNE.golf.powerSpeed;if(g.pw>=1.2){g.pw=1.2;g.pd=-1}if(g.pw<=0){g.pw=0;g.pd=1}if(IN.pb){g.ph='aim';break}if(IN.pa){g.ph='rel';g.rel=-1;g.rd=1;sfx('sel')}break;
@@ -1128,7 +1128,7 @@ function updGolf(){const g=G.golf;if(!g)return;const c=g.c;g.t++;if(G.shake>0)G.
   case'fly':golfFly();break;
   case'land':if(--g.lt<=0)golfAfter();break;
   case'putt':updPutt();break;
-  case'retry':if(g.t>50&&IN.pa){golfReset();break}if((g.admin||g.tut)&&g.t>50&&(IN.pb||IN.pst)){if(g.tut){golfFinish();break}G.golf=null;G.mode='play';G.parts=[];areaMusic()}break;
+  case'retry':if(g.t>50&&IN.pa){golfReset();break}if(g.t>50&&(IN.pb||IN.pst)){if(g.tut){golfFinish();break}if(!g.admin){golfLeave();break}G.golf=null;G.mode='play';G.parts=[];areaMusic()}break;
   case'done':if(g.t>100&&(IN.pa||g.t>260))golfFinish();break}}
 function golfThrow(){const g=G.golf,s=golfAim(),clean=Math.abs(g.rel)<0.12;
   const a=s.a+g.rel*TUNE.golf.releaseAim,cv=s.cv+g.rel*TUNE.golf.releaseCurve,D=s.D*g.pw,v0=Math.sqrt(2*0.05*Math.max(1,D));
@@ -1152,8 +1152,11 @@ function golfEnd(how){const g=G.golf,c=g.c,d=g.disc;g.strokes++;
 function golfLie(x,y){const g=G.golf,c=g.c;for(const t of c.trees){const q=Math.hypot(x-t.x,y-t.y);if(q<t.r+4){x=t.x+(x-t.x)/(q||1)*(t.r+5);y=t.y+(y-t.y)/(q||1)*(t.r+5)}}
   for(const w of c.water)if(x>=w.x&&x<=w.x+w.w&&y>=w.y&&y<=w.y+w.h){y=y<w.y+w.h/2?w.y-3:w.y+w.h+3}
   g.lie={x:clamp(x,8,248),y:clamp(y,8,c.L-8)};g.prev={x:g.lie.x,y:g.lie.y};const left=Math.round(golfDist());if(!g.msg||g.msg.t<20)golfMsg(left<=PUTT_FT?left+' FT - PUTT!':left+' FT TO GO','#ffffff',70)}
+function golfHeartsLeft(g){return g.admin||g.tut?0:TUNE.golf.heartsPerHole-((S.golfLost||{})[g.h.n]||0)}
+// Walk away from a hole challenge: back to the surface; the keeper stays down and the basket waits in its chamber.
+function golfLeave(){const g=G.golf;G.golf=null;G.mode='play';G.parts=[];S.hp=Math.max(S.hp,2);save();play(null);say('You walk away from hole '+g.h.n+' for now. The keeper stays down; the ghostly basket will wait in its chamber.',()=>exitDungeon())}
 function golfAfter(){const g=G.golf;if(g.strokes>=g.c.par){g.fails++;g.failed=1;g.ph='retry';g.t=0;sfx('hurt');
-    if(!g.tut&&g.fails%TUNE.golf.failsPerHeart===0){const took=S.maxHp>6;S.maxHp=Math.max(6,S.maxHp-2);S.hp=Math.min(Math.max(S.hp,2),S.maxHp);g.heartLost=took?1:2;save()}return}
+    if(!g.tut&&g.fails%TUNE.golf.failsPerHeart===0&&golfHeartsLeft(g)>0){const took=S.maxHp>6;S.maxHp=Math.max(6,S.maxHp-2);S.hp=Math.min(Math.max(S.hp,2),S.maxHp);g.heartLost=took?1:2;if(took){S.golfLost=S.golfLost||{};S.golfLost[g.h.n]=(S.golfLost[g.h.n]||0)+1}save()}return}
   g.disc=null;if(golfDist()<=PUTT_FT)startPutt();else{g.ph='aim';golfHome()}}
 // ---- putting mini-game ----
 function startPutt(){const g=G.golf,d=Math.max(1,golfDist()),hw=Math.max(TUNE.golf.puttZoneMin,TUNE.golf.puttZone-TUNE.golf.puttZonePerFt*d);g.pt={d,ph:'x',x:-1,xd:1,y:-1,yd:1,ox:clamp((R()-0.5)*0.6+g.c.wind.x*1.5,-0.55,0.55),oy:clamp((R()-0.5)*0.4,-0.3,0.3),hw,hh:hw*1.3,v:TUNE.golf.puttSpeed+TUNE.golf.puttSpeedPerFt*d,t:0};g.ph='putt';sfx('sel')}
@@ -1223,9 +1226,9 @@ function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();retu
     txt('RELEASE',6,by+12,'#ffe060');px(ctx,'#000',62,by+12,112,7);px(ctx,'#3a3048',63,by+13,110,5);px(ctx,'#2a7a5a',118-7,by+13,14,5);px(ctx,'#ffffff',118,by+11,1,9);if(g.ph==='rel')px(ctx,'#ff7a2f',117+Math.round(g.rel*54),by+11,3,9);
     }
   const big=(a,b,col,b2)=>{px(ctx,'rgba(0,0,0,0.7)',0,56,PW,b2?60:48);txt(a,128,62,col,'center',16);if(b)txt(b,128,84,'#ffffff','center');if(b2)txt(b2,128,98,'#a0d0ff','center')};
-  if(g.ph==='intro')g.tut?big('PRACTICE HOLE','NOTHING TO LOSE HERE','#7fffd4'):big('HOLE '+g.h.n+'  PAR '+g.h.par,'SINK IT IN PAR OR BETTER','#ffe060');
+  if(g.ph==='intro')g.tut?big('PRACTICE HOLE','NOTHING TO LOSE HERE','#7fffd4'):big('HOLE '+g.h.n+'  PAR '+g.h.par,'SINK IT IN PAR OR BETTER','#ffe060',g.admin?'':'B: WALK AWAY FOR NOW');
   if(g.ph==='retry'&&g.tut)big('OVER PAR','NO HARM DONE IN PRACTICE','#ff6040',g.t>50?'A: AGAIN   B: SKIP':'');
-  else if(g.ph==='retry'){const left=TUNE.golf.failsPerHeart-(g.fails%TUNE.golf.failsPerHeart);big('OVER PAR',g.heartLost===1?'YOU LOST A HEART CONTAINER!':g.heartLost===2?'3 MISSES, BUT YOUR HEART HOLDS':left+' TR'+(left>1?'IES':'Y')+' LEFT, THEN A HEART','#ff6040',g.t>50?'A: PLAY IT AGAIN'+(g.admin?'   B: QUIT':''):'')}
+  else if(g.ph==='retry'){const left=TUNE.golf.failsPerHeart-(g.fails%TUNE.golf.failsPerHeart);big('OVER PAR',g.heartLost===1?'YOU LOST A HEART CONTAINER!':g.heartLost===2?'3 MISSES, BUT YOUR HEART HOLDS':golfHeartsLeft(g)<=0?'NO MORE HEARTS AT STAKE HERE':left+' TR'+(left>1?'IES':'Y')+' LEFT, THEN A HEART','#ff6040',g.t>50?'A: PLAY IT AGAIN   B: '+(g.admin?'QUIT':'LEAVE'):'')}
   if(g.ph==='done'&&g.tut)big('IN THE CHAINS!',g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  PRACTICE DONE','#7fffd4');
   else if(g.ph==='done'){const dd=g.strokes-g.h.par;big(g.strokes===1?'ACE!!':(SCORENM[String(dd)]||'PAR'),g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  CROWN PIECE!','#7fffd4')}
   if(g.msg)txt(g.msg.s,128,18,g.msg.c,'center')}
@@ -1694,7 +1697,7 @@ function shopBuy(pk){const it=pk.item;
 function giveItem(kind,msg){G.mode='hold';G.holdT=80;G.holdKind=kind;G.holdMsg=msg;jingle(kind==='shard'?'shard':'get');P.atk=0;P.spin=0;P.charge=0;P.atkHeld=0}
 function bossDeath(e){G.bossDie={t:0,x:ecx(e),y:ecy(e),final:!!e.cfg.final};G.ents.forEach(o=>{if(o!==e)o.dead=1});G.shots=[];play(null)}
 function updBossDie(){const b=G.bossDie;b.t++;if(b.t%6===0){const x=b.x+(R()-0.5)*36,y=b.y+(R()-0.5)*36;puff(x,y,pick(['#ff7a2f','#ffd040','#ffffff']),12,2.2);sfx('boom');G.shake=5}
-  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1];say('The keeper falls. The Old Course remembers this hole, and a ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again; every third miss costs a heart container!',()=>startGolf());return}
+  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1];say('The keeper falls. The Old Course remembers this hole, and a ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again. Three misses cost a heart container, but never more than one per hole. Press B at the tee or after a miss to walk away; the basket will wait here.',()=>{S.dun[G.dn].bossDown=1;save();startGolf()});return}
   if(b.t>=96){G.bossDie=null;const ds=S.dun[G.dn];ds.boss=1;swordXP(5);if(b.final){winGame();return}G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');sfx('secret');save()}}
 function winGame(){S.won=1;save();playScene('ending',()=>{G.mode='win';G.winT=0;jingle('win','title')})}
 
@@ -1762,6 +1765,7 @@ function updatePlay(){
   if(G.bf.vigor>0&&G.t%120===0&&S.hp<S.maxHp)S.hp++;if(G.reveal>0)G.reveal--;for(const b of G.bolts)b.t--;G.bolts=G.bolts.filter(b=>b.t>0);
   if(G.heartQ&&G.mode==='play'){const m=G.heartQ;G.heartQ=null;giveHeart(m);return}
   if(G.sceneQ&&G.mode==='play'){const b=G.sceneQ;G.sceneQ=null;playScene(b,b==='nine'?()=>say('Dusk falls over the land. Foes see better in the dark than you do.'):b==='eighteen'?()=>say('Night covers the land. Only the baskets still glow.'):null);return}
+  if(G.golfWait&&G.mode==='play'&&--G.golfWait<=0){G.golfWait=0;const h=HOLES[DUN[G.dn].hole-1];say('The ghostly basket still waits. HOLE '+h.n+', PAR '+h.par+'.',()=>startGolf());return}
   if(G.tutEnter&&G.mode==='play'&&--G.tutEnter<=0){G.tutEnter=0;startGolf(0,1);return}
   if(G.holeEnter&&G.mode==='play'&&--G.holeEnter.t<=0){const n=G.holeEnter.n;G.holeEnter=null;G.holeRet={x:G.room.x,y:G.room.y,px:P.x,py:P.y};enterDungeon(HD0+n);return}
   if(G.bossDie)updBossDie();else updPlayer();
