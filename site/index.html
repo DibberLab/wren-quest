@@ -105,7 +105,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;width
     </div>
     <div class="card">
       <h2>The quest</h2>
-      <p>The Obsidian King broke the Ember Crown into 27 pieces and hid one under each of the 27 disc golf baskets. Grab your gear from the sage's cave, sink a basket to drop into its dungeon, beat the boss, then sink the ghostly hole in par or better for the crown piece, then storm the Obsidian Throne in the far northeast. Talk to strangers (walk up and press attack) for quests, clues and lies. Eat strange mushrooms. Beware wandering champions. There are 13 secrets to find. Progress saves in this browser.</p>
+      <p>Long ago this land settled every quarrel with a round on the Old Course. When the Obsidian King cheated in the Crown Round, the Course turned him to black glass, and he shattered the Ember Crown and buried a piece under each of its 27 baskets. Get your gear from the old groundskeeper's cave, sink a basket to drop into its dungeon, beat its keeper, then play the hole honestly (par or better) to break the seal. The land darkens as the round goes on. Collect all 27 pieces and face the King on his throne in the far northeast. Talk to strangers (walk up and press attack) for quests, clues and lies. Eat strange mushrooms. Beware wandering champions. There are 15 secrets to find. Progress saves in this browser.</p>
     </div>
   </section>
 </main>
@@ -1033,7 +1033,7 @@ for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thu
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
 const HINTS=['27 baskets hide 27 dungeons and 27 crown pieces. After each boss, sink the ghostly hole in par or better: aim, lock power, then lock the curve. Watch the wind.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:3,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,wv:3,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY)||localStorage.getItem('emberwake-save-v3');return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
@@ -1055,7 +1055,7 @@ function onEnter(){const rm=G.room;unstick();
     const bell=S.relics.silence?0.11:0.05;if(!rm.arena&&!rm.dn&&rm.lvl>=1&&swordLv()&&!NPCAT[rm.key]&&G.t-(G.lastDuelT||-1e9)>2400&&R()<bell){const pool=['duelist','witch','brute'];if(rm.lvl>=4||R()<0.2)pool.push('shadow');G.duelPending=pick(pool)}
     save()}
   else if(rm.kind==='dun'){const ds=S.dun[rm.d],rk=rm.x+','+rm.y;if(!ds.vis.includes(rk))ds.vis.push(rk);G.puz=null;if(rm.puz)initPuzzle(rm);
-    if(rm.boss){if(!ds.boss){G.pendingShut=1;G.bossPending=80;play(null)}else{play('dun');bossLoot(rm)}}
+    if(rm.boss){if(!ds.boss){G.pendingShut=1;G.bossPending=80;play(null);if(rm.d===NDUN&&!(S.beats||[]).includes('throne')){(S.beats=S.beats||[]).push('throne');G.sceneQ='throne'}}else{play('dun');bossLoot(rm)}}
     else{play('dun');if(!rm.cleared&&rm.en.length){spawnList(rm.en,Math.max(1,Math.ceil(rm.en.length*TUNE.spawn.dungeon)),dlvlS(rm.d));G.needClear=1;if(rm.shut)G.pendingShut=1}else{rm.cleared=1;roomRewards(rm,false)}
       if(rm.turrets){for(const c of [1,14]){const tt=makeEnemy('turret',c*16,16,rm.d);tt.spawn=0;tt.ox=1;tt.oy=1;tt.w=14;tt.h=14;G.ents.push(tt)}}}}
   else if(rm.kind==='cave'){play('cave');caveSetup(rm)}
@@ -1182,14 +1182,15 @@ function drawPutt(){const g=G.golf,p=g.pt,bx=128+p.ox*88,by=78+p.oy*52,zw=p.hw*8
   const hint=p.ph==='x'?'A: LOCK LEFT/RIGHT':p.ph==='y'?'A: LOCK UP/DOWN':'';if(hint)txt(hint,128,PH-30,'#ffffff','center');if(p.ph==='miss')txt(p.res,128,PH-30,'#ffb060','center')}
 function golfFinish(){const g=G.golf,h=g.h,ds=S.dun[G.dn];G.golf=null;G.mode='play';G.parts=[];
   if(g.admin){areaMusic();if(!g.made)return;const d=HD0+h.n,st=g.strokes,dd=st-h.par;S.dun[d]=Object.assign(S.dun[d]||{unl:[],keys:[],item:0,hc:0,vis:[]},{boss:1,golf:1});if(!S.shards.includes(d))S.shards.push(d);if(!S.bk[h.key])S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};S.hp=S.maxHp;save();
-    giveItem('shard',(st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!',''))+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'!');if(dd<0)heartPiece('Under par!');return}
+    giveItem('shard',(st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!',''))+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'!');if(dd<0)heartPiece('Under par!');storyBeat();return}
   P.x=112;P.y=110;P.dir=0;
   const st=g.strokes,dd=st-h.par;ds.boss=1;ds.golf=1;G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');
   if(!S.shards.includes(G.dn))S.shards.push(G.dn);if(!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:200};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
   if(st===1){S.aces=(S.aces||0)+1;addSecret('ace')}S.hp=S.maxHp;save();
   const nm=st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!','');
   giveItem('shard',nm+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'! '+(S.shards.length>=NSH?'The seal on the Obsidian Throne is broken. Go to the far northeast!':'The stairs will take you back to the surface.'));
-  if(dd<0)heartPiece('Under par!')}
+  if(dd<0)heartPiece('Under par!');storyBeat()}
+function storyBeat(){const n=S.shards.length;S.beats=S.beats||[];const b=n>=NSH?'all':n>=18?'eighteen':n>=9?'nine':n>=1?'first':null;if(b&&!S.beats.includes(b)){S.beats.push(b);G.sceneQ=b;save()}}
 function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();return}const z=g.z||1,cy=0,Y=v=>Math.round(v);
   px(ctx,'#2e5a24',0,0,PW,PH);ctx.save();ctx.translate(PW/2,PH/2);ctx.scale(z,z);ctx.translate(-128,-Math.round(g.cy));
   px(ctx,'#3e7230',-40,-60,336,c.L+120);px(ctx,'rgba(0,0,0,0.12)',-40,-60,44,c.L+120);px(ctx,'rgba(0,0,0,0.12)',252,-60,44,c.L+120);for(let i=0;i<60;i++){const x=Math.floor(h2(i,g.h.n,1)*256),y=Math.floor(h2(g.h.n,i,2)*c.L);px(ctx,'#356628',x,y,3,1)}
@@ -1239,6 +1240,68 @@ function drawAdmin(){const a=G.adm;px(ctx,'rgba(8,10,24,0.95)',8,HUD+4,240,PH-8)
     const h=HOLES[i],won=S.shards.includes(HD0+h.n),b=S.bk[h.key];txt((h.n<10?' ':'')+h.n+' '+h.nm.toUpperCase().slice(0,7),18,y,sel?'#ffffff':won?'#7fffd4':'#a0a8c0');if(sel)txt('>',9,y,'#7fffd4');
     txt('P'+h.par+(b?' '+b.s:''),134,y,won?'#7fffd4':'#8a8aa0','right');txt(sel&&a.col===0?'[GO]':'GO',162,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');txt(sel&&a.col===1?'[PLAY]':'PLAY',220,y,sel&&a.col===1?'#7fffd4':'#5a6a8a','center')}
   txt('UP/DN HOLE   L/R MODE',128,HUD+PH-22,'#6a7a9a','center');txt('A GO   B CLOSE',128,HUD+PH-12,'#6a7a9a','center')}
+
+
+// ================= STORY: cutscenes =================
+// Each scene is a list of pages: [backdrop, speaker, text]. A or Start advances; Start held skips the rest.
+const SCENES={
+ opening:[
+  ['course','','Long ago this land settled every quarrel with one game: a round on the Old Course, twenty-seven holes laid by the first wardens.'],
+  ['crown','','Whoever played the Crown Round honestly wore the Ember Crown, and its light kept the endless night away.'],
+  ['king','','Then a king played the Crown Round and nudged his disc into the chains when he thought no one was looking.'],
+  ['shards','','The Course saw. It turned him to black glass. In his rage the Obsidian King shattered the Crown and buried a piece under every basket.'],
+  ['course','','His keepers guard each piece. Beat a keeper, then play its hole honestly, par or better, and the seal breaks.'],
+  ['wren','','The wardens are long gone. Only the old groundskeeper is left, and his apprentice. Wake up, Wren.']],
+ first:[
+  ['king','THE OBSIDIAN KING','So. The groundskeeper\'s apprentice wants to play my course.'],
+  ['king','THE OBSIDIAN KING','Take your little piece. Every one you lift, the night takes a bite out of the day.']],
+ nine:[
+  ['king','THE OBSIDIAN KING','The front nine. Anyone can par the front nine.'],
+  ['dusk','THE OBSIDIAN KING','Let us see how you play at dusk.']],
+ eighteen:[
+  ['king','THE OBSIDIAN KING','Eighteen holes and not one stroke fudged. I never managed three.'],
+  ['night','THE OBSIDIAN KING','The night is mine now. Finish the round, if you can still see the chains.']],
+ all:[
+  ['crown','','The last seal breaks. Twenty-seven pieces hum together in Wren\'s pack.'],
+  ['king','THE OBSIDIAN KING','Whole, almost. The last of the Crown is on my throne. With me.'],
+  ['king','THE OBSIDIAN KING','The far northeast, caddie. One more hole. No par this time.']],
+ throne:[
+  ['king','THE OBSIDIAN KING','You came. Good. I have waited a very long time for an honest opponent.'],
+  ['king','THE OBSIDIAN KING','The Course will not watch this one. Just you and me.'],
+  ['king','THE OBSIDIAN KING','Draw.']],
+ ending:[
+  ['cracked','','The Obsidian King falls to one knee. The glass cracks, and cracks again.'],
+  ['oldman','','Inside is only an old man holding a chipped putter. "I just wanted to win," he says. "Just once."'],
+  ['wren','WREN','"Then play a round with me. An honest one. Win it fair, or lose it fair."'],
+  ['crown','','The Ember Crown rises, whole, and dawn spills over the Old Course for the first time in a hundred years.'],
+  ['course','','Somewhere a basket rings. Then another. The land is playing again.']]};
+function playScene(name,after){G.scene={name,pages:SCENES[name],i:0,ch:0,t:0,after,prev:G.mode};G.mode='scene';play(name==='ending'||name==='opening'?'title':null)}
+function updScene(){const sc=G.scene,pg=sc.pages[sc.i],len=pg[2].length;sc.t++;if(sc.ch<len){sc.ch+=1.2;if(G.t%3===0)sfx('text')}
+  if(IN.pst&&sc.t>20){sc.i=sc.pages.length;}
+  else if(IN.pa||IN.pb){if(sc.ch<len)sc.ch=len;else{sc.i++;sc.ch=0;sc.t=0}}
+  if(sc.i>=sc.pages.length){G.scene=null;G.mode='play';if(sc.name==='nine'||sc.name==='eighteen'||sc.name==='all'){G.shake=10;sfx('boom')}areaMusic();if(sc.after)sc.after()}}
+function sceneEra(){return S&&!S.won?Math.min(3,Math.floor((S.shards||[]).length/9)):0}
+function drawSceneArt(bg,t){const cx=128,cy=74;
+  const sky=(a,b)=>{for(let y=0;y<148;y+=4){const k=y/148;px(ctx,k<0.5?a:b,0,y,W,4)}};
+  if(bg==='course'||bg==='wren'||bg==='dusk'||bg==='night'){sky(bg==='night'?'#0a0c24':bg==='dusk'?'#5a2a48':'#3a5a8a',bg==='night'?'#141a3a':bg==='dusk'?'#a04a3a':'#5a80b0');
+    px(ctx,bg==='night'?'#1a3020':'#3e7230',0,110,W,38);px(ctx,bg==='night'?'#24402a':'#5a9a44',40,118,176,20);
+    if(bg==='night')for(let i=0;i<30;i++)px(ctx,'#ffffff',Math.floor(h2(i,1,7)*W),Math.floor(h2(1,i,7)*90),1,1);
+    if(bg!=='night')disc(ctx,bg==='dusk'?'#ff8040':'#ffe080',200,40,12);
+    const bx=bg==='wren'?190:128;px(ctx,'#5a5a6a',bx-1,82,3,32);px(ctx,'#ffd040',bx-10,76,21,4);for(let i=0;i<6;i++)px(ctx,'#c0c8d8',bx-8+i*3,80,1,14);px(ctx,'#8a92a6',bx-11,94,23,6);
+    if(bg==='wren'){ctx.drawImage(heroImg(2,0),56,82,32,32);drawCap(56,82,2,2)}}
+  else{px(ctx,'#0a0610',0,0,W,148);for(let i=0;i<40;i++){const x=Math.floor(h2(i,3,9)*W),y=(Math.floor(h2(3,i,9)*148)-t*0.3*(1+i%3))%148;px(ctx,i%2?'#ff5a20':'#a02010',x,(y+148)%148,1,1)}}
+  if(bg==='king'||bg==='cracked'){ctx.save();ctx.imageSmoothingEnabled=false;const pal={a:'#3a3040',d:'#1a1420',r:'#ff4010',k:'#000000'};ctx.globalAlpha=0.35;disc(ctx,'#ff3010',cx,cy+6,46+Math.sin(t*0.05)*3);ctx.globalAlpha=1;
+    ctx.drawImage(gs('knight',pal,'kingS',''),cx-32,cy-30,64,64);if(bg==='cracked')for(let i=0;i<7;i++){const a=i*0.9;px(ctx,'#ffe0a0',Math.round(cx+Math.cos(a)*10*(i%3+1)),Math.round(cy+Math.sin(a)*10*(i%3+1)),2,2)}
+    px(ctx,(t>>3)%4?'#ff6020':'#ffd080',cx-9,cy-12,4,2);px(ctx,(t>>3)%4?'#ff6020':'#ffd080',cx+6,cy-12,4,2);ctx.restore()}
+  if(bg==='oldman'){px(ctx,'#2a2030',cx-14,cy-18,28,44);disc(ctx,'#e8c8a0',cx,cy-16,8);px(ctx,'#c0c0c0',cx-8,cy-10,16,4);px(ctx,'#5a4a6a',cx-12,cy-6,24,30);px(ctx,'#8a6a3a',cx+12,cy-4,2,28);px(ctx,'#ffd040',cx+9,cy+22,8,3);
+    for(let i=0;i<12;i++)px(ctx,'#3a3040',cx-40+Math.floor(h2(i,5,5)*80),cy+30+Math.floor(h2(5,i,5)*8),3,2)}
+  if(bg==='crown'||bg==='shards'){const n=bg==='shards'?0:1,glow=0.25+0.1*Math.sin(t*0.08);ctx.globalAlpha=glow;disc(ctx,'#ffb030',cx,cy,40);ctx.globalAlpha=1;
+    const pts=[[-30,14],[-30,-10],[-15,4],[0,-22],[15,4],[30,-10],[30,14]];if(n){ctx.fillStyle='#ffc040';ctx.beginPath();pts.forEach((q,i)=>i?ctx.lineTo(cx+q[0],cy+q[1]):ctx.moveTo(cx+q[0],cy+q[1]));ctx.closePath();ctx.fill();px(ctx,'#ff5a20',cx-3,cy-2,6,6);px(ctx,'#7fffd4',cx-20,cy+2,4,4);px(ctx,'#7fffd4',cx+16,cy+2,4,4);px(ctx,'#b07a10',cx-30,cy+10,60,4)}
+    else for(let i=0;i<27;i++){const a=i/27*6.283+t*0.004,r=30+(i%3)*10;px(ctx,'#ffc040',Math.round(cx+Math.cos(a)*r),Math.round(cy+Math.sin(a)*r*0.6),3,3)}}}
+function drawScene(){const sc=G.scene;if(!sc)return;const pg=sc.pages[Math.min(sc.i,sc.pages.length-1)];px(ctx,'#000',0,0,W,H);drawSceneArt(pg[0],G.t);
+  px(ctx,'#000',0,150,W,82);px(ctx,'#ff7a2f',4,152,W-8,1);let y=158;if(pg[1]){txt(pg[1],10,y,'#ff9a50');y+=12}
+  const lines=paginate(pg[2])[0].concat(paginate(pg[2]).slice(1).flat()),n=Math.floor(sc.ch);let used=0;for(const ln of lines){const sh=ln.slice(0,Math.max(0,n-used));used+=ln.length+1;txt(sh,10,y,'#ffffff');y+=11}
+  txt((sc.i+1)+'/'+sc.pages.length,250,4,'#6a5a7a','right');txt('START: SKIP',6,4,'#6a5a7a');if(sc.ch>=pg[2].length&&(G.t>>4)%2)px(ctx,'#ff7a2f',242,222,6,4)}
 
 function startDuel(type,o){o=o||{};const lvl=o.lvl||2;const D={type,t:0,phase:'ready',combo:0,comboT:0,saved:G.room.t.slice(),npcs:G.npcs,dojo:o.dojo,lvl,arena:G.arena,needClear:G.needClear,ents:G.ents.filter(e=>!e.dead&&!e.champ)};G.duel=D;
   G.npcs=[];G.ents=[];G.shots=[];G.bombs=[];G.needClear=0;G.arena=null;G.pendingArena=0;
@@ -1361,7 +1424,7 @@ function shopStock(cv,taken){if(cv.type==='hcshop')return taken?[{item:'p_heal',
   return[{item:'bombs',price:20},{item:a,price:CONS[a].price},{item:b,price:CONS[b].price}]}
 function caveTalk(){const cv=G.room.cv,taken=S.caves.includes(cv.id);let m;
   switch(cv.type){
-  case'intro':if(!taken){S.caves.push(cv.id);say('WREN! The Obsidian King shattered the Ember Crown into 27 pieces and buried them beneath the 27 disc golf baskets. You cannot face him empty-handed. Take these!',()=>{S.items.sword=1;S.items.shield=1;S.items.bow=1;S.items.bombs=1;S.items.disc_putt=1;S.bombs=10;S.gems+=30;S.inv.p_heal=1;S.sel='disc_putt';save();giveItem('kit','You got a SWORD, SHIELD, BOW, BOMBS and a disc golf PUTTER! There is a basket right outside. Throw your disc into it (K/X) and the chains will refill your hearts. Swing with J/Z (A), jump with SPACE (Y), roll with SHIFT (B) and hold it to sprint. The green bar is your stamina. Use items with K/X (X), switch with Q/E. Arrows cost 1 gem each. Open your inventory with ENTER.')});return}else m=HINTS[0];break;
+  case'intro':if(!taken){S.caves.push(cv.id);say('There you are. The Course is waking, Wren. I can feel the seals on all twenty-seven holes. I am too old to play it. You are not. Take these.',()=>{S.items.sword=1;S.items.shield=1;S.items.bow=1;S.items.bombs=1;S.items.disc_putt=1;S.bombs=10;S.gems+=30;S.inv.p_heal=1;S.sel='disc_putt';save();giveItem('kit','You got a SWORD, SHIELD, BOW, BOMBS and a disc golf PUTTER! The first hole is close by. Sink a throw into its basket (K/X) and the ground will open onto its keeper. Swing with J/Z (A), jump with SPACE (Y), roll with SHIFT (B) and hold it to sprint. The green bar is your stamina. Use items with K/X (X), switch with Q/E. Arrows cost 1 gem each. Open your inventory with ENTER.')});return}else m=HINTS[0];break;
   case'supply':m='Supply cache! Your bombs are full again, and there is a potion on the shelf.';S.bombs=bombMax();S.inv.p_heal=Math.min(9,(S.inv.p_heal||0)+(S.caves.includes(cv.id)?0:1));if(!S.caves.includes(cv.id))S.caves.push(cv.id);sfx('key');save();break;
   case'shop':case'hcshop':m='Welcome, traveler! Walk into an item to buy it.';break;
   case'smith':m='Finest steel in the land! Walk into a weapon to buy it. No refunds. No exceptions. No crying.';break;
@@ -1623,9 +1686,9 @@ function shopBuy(pk){const it=pk.item;
 function giveItem(kind,msg){G.mode='hold';G.holdT=80;G.holdKind=kind;G.holdMsg=msg;jingle(kind==='shard'?'shard':'get');P.atk=0;P.spin=0;P.charge=0;P.atkHeld=0}
 function bossDeath(e){G.bossDie={t:0,x:ecx(e),y:ecy(e),final:!!e.cfg.final};G.ents.forEach(o=>{if(o!==e)o.dead=1});G.shots=[];play(null)}
 function updBossDie(){const b=G.bossDie;b.t++;if(b.t%6===0){const x=b.x+(R()-0.5)*36,y=b.y+(R()-0.5)*36;puff(x,y,pick(['#ff7a2f','#ffd040','#ffffff']),12,2.2);sfx('boom');G.shake=5}
-  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1];say('The boss falls! A ghostly basket rises from the stone. HOLE '+h.n+', PAR '+h.par+'. Sink it in par or better to claim the crown piece. Miss par and you play it again; every third miss costs a heart container!',()=>startGolf());return}
+  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1];say('The keeper falls. The Old Course remembers this hole, and a ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again; every third miss costs a heart container!',()=>startGolf());return}
   if(b.t>=96){G.bossDie=null;const ds=S.dun[G.dn];ds.boss=1;swordXP(5);if(b.final){winGame();return}G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');sfx('secret');save()}}
-function winGame(){G.mode='win';G.winT=0;S.won=1;jingle('win','title');save()}
+function winGame(){S.won=1;save();playScene('ending',()=>{G.mode='win';G.winT=0;jingle('win','title')})}
 
 // ================= DIALOG =================
 function paginate(t){const words=t.split(' '),lines=[];let cur='';for(const w of words){if((cur+' '+w).trim().length>28){lines.push(cur);cur=w}else cur=(cur+' '+w).trim()}if(cur)lines.push(cur);const pages=[];for(let i=0;i<lines.length;i+=4)pages.push(lines.slice(i,i+4));return pages}
@@ -1661,7 +1724,7 @@ function poll(){let x=0,y=0,a=0,b=0,it=0,st=0,l=0,r=0;
 
 // ================= GAME FLOW =================
 function newGame(){S=newState();G.bf={};if(G.konami){S.gold=1;S.secrets.push('konami')}G.lastArea=null;const rm=genScreen(START[0],START[1]);setRoom(rm);const f=findSafe(rm);P.x=f[0];P.y=f[1]+16;if(!freeP(P.x,P.y))P.y=f[1];P.dir=0;P.inv=0;G.mode='play';onEnter();
-  say('The Ember Crown once held back the endless night. Now it lies in 27 pieces, buried beneath the disc golf baskets of the land. Wren, you have no weapon yet. The old sage waits in the cave to the north. Begin there.')}
+  playScene('opening',()=>say('Wren! You overslept again. The groundskeeper is waiting in his cave to the north. Go on.'))}
 function startLoaded(){G.lastArea=null;if(S.inv)delete S.inv.p_slime;if(S.sel&&!INV.includes(S.sel)&&!(ITEMS[S.sel]&&S.items[S.sel]))S.sel=usable()[0]||null;let msg='';if(!S.wv||S.wv<2){S.wv=2;S.sx=START[0];S.sy=START[1];S.visited=[];S.opened=[];S.arenas=[];S.caves=S.caves.filter(c=>c===99);S.qgot=[];S.bounty={};msg='The land has grown to twice its size while you rested. You wake in Emberglen with all your gear.'}
   if(S.wv<3){S.wv=3;const k=Math.min(NHOLE,(S.shards||[]).filter(d=>d<HD0).length);S.shards=[];S.bk={};for(let i=1;i<=k;i++){const d=HD0+i;S.shards.push(d);S.dun[d]={unl:[],keys:[],item:1,boss:1,hc:1,vis:[],golf:1};S.bk[HOLES[i-1].key]={s:HOLES[i-1].par,o:i};const it=DUN[d].item;if(it&&ITEMS[it]&&ITEMS[it].give&&!S.items[it])try{ITEMS[it].give()}catch(e){}}S.swl=S.swl||1;S.swx=S.swx||0;S.hpc=S.hpc||0;msg+=(msg?' ':'')+'The Ember Crown has shattered into 27 pieces, one beneath each disc golf basket. Sink a basket to drop into its dungeon.'+(k?' Your '+k+' shards became the first '+k+' crown pieces.':'')}
   if(S.items.sword&&!S.items.disc_putt){S.items.disc_putt=1;msg+=(msg?' ':'')+'A disc golf PUTTER lies beside you! Baskets stand all over the land: sink a throw and the chains refill your hearts.'}
@@ -1689,6 +1752,7 @@ function updatePlay(){
   updPuzzle();if(G.glowT>0)G.glowT--;if(G.cardPending&&--G.cardPending.t<=0&&G.mode==='play'){openCard(G.cardPending.n);G.cardPending=null;return}
   if(G.bf.vigor>0&&G.t%120===0&&S.hp<S.maxHp)S.hp++;if(G.reveal>0)G.reveal--;for(const b of G.bolts)b.t--;G.bolts=G.bolts.filter(b=>b.t>0);
   if(G.heartQ&&G.mode==='play'){const m=G.heartQ;G.heartQ=null;giveHeart(m);return}
+  if(G.sceneQ&&G.mode==='play'){const b=G.sceneQ;G.sceneQ=null;playScene(b,b==='nine'?()=>say('Dusk falls over the land. Foes see better in the dark than you do.'):b==='eighteen'?()=>say('Night covers the land. Only the baskets still glow.'):null);return}
   if(G.holeEnter&&G.mode==='play'&&--G.holeEnter.t<=0){const n=G.holeEnter.n;G.holeEnter=null;G.holeRet={x:G.room.x,y:G.room.y,px:P.x,py:P.y};enterDungeon(HD0+n);return}
   if(G.bossDie)updBossDie();else updPlayer();
   if(G.mode!=='play'&&G.mode!=='dialog'&&G.mode!=='hold')return;
@@ -1719,6 +1783,7 @@ function tick(){poll();G.t++;
   case'card':updCard();break;
   case'golf':updGolf();break;
   case'admin':updAdmin();break;
+  case'scene':updScene();break;
   case'warp':updWarp();break}}
 
 // ================= RENDER =================
@@ -1856,7 +1921,7 @@ function drawWorld(){ctx.drawImage(G.bg,0,0);animTiles();drawPuzzle();if(G.room.
   drawPlayer(0,0);
   G.shots.forEach(drawShot);
   for(const p of G.parts){ctx.globalAlpha=Math.min(1,p.t/8);ctx.fillStyle=p.c;ctx.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s)}ctx.globalAlpha=1;
-  drawDark();for(const f of G.floats)txt(f.s,Math.round(f.x),Math.round(f.y),f.c,'center');
+  drawDark();if(G.room.kind==='over'){const e=sceneEra();if(e)px(ctx,e===1?'rgba(110,40,70,0.2)':e===2?'rgba(8,10,48,0.4)':'rgba(70,0,12,0.36)',0,0,PW,PH)}for(const f of G.floats)txt(f.s,Math.round(f.x),Math.round(f.y),f.c,'center');
   if(G.bossDie&&G.bossDie.t%12<3){px(ctx,'rgba(255,255,255,0.25)',0,0,PW,PH)}
   const boss=G.ents.find(e=>e.boss&&!e.dead);
   if(boss){px(ctx,'#000',40,PH-14,176,10);px(ctx,'#3a1010',42,PH-12,172,6);px(ctx,boss.hp<boss.maxhp/2?'#ff5030':'#ffb030',42,PH-12,Math.round(172*Math.max(0,boss.hp)/boss.maxhp),6);txt(boss.cfg.n,128,PH-26,'#ffffff','center')}
@@ -1966,9 +2031,11 @@ function drawPause(){px(ctx,'rgba(8,4,14,0.96)',0,HUD,PW,PH);const y0=HUD;
 function drawOver(){if(G.mode==='dying')return;px(ctx,'rgba(10,0,0,0.85)',0,HUD,PW,PH);txt('YOU FELL',128,HUD+50,'#ff4a3a','center',16);
   ['CONTINUE','SAVE AND QUIT'].forEach((s,i)=>{txt(s,128,HUD+92+i*16,i===G.menu?'#ffffff':'#7a6a7a','center');if(i===G.menu&&(G.t>>4)%2===0)ctx.drawImage(HEARTS[2],128-s.length*4-14,HUD+93+i*16)})}
 function drawWin(){px(ctx,'rgba(10,4,16,'+Math.min(0.92,G.winT/60)+')',0,0,W,H);if(G.winT<40)return;
-  txt('THE CROWN IS WHOLE',128,40,'#ffd060','center');txt('Dawn returns to the land.',128,64,'#e8d8c8','center');
-  const m=Math.floor(S.time/60),s=Math.floor(S.time%60);txt('TIME  '+m+':'+String(s).padStart(2,'0'),128,100,'#ffffff','center');txt('FALLS '+S.deaths,128,116,'#ffffff','center');txt('HEARTS '+(S.maxHp/2),128,132,'#ffffff','center');
-  ctx.drawImage(heroImg(2,0),112,150,32,32);drawCap(112,150,2,2);if(G.winT>150&&(G.t>>4)%2)txt('PRESS START',128,200,'#ff7a2f','center')}
+  txt('THE CROWN IS WHOLE',128,24,'#ffd060','center');txt('THE OLD COURSE PLAYS AGAIN',128,40,'#e8d8c8','center');
+  const m=Math.floor(S.time/60),s=Math.floor(S.time%60);let cp=0,cs=0;for(const h of HOLES){const e=S.bk[h.key];if(e){cp+=h.par;cs+=e.s}}const cd=cs-cp;
+  [['TIME',m+':'+String(s).padStart(2,'0')],['COURSE',cp?(cd===0?'EVEN':cd>0?'+'+cd:''+cd):'-'],['ACES',''+(S.aces||0)],['SWORD','LV '+(S.swl||1)],['HEARTS',''+(S.maxHp/2)],['FALLS',''+S.deaths],['SECRETS',S.secrets.length+'/'+NSEC]].forEach((r,i)=>{txt(r[0],80,62+i*12,'#a89880');txt(r[1],176,62+i*12,'#ffffff','right')});
+  txt('THANKS FOR PLAYING',128,150,'#ff9a50','center');
+  ctx.drawImage(heroImg(2,0),112,166,32,32);drawCap(112,166,2,2);if(G.winT>150&&(G.t>>4)%2)txt('PRESS START',128,210,'#ff7a2f','center')}
 function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
   if(G.mode==='title'){drawTitle();return}
   px(ctx,'#000',0,0,W,H);
@@ -1986,6 +2053,7 @@ function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
   if(G.mode==='win')drawWin();
   if(G.mode==='card')drawCard();
   if(G.mode==='admin')drawAdmin();
+  if(G.mode==='scene')drawScene();
   if(G.mode==='fade'){const f=G.fade.t;px(ctx,'rgba(0,0,0,'+(f<20?f/20:(40-f)/20)+')',0,HUD,PW,PH)}}
 
 // ================= LOOP & UI =================
