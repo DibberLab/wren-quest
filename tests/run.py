@@ -157,6 +157,12 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  const v=Q.HOLES.find(h=>Q.holeBiome(h)==='volcano');fresh();go(18,23);Q.startGolf(v.n);T(3);const g=Q.G.golf;g.ph='aim';const w=g.c.water[0];
  if(w){g.disc={x:w.x+w.w/2,y:w.y+w.h/2,gd:Q.gDisc()};Q.golfEnd('stop');step(g.msg&&/LAVA/.test(g.msg.s),'volcano hazards are lava')}
  Q.G.golf=null;Q.G.mode='play'}
+// a keeper per hole: 27 different bosses (the Bog Hydra included); each new pattern fires and hands back to moving
+{const names=Q.HOLES.map(h=>Q.DUN[Q.HD0+h.n].boss.n);step(new Set(names).size===27,'27 holes have 27 different bosses');step(names.includes('BOG HYDRA'),'the Bog Hydra has a hole');
+ for(const pat of ['rain','wall','cross','burrow','sweep']){fresh();Q.enterDungeon(Q.HD0+27);T(60);Q.G.mode='play';const bb=Q.G.dg.boss;bb.t=Q.dunTiles(bb);Q.setRoom(bb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';for(let i=0;i<400;i++){const b0=Q.G.ents.find(o=>o.boss);if(b0&&!b0.spawn&&Q.G.mode==='play')break;if(['dialog','hold'].includes(Q.G.mode))adv();T(1)}
+  const e=Q.G.ents.find(o=>o.boss);if(!e){step(false,'boss spawned for '+pat);continue}Q.P.inv=9999;e.st=pat;e.pt=0;const n0=Q.G.shots.length;let shots=0,hitWhileUnder=null;
+  for(let i=0;i<170&&e.st===pat;i++){T(1);shots=Math.max(shots,Q.G.shots.length-n0);if(pat==='burrow'&&e.pt===30)hitWhileUnder=Q.hitEnemy(e,1,e.x,e.y)}
+  step(shots>0&&e.st==='move','the '+pat+' pattern fires and returns to moving');if(pat==='burrow')step(hitWhileUnder===false,'a burrowed boss cannot be hit');Q.P.inv=0}}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -189,6 +195,7 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+shot('boss banner',()=>{worst();Q.enterDungeon(Q.HD0+18);T(60);Q.G.mode='play';Q.G.banner={s:Q.DUN[Q.HD0+18].boss.n,t:100}});
 for(const bn of ['forest','swamp','desert','grave','volcano'])shot('course '+bn,()=>{worst();go(18,23);const h=Q.HOLES.find(h=>Q.holeBiome(h)===bn);Q.startGolf(h.n);T(5);const g=Q.G.golf;g.ph='intro';g.t=20;g.admin=false});
 const mts=(name,f)=>shot('map throw '+name,()=>{worst();for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;const h=Q.HOLES[3],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.ents=[];Q.G.npcs=[];const b=Q.G.basket;Q.P.x=b.cx-8;Q.P.y=Math.min(150,b.cy+60);Q.startMT('disc_drive');f(Q.G.mt)});
 shot('disc gate hint',()=>{worst();const L=[];for(let y=0;y<Q.WH&&!L.length;y++)for(let x=0;x<Q.WW&&!L.length;x++){const rm=Q.genScreen(x,y);if(rm.jf&&rm.jf.gate==='ember')L.push([x,y])}go(L[0][0],L[0][1]);Q.G.gateHint=0;Q.gateHit({x:120,y:80,dk:'disc_mid'},Q.TH)});
