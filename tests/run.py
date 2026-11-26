@@ -71,7 +71,7 @@ return {checks:Q.HOLES.length,bad,info:out.join(' ')};"""
 FLOWS = PRE + r"""
 const bad=[],ck=(c,m)=>{if(!c)bad.push(m)};let n=0;const step=(c,m)=>{n++;ck(c,m)};
 // new game says the intro
-Q.newGame();step(Q.G.mode==='dialog'&&/27 pieces/.test(Q.G.dlg.pages.join(' ')),'new game intro');Q.G.mode='play';Q.G.dlg=null;
+
 // all pars 3 or 4
 step(Q.HOLES.every(h=>h.par===3||h.par===4),'pars are 3 or 4');
 // hole loop: sink basket -> dungeon -> boss -> golf -> over par replays -> par gives crown + stairs -> exit to basket screen
@@ -89,6 +89,13 @@ let g=Q.G.golf;if(g){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);step(g.ph==='retr
   T(270);adv();T(5)}
 step(Q.S.shards.includes(Q.HD0+1)&&[...Q.G.room.t].includes(Q.ST),'par gives the crown piece and opens the stairs');
 Q.exitDungeon();T(60);adv();step(Q.G.room.kind==='over'&&Q.G.room.key===h.key,'stairs return to the basket screen');
+// story: opening plays on a new game, beats at 1/9/18/27 pieces, throne talk, ending then the win screen
+Q.newGame();step(Q.G.mode==='scene'&&Q.G.scene.name==='opening','new game opens with the story');for(let i=0;i<20&&Q.G.mode==='scene';i++){K.Enter=1;T(1);K.Enter=0;T(30)}step(Q.G.mode==='dialog','skipping the opening leads to the first line');
+fresh();go(18,23);for(const [n,b] of [[1,'first'],[9,'nine'],[18,'eighteen'],[27,'all']]){Q.S.shards=[];for(let i=1;i<=n;i++)Q.S.shards.push(Q.HD0+i);Q.storyBeat();T(2);step(Q.G.mode==='scene'&&Q.G.scene.name===b,'story beat at '+n+' pieces');for(let i=0;i<20&&Q.G.mode==='scene';i++){K.Enter=1;T(1);K.Enter=0;T(30)}adv();Q.G.mode='play'}
+Q.storyBeat();T(2);step(Q.G.mode==='play','each beat plays once');
+fresh();Q.S.shards=[];Q.enterDungeon(Q.NDUN);T(60);Q.G.mode='play';const tb=Q.G.dg.boss;tb.t=Q.dunTiles(tb);Q.setRoom(tb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(3);step(Q.G.mode==='scene'&&Q.G.scene.name==='throne','the King speaks before the final fight');
+fresh();go(18,23);Q.winGame();step(Q.G.mode==='scene'&&Q.G.scene.name==='ending','winning plays the ending');for(let i=0;i<20&&Q.G.mode==='scene';i++){K.Enter=1;T(1);K.Enter=0;T(30)}step(Q.G.mode==='win','the ending leads to the win screen');
+fresh();go(18,23);Q.S.shards=[];for(let i=1;i<=18;i++)Q.S.shards.push(Q.HD0+i);step(Q.sceneEra()===2,'the land darkens after 18 pieces');
 // admin menu is hidden without the flag
 fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin');
 // ambush: duel mid-ambush restores the ambush and clearing opens the gates
@@ -104,7 +111,7 @@ return {checks:n,bad};"""
 
 # Layout: screens drawn with worst-case values; any text drawn over other text fails.
 LAYOUT = PRE + r"""
-const res=[];const shot=(name,setup)=>{try{fresh();setup();Q.G.floats=[];Q.G.banner=null;const L=window.__frameText(),ov=window.__overlaps(L),off=window.__offscreen(L);res.push({name,n:L.length,ov,off})}catch(e){res.push({name,n:0,ov:['THREW '+e.message],off:[]})}};
+const res=[];const shot=(name,setup)=>{try{fresh();setup();Q.G.floats=[];Q.G.banner=null;const t0=Q.G.t,ov=new Set(),off=new Set();let n=0;for(let k=0;k<48;k+=4){Q.G.t=t0+k;const L=window.__frameText();n=Math.max(n,L.length);window.__overlaps(L).forEach(x=>ov.add(x+' @t+'+k));window.__offscreen(L).forEach(x=>off.add(x+' @t+'+k))}Q.G.t=t0;res.push({name,n,ov:[...ov],off:[...off]})}catch(e){res.push({name,n:0,ov:['THREW '+e.message],off:[]})}};
 const worst=()=>{const S=Q.S;S.maxHp=32;S.hp=31;S.gems=999;S.bombs=99;S.swl=30;S.swx=0;S.hpc=3;S.deaths=123;S.secrets=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'];S.shards=[];for(let n=1;n<=27;n++)S.shards.push(Q.HD0+n);
   for(const k in Q.ITEMS)S.items[k]=1;for(const k of Q.CONSK)S.inv[k]=9;for(const k of ['giant','boom','frost'])S.bag[k]=9;for(const hh of Q.HOLES)S.bk[hh.key]={s:hh.par+3,o:hh.n};S.aces=12;S.putts=99};
 for(const [x,y] of [[18,23],[0,0],[35,23],[35,0]])shot('overworld HUD '+x+','+y,()=>{worst();go(x,y)});
@@ -129,6 +136,7 @@ golf('done',g=>{g.ph='done';g.t=50;g.made=1;g.strokes=1});
 golf('message',g=>{g.ph='aim';g.msg={s:'OUT OF BOUNDS! +1',c:'#fff',t:50}});
 for(const ph of ['x','y','miss'])golf('putt '+ph,g=>{g.lie={x:g.c.bk.x,y:g.c.bk.y+30};Q.startPutt();g.pt.ph=ph;g.pt.t=10;g.pt.res='SHORT! HITS THE CAGE'});
 shot('title',()=>{Q.G.mode='title';Q.G.t=200});
+for(const nm in Q.SCENES)Q.SCENES[nm].forEach((pg,i)=>shot('scene '+nm+' '+(i+1),()=>{worst();go(18,23);Q.playScene(nm);Q.G.scene.i=i;Q.G.scene.ch=999}));
 shot('win',()=>{worst();go(18,23);Q.S.time=359999;Q.G.mode='win';Q.G.winT=300});
 const bad=[];for(const r of res){for(const o of r.ov)bad.push(r.name+': "'+o+'" overlap');for(const o of r.off)bad.push(r.name+': "'+o+'" runs off screen')}
 return {checks:res.length,bad};"""
