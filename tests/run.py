@@ -91,6 +91,14 @@ step(Q.S.shards.includes(Q.HD0+1)&&[...Q.G.room.t].includes(Q.ST),'par gives the
 Q.exitDungeon();T(60);adv();step(Q.G.room.kind==='over'&&Q.G.room.key===h.key,'stairs return to the basket screen');
 // story: opening plays on a new game, beats at 1/9/18/27 pieces, throne talk, ending then the win screen
 Q.newGame();step(Q.G.mode==='scene'&&Q.G.scene.name==='opening','new game opens with the story');for(let i=0;i<20&&Q.G.mode==='scene';i++){K.Enter=1;T(1);K.Enter=0;T(30)}step(Q.G.mode==='dialog','skipping the opening leads to the first line');
+// one-minute opening: putter in hand, first sink on hole 1 opens a practice hole (no heart cost), then the groundskeeper
+Q.newGame();Q.G.scene=null;Q.G.mode='play';Q.G.dlg=null;step(Q.S.items.disc_putt===1&&Q.S.sel==='disc_putt'&&!Q.S.items.sword,'a new game starts with the putter in hand');
+Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;step(!!Q.G.basket,'the first basket is on the start screen');
+if(Q.G.basket){Q.G.strokes=1;Q.basketMade();for(let i=0;i<200&&Q.G.mode!=='golf';i++)T(1)}step(Q.G.mode==='golf'&&Q.G.golf.tut&&Q.G.room.kind==='over','sinking it opens the practice hole, not the dungeon');
+{const g=Q.G.golf,mh=Q.S.maxHp;for(let k=0;k<3;k++){g.strokes=3;Q.golfAfter();step(g.ph==='retry','practice over par replays');Q.golfReset()}step(Q.S.maxHp===mh,'missing practice three times costs no heart');
+ g.made=1;g.strokes=2;g.ph='done';g.t=120;K.KeyJ=1;T(1);K.KeyJ=0;T(2);step(Q.G.mode==='dialog'&&Q.S.beats.includes('practice'),'finishing practice calls Wren to the groundskeeper')}
+Q.G.mode='play';Q.G.dlg=null;Q.setRoom(Q.genScreen(18,23));Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;if(Q.G.basket){Q.G.strokes=1;Q.basketMade();T(200)}step(Q.G.mode!=='golf'&&Q.G.room.kind==='over','no sword yet: a second sink does not drop into the dungeon');
+Q.newGame();Q.G.scene=null;Q.G.mode='play';Q.G.dlg=null;Q.startGolf(0,1);T(3);Q.G.golf.ph='retry';Q.G.golf.t=60;K.KeyL=1;T(1);K.KeyL=0;T(2);step(Q.G.mode!=='golf'&&Q.S.beats.includes('practice'),'B skips the practice hole');
 fresh();go(18,23);for(const [n,b] of [[1,'first'],[9,'nine'],[18,'eighteen'],[27,'all']]){Q.S.shards=[];for(let i=1;i<=n;i++)Q.S.shards.push(Q.HD0+i);Q.storyBeat();T(2);step(Q.G.mode==='scene'&&Q.G.scene.name===b,'story beat at '+n+' pieces');for(let i=0;i<20&&Q.G.mode==='scene';i++){K.Enter=1;T(1);K.Enter=0;T(30)}adv();Q.G.mode='play'}
 Q.storyBeat();T(2);step(Q.G.mode==='play','each beat plays once');
 fresh();Q.S.shards=[];Q.enterDungeon(Q.NDUN);T(60);Q.G.mode='play';const tb=Q.G.dg.boss;tb.t=Q.dunTiles(tb);Q.setRoom(tb);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(3);step(Q.G.mode==='scene'&&Q.G.scene.name==='throne','the King speaks before the final fight');
@@ -127,6 +135,11 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+const prac=(name,f)=>shot('practice '+name,()=>{worst();go(18,23);Q.startGolf(0,1);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.fails=11;f(g)});
+prac('intro',g=>{g.ph='intro';g.t=20});prac('aim',g=>{g.ph='aim';g.t=200});prac('power',g=>{g.ph='power';g.pw=1.1});prac('release',g=>{g.ph='rel';g.pw=1;g.rel=0.9});
+prac('putt',g=>{g.lie={x:g.c.bk.x,y:g.c.bk.y+25};Q.startPutt()});prac('retry',g=>{g.ph='retry';g.t=80;g.failed=1});prac('done',g=>{g.ph='done';g.made=1;g.t=50});
+shot('hud crown complete',()=>{worst();go(18,23);Q.S.shards=[];for(let i=1;i<=27;i++)Q.S.shards.push(Q.HD0+i)});
+shot('hud crown new piece',()=>{worst();go(18,23);Q.S.shards=[];for(let i=1;i<=12;i++)Q.S.shards.push(Q.HD0+i);Q.drawHUD();Q.S.shards.push(Q.HD0+20);Q.drawHUD()});
 golf('aim',g=>{g.ph='aim';g.t=200;g.mk={x:g.lie.x,y:g.lie.y-210};g.pv=null});
 golf('power',g=>{g.ph='power';g.pw=1.1});
 golf('release',g=>{g.ph='rel';g.pw=1;g.rel=0.9});
