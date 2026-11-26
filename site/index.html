@@ -1091,11 +1091,11 @@ function golfCourse(h){const r=rng(SEED+h.n*7717),par=h.par,L=par<=2?240:par===3
   const water=[];if(par>=3&&r()<0.75){const y=Math.round(L*(0.42+r()*0.16)),hh=16+Math.round(r()*10);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
   const a=r()*6.28,ws=(0.03+r()*0.12)*Math.min(1,0.4+h.n/27);
   return{L,tee,bk,mid,path,trees,water,wind:{x:Math.cos(a)*ws,y:Math.sin(a)*ws,s:ws,a},par}}
-function startGolf(hn){const h=HOLES[(hn||DUN[G.dn].hole)-1],c=golfCourse(h);G.golf={admin:!!hn,h,c,lie:{x:c.tee.x,y:c.tee.y},prev:{x:c.tee.x,y:c.tee.y},strokes:0,ph:'intro',t:0,aim:Math.atan2(c.bk.y-c.tee.y,c.bk.x-c.tee.x),pw:0,pd:1,cv:-1,cd:1,disc:null,cam:0,msg:null,trail:[]};G.mode='golf';play('title')}
+function startGolf(hn){const h=HOLES[(hn||DUN[G.dn].hole)-1],c=golfCourse(h);G.shake=0;G.golf={admin:!!hn,h,c,lie:{x:c.tee.x,y:c.tee.y},prev:{x:c.tee.x,y:c.tee.y},strokes:0,ph:'intro',t:0,aim:Math.atan2(c.bk.y-c.tee.y,c.bk.x-c.tee.x),pw:0,pd:1,cv:-1,cd:1,disc:null,cam:0,msg:null,trail:[]};G.mode='golf';play('title')}
 function golfMsg(s,c,t){G.golf.msg={s,c:c||'#ffffff',t:t||90}}
 function golfAimHome(){const g=G.golf,c=g.c;let tx=c.bk.x,ty=c.bk.y;if(c.mid&&g.lie.y>c.mid.y+20&&Math.hypot(c.bk.x-g.lie.x,c.bk.y-g.lie.y)>GOLF_MAX*0.9){tx=c.mid.x;ty=c.mid.y}g.aim=Math.atan2(ty-g.lie.y,tx-g.lie.x)}
 function golfPutt(){const g=G.golf;return Math.hypot(g.c.bk.x-g.lie.x,g.c.bk.y-g.lie.y)<GOLF_PUTT}
-function updGolf(){const g=G.golf,c=g.c;if(!g)return;g.t++;if(g.msg&&--g.msg.t<=0)g.msg=null;
+function updGolf(){const g=G.golf,c=g.c;if(!g)return;g.t++;if(G.shake>0)G.shake--;if(g.msg&&--g.msg.t<=0)g.msg=null;
   const camT=g.ph==='fly'&&g.disc?g.disc.y-96:g.ph==='intro'?(g.t<70?c.bk.y-60:c.bk.y-60+(g.lie.y-c.bk.y)*Math.min(1,(g.t-70)/70)):g.lie.y-96;g.cam+=(clamp(camT,0,c.L-PH+48)-g.cam)*(g.ph==='intro'?0.2:0.12);
   for(const p of G.parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.t--}G.parts=G.parts.filter(p=>p.t>0);
   switch(g.ph){
@@ -1169,12 +1169,12 @@ function updAdmin(){const a=G.adm,N=NHOLE+1;if(IN.pu)a.i=(a.i+N-1)%N;if(IN.pd)a.
   if(IN.pa){G.mode='play';G.duelPending=0;G.holeEnter=null;if(a.i===NHOLE){G.holeRet=null;enterDungeon(NDUN);return}const n=a.i+1;
     if(a.col===0){G.holeRet=adminRet();enterDungeon(HD0+n)}else{startGolf(n)}}}
 function drawAdmin(){const a=G.adm;px(ctx,'rgba(8,10,24,0.95)',8,HUD+4,240,PH-8);txt('ADMIN: FAST TRAVEL',128,HUD+8,'#ff7a2f','center');
-  txt('DUNGEON',150,HUD+19,a.col===0?'#ffffff':'#5a6a8a','center');txt('GOLF ONLY',212,HUD+19,a.col===1?'#ffffff':'#5a6a8a','center');
+  txt('DUNGEON',162,HUD+19,a.col===0?'#ffffff':'#5a6a8a','center');txt('GOLF',220,HUD+19,a.col===1?'#ffffff':'#5a6a8a','center');
   const rows=12,st=Math.max(0,Math.min(a.i-5,NHOLE+1-rows));for(let j=0;j<rows;j++){const i=st+j;if(i>NHOLE)break;const y=HUD+31+j*10,sel=i===a.i;
-    if(i===NHOLE){txt('OBSIDIAN THRONE',18,y,sel?'#ffffff':'#a080c0');if(sel)txt('>',12,y,'#7fffd4');txt('ENTER',150,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');continue}
-    const h=HOLES[i],won=S.shards.includes(HD0+h.n),b=S.bk[h.key];txt((h.n<10?' ':'')+h.n+' '+h.nm.toUpperCase().slice(0,12),18,y,sel?'#ffffff':won?'#7fffd4':'#a0a8c0');if(sel)txt('>',12,y,'#7fffd4');
-    txt('P'+h.par+(b?' '+b.s:''),118,y,won?'#7fffd4':'#8a8aa0','right');txt(sel&&a.col===0?'[GO]':'GO',150,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');txt(sel&&a.col===1?'[PLAY]':'PLAY',212,y,sel&&a.col===1?'#7fffd4':'#5a6a8a','center')}
-  txt('UP/DOWN HOLE  LEFT/RIGHT MODE  A GO  B CLOSE',128,HUD+PH-12,'#6a7a9a','center')}
+    if(i===NHOLE){txt('OBSIDIAN THRONE',18,y,sel?'#ffffff':'#a080c0');if(sel)txt('>',12,y,'#7fffd4');txt('ENTER',166,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');continue}
+    const h=HOLES[i],won=S.shards.includes(HD0+h.n),b=S.bk[h.key];txt((h.n<10?' ':'')+h.n+' '+h.nm.toUpperCase().slice(0,7),18,y,sel?'#ffffff':won?'#7fffd4':'#a0a8c0');if(sel)txt('>',12,y,'#7fffd4');
+    txt('P'+h.par+(b?' '+b.s:''),134,y,won?'#7fffd4':'#8a8aa0','right');txt(sel&&a.col===0?'[GO]':'GO',162,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');txt(sel&&a.col===1?'[PLAY]':'PLAY',220,y,sel&&a.col===1?'#7fffd4':'#5a6a8a','center')}
+  txt('UP/DN HOLE   L/R MODE',128,HUD+PH-22,'#6a7a9a','center');txt('A GO   B CLOSE',128,HUD+PH-12,'#6a7a9a','center')}
 
 function startDuel(type,o){o=o||{};const lvl=o.lvl||2;const D={type,t:0,phase:'ready',combo:0,comboT:0,saved:G.room.t.slice(),npcs:G.npcs,dojo:o.dojo,lvl,arena:G.arena,needClear:G.needClear,ents:G.ents.filter(e=>!e.dead&&!e.champ)};G.duel=D;
   G.npcs=[];G.ents=[];G.shots=[];G.bombs=[];G.needClear=0;G.arena=null;G.pendingArena=0;
