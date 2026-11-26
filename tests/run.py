@@ -245,7 +245,8 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  step(one===27&&match===27&&quiet===27,'every hole dungeon has one puzzle room, of its biome\'s kind, with no foes');step(trapRooms>=20&&corr===trapRooms,'traps ('+trapRooms+' rooms) never touch the cross corridor');step(fls.size===4,'rooms use all four floor styles');
  // spikes hurt only while up
  const hs=Q.HOLES.find(h=>{const dg=Q.genDungeon(Q.HD0+h.n);return dg.list.some(o=>o.trap==='spikes')}),ds=Q.HD0+hs.n;Q.enterDungeon(ds);T(60);adv();Q.G.mode='play';const so=Q.G.dg.list.find(o=>o.trap==='spikes');so.t=Q.dunTiles(so);Q.setRoom(so);Q.G.ents=[];Q.G.mode='play';
- const si=[...Q.G.room.t].indexOf(Q.SPK),sc=si%16,sw=si>>4;Q.P.x=sc*16;Q.P.y=sw*16-4;Q.P.inv=0;Q.S.hp=Q.S.maxHp;let tt0=0;while(Q.spikeUp(sc)&&tt0++<200)T(1);const h0=Q.S.hp;Q.P.x=sc*16;Q.P.y=sw*16-4;T(2);step(Q.S.hp===h0,'lowered spikes are safe');
+ const si=[...Q.G.room.t].indexOf(Q.SPK),sc=si%16,sw=si>>4;Q.P.x=sc*16;Q.P.y=sw*16-4;Q.P.inv=0;Q.S.hp=Q.S.maxHp;// wait for the middle of the down phase (not its last frames, which roll straight into the rise)
+ let tt0=0;const ph=()=>(Q.G.t+sc*11)%96;while((ph()<32||ph()>80)&&tt0++<200)T(1);const h0=Q.S.hp;Q.P.x=sc*16;Q.P.y=sw*16-4;T(2);step(Q.S.hp===h0,'lowered spikes are safe');
  let tt1=0;while(!Q.spikeUp(sc)&&tt1++<200){Q.P.x=sc*16;Q.P.y=sw*16-4;T(1)}Q.P.inv=0;Q.P.x=sc*16;Q.P.y=sw*16-4;T(2);step(Q.S.hp<h0,'raised spikes hurt');
  // crumbling floor gives way and drops Wren back to safe ground
  const hc=Q.HOLES.find(h=>Q.genDungeon(Q.HD0+h.n).list.some(o=>o.trap==='crumble'));Q.enterDungeon(Q.HD0+hc.n);T(60);adv();Q.G.mode='play';const co=Q.G.dg.list.find(o=>o.trap==='crumble');co.t=Q.dunTiles(co);Q.setRoom(co);Q.G.ents=[];Q.G.mode='play';
