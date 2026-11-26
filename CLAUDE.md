@@ -54,6 +54,7 @@ An 8-bit top-down action-adventure game (original IP: hero Wren, the Ember Crown
   - flows: the hole loop (basket → dungeon → boss → golf, over par replays, third miss costs a heart, putting, par → crown + stairs → back to the basket), admin gate, ambush restore, sword level 30, heart pieces, old-save migration
   - layout: about 30 screens drawn with worst-case values (16 hearts, 999 gems, level 30, try 12, long names); fails on any text drawn over other text or off screen. Each screen is drawn at 12 points across 48 frames so blinking text is checked lit and unlit. Widths assume Press Start 2P (1em per character). When you add or change a screen, add it here.
   - stress: random input across overworld, dungeons and caverns with no console errors
+  - `fresh()` turns random duels off (`G.lastDuelT` in the future) and `waitDun()` waits for a hole drop while dismissing dialogs, so random encounters can't make flows flaky. In the game, `countingDown()` stops random duels from starting while the ground opens, a practice hole starts or a challenge resumes.
   Run the suite before every PR and put its result in the PR description. Add a flow or layout case for each new feature.
 - Balance numbers live in `TUNE` at the top of the script (foes per screen, spawn shares, drop chances, sword scaling, stamina costs, golf meters and putting, charm and folk chances). Change them there, not inline.
 
