@@ -127,6 +127,18 @@ fresh();go(18,23);Q.winGame();step(Q.G.mode==='scene'&&Q.G.scene.name==='ending'
 fresh();go(18,23);Q.S.shards=[];for(let i=1;i<=18;i++)Q.S.shards.push(Q.HD0+i);step(Q.sceneEra()===2,'the land darkens after 18 pieces');
 // admin menu is hidden without the flag
 fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin');
+// map marker throw: near a basket with no foes close, the disc button opens the marker; a perfect throw sinks it
+{const mtAt=(n)=>{fresh();const h=Q.HOLES[n-1],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.ents=[];Q.G.npcs=[];const b=Q.G.basket;
+   for(const [ox,oy] of [[0,70],[0,-70],[70,0],[-70,0],[50,50],[-50,50],[0,40],[40,0]]){const px=b.cx+ox-8,py=b.cy+oy-10;if(!Q.freeP(px,py))continue;let ok=true;for(let k=1;k<20;k++){const tl=Q.tileAt(b.cx+ox*(1-k/20),b.cy+oy*(1-k/20));if(tl===null||Q.blocksShot(tl))ok=false}if(ok){Q.P.x=px;Q.P.y=py;return b}}return null};
+ const b=mtAt(4);step(!!b,'found a clear lie near a map basket');if(b){Q.S.sel='disc_putt';Q.P.icd=0;press('KeyK');step(Q.G.mode==='mthrow','the disc button near a basket opens the marker');
+  press('KeyK');step(Q.G.mode==='play','pressing it again backs out with no throw');step(!Q.G.strokes,'backing out costs no stroke');
+  Q.P.icd=0;press('KeyK');const m=Q.G.mt;m.mk={x:b.cx,y:b.cy};m.pv=null;press('KeyL');step(m.shape===2,'B changes the shape');m.shape=1;
+  press('KeyJ');step(m.ph==='power','A starts the power bar');m.pw=1;m.pd=0;press('KeyJ');step(m.ph==='rel','A locks power');m.rel=0;m.rd=0;Q.mtThrow();step(Q.G.discOut&&Q.G.strokes===1,'the throw counts a stroke');
+  for(let i=0;i<200&&!Q.G.basket.made;i++)T(1);step(Q.G.basket.made===1,'a perfect marker throw sinks the basket')}
+ const b2=mtAt(5);if(b2){Q.S.sel='disc_putt';Q.P.icd=0;press('KeyK');const m=Q.G.mt;m.mk={x:b2.cx,y:b2.cy};m.pv=null;m.pw=0.5;m.rel=0;Q.mtThrow();for(let i=0;i<200&&Q.G.shots.length;i++)T(1);
+  step(!Q.G.basket.made&&Q.G.picks.some(p=>p.kind==='discdrop'),'a short marker throw lands where Wren can pick it up')}
+ const b3=mtAt(6);if(b3){Q.S.sel='disc_putt';{const fe=Q.makeEnemy(Object.keys(Q.EN)[0],Q.P.x+20,Q.P.y,1);fe.spawn=0;Q.G.ents.push(fe)}Q.P.icd=0;press('KeyK');step(Q.G.mode==='play'&&Q.G.shots.some(s=>s.kind==='disc'&&!s.pts),'with a foe close by, the disc is a quick throw');Q.G.ents=[];Q.G.shots=[];Q.G.discOut=0}
+ fresh();go(18,23);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.P.x=16;Q.P.y=140;Q.S.sel='disc_putt';Q.P.icd=0;if(Math.hypot(Q.G.basket.cx-24,Q.G.basket.cy-150)>Q.TUNE.golf.mapRange){press('KeyK');step(Q.G.mode==='play','far from the basket, the disc is a quick throw')}}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -159,6 +171,8 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+const mts=(name,f)=>shot('map throw '+name,()=>{worst();for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;const h=Q.HOLES[3],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.ents=[];Q.G.npcs=[];const b=Q.G.basket;Q.P.x=b.cx-8;Q.P.y=Math.min(150,b.cy+60);Q.startMT('disc_drive');f(Q.G.mt)});
+mts('aim',m=>{m.ph='aim'});mts('aim panel top',m=>{m.ph='aim';m.lie.y=150});mts('power',m=>{m.ph='power';m.pw=1.1});mts('release',m=>{m.ph='rel';m.pw=1;m.rel=0.9});
 shot('golf full bag',()=>{worst();go(18,23);for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;Q.startGolf(27);T(5);const g=Q.G.golf;g.ph='aim';g.t=200;g.di=g.bag.indexOf('disc_crystal');g.tries=12;g.strokes=9;g.shape=2});
 const prac=(name,f)=>shot('practice '+name,()=>{worst();go(18,23);Q.startGolf(0,1);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.fails=11;f(g)});
 prac('intro',g=>{g.ph='intro';g.t=20});prac('aim',g=>{g.ph='aim';g.t=200});prac('power',g=>{g.ph='power';g.pw=1.1});prac('release',g=>{g.ph='rel';g.pw=1;g.rel=0.9});

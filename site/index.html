@@ -123,7 +123,9 @@ const TUNE={
         // max = longest throw in ft, cv = how much the shape bends, wind = wind drift, turn = extra right turn, ric = glances off trees
         discs:{disc_putt:{nm:'PUTTER',max:120,cv:0.3,wind:1},disc_mid:{nm:'MIDRANGE',max:210,cv:1,wind:1},disc_drive:{nm:'DRIVER',max:280,cv:1.4,wind:1.3},
                disc_crystal:{nm:'CRYSTAL',max:240,cv:1,wind:1,turn:0.3,ric:1},disc_glow:{nm:'EMBER',max:250,cv:0.9,wind:0.3}},
-        discAt:{1:'disc_mid',3:'disc_drive',6:'disc_crystal',9:'disc_glow'}},
+        discAt:{1:'disc_mid',3:'disc_drive',6:'disc_crystal',9:'disc_glow'},
+        // map baskets: marker throw within mapRange px of the basket when no foe is within mapFoeClear px
+        mapRange:170,mapFoeClear:56},
   charm:{chance:0.3,chanceOwed:0.6},           // Marebear charm duel chance (owed = while she holds one of your hearts)
   folk:0.22                                     // share of eligible overworld screens with a wandering person
 };
@@ -1043,7 +1045,7 @@ function loadSave(){try{const s=localStorage.getItem(SKEY)||localStorage.getItem
 G.hasSave=!!loadSave();
 
 // ================= ROOMS =================
-function setRoom(room){G.slicks=[];G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
+function setRoom(room){G.slicks=[];G.mt=null;G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
 function reachCells(){const sc=clamp(Math.floor((P.x+8)/16),0,15),sw=clamp(Math.floor((P.y+11)/16),0,10),seen=new Set([sw*16+sc]),q=[[sc,sw]],out=[];
   while(q.length){const [c,w]=q.shift();if(c>=1&&c<=14&&w>=1&&w<=9&&EWALK.has(G.room.t[w*16+c]))out.push([c,w]);for(const d of DIRS){const nc=c+d[0],nw=w+d[1];if(nc<0||nc>15||nw<0||nw>10)continue;const k=nw*16+nc;if(seen.has(k)||!WALK.has(G.room.t[k]))continue;seen.add(k);q.push([nc,nw])}}return out}
 function spawnList(types,n,lvl){const far=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8&&Math.hypot(c*16-P.x,w*16-P.y)>76);for(let i=0;i<n&&far.length;i++){const [c,w]=far.splice(ri(far.length),1)[0];G.ents.push(makeEnemy(pick(types),c*16,w*16,lvl))}}
@@ -1323,6 +1325,44 @@ function drawScene(){const sc=G.scene;if(!sc)return;const pg=sc.pages[Math.min(s
   const lines=paginate(pg[2])[0].concat(paginate(pg[2]).slice(1).flat()),n=Math.floor(sc.ch);let used=0;for(const ln of lines){const sh=ln.slice(0,Math.max(0,n-used));used+=ln.length+1;txt(sh,10,y,'#ffffff');y+=11}
   txt((sc.i+1)+'/'+sc.pages.length,250,4,'#6a5a7a','right');txt('START: SKIP',6,4,'#6a5a7a');if(sc.ch>=pg[2].length&&(G.t>>4)%2)px(ctx,'#ff7a2f',242,222,6,4)}
 
+// ================= MAP MARKER THROW =================
+// Near an unsunk map basket (and no foe close by) the disc button opens the same marker + power + release throw as the challenge.
+function mtWanted(){const b=G.basket;if(G.room.kind!=='over'||!b||b.made||G.discOut)return false;const cx=P.x+8,cy=P.y+10;if(Math.hypot(b.cx-cx,b.cy-cy)>TUNE.golf.mapRange)return false;
+  return !G.ents.some(e=>!e.dead&&!e.noCount&&Math.hypot(e.x+8-cx,e.y+8-cy)<TUNE.golf.mapFoeClear)}
+function mtBag(){const b=GDISCS.filter(k=>S.items[k]);return b.length?b:['disc_putt']}
+function startMT(k){const b=G.basket,bag=mtBag(),lie={x:P.x+8,y:P.y+10};G.mt={ph:'aim',t:0,bag,di:Math.max(0,bag.indexOf(k)),shape:1,mk:{x:b.cx,y:b.cy},pw:0,pd:1,rel:-1,rd:1,lie,pv:null,held:0};mtClamp();G.mode='mthrow';sfx('sel')}
+function mtDisc(){const m=G.mt;return TUNE.golf.discs[m.bag[m.di]]}
+function mtClamp(){const m=G.mt,M=mtDisc().max;m.mk.x=clamp(m.mk.x,4,PW-4);m.mk.y=clamp(m.mk.y,4,PH-4);const dx=m.mk.x-m.lie.x,dy=m.mk.y-m.lie.y,d=Math.hypot(dx,dy);if(d>M){m.mk.x=m.lie.x+dx/d*M;m.mk.y=m.lie.y+dy/d*M}m.pv=null}
+function mtSolve(){const m=G.mt,gd=mtDisc(),cv=SHAPES[m.shape][1]*gd.cv+(gd.turn||0),T=Math.hypot(m.mk.x-m.lie.x,m.mk.y-m.lie.y)||1,base=Math.atan2(m.mk.y-m.lie.y,m.mk.x-m.lie.x);let a=base,D=T;
+  for(let i=0;i<5;i++){const e=golfPath(m.lie.x,m.lie.y,a,D,cv),ch=Math.hypot(e.x-m.lie.x,e.y-m.lie.y)||1;a-=Math.atan2(e.y-m.lie.y,e.x-m.lie.x)-base;D*=T/ch}return{a,D,cv}}
+function updMT(){const m=G.mt;m.t++;
+  if(m.ph==='aim'){if(IN.pi||IN.pst){G.mt=null;G.mode='play';P.icd=12;P.ibuf=0;return}
+    if(IN.x||IN.y){m.held++;const sp=0.6+Math.min(2,m.held*0.05);m.mk.x+=IN.x*sp;m.mk.y+=IN.y*sp;mtClamp()}else m.held=0;
+    if(IN.pb){m.shape=(m.shape+1)%3;m.pv=null;sfx('text')}if((IN.pl||IN.pr)&&m.bag.length>1){m.di=(m.di+(IN.pr?1:m.bag.length-1))%m.bag.length;mtClamp();sfx('sel')}
+    if(IN.pa&&Math.hypot(m.mk.x-m.lie.x,m.mk.y-m.lie.y)>4){m.ph='power';m.pw=0;m.pd=1;sfx('sel')}return}
+  if(m.ph==='power'){m.pw+=m.pd*TUNE.golf.powerSpeed;if(m.pw>=1.2){m.pw=1.2;m.pd=-1}if(m.pw<=0){m.pw=0;m.pd=1}if(IN.pb){m.ph='aim';return}if(IN.pa){m.ph='rel';m.rel=-1;m.rd=1;sfx('sel')}return}
+  if(m.ph==='rel'){m.rel+=m.rd*TUNE.golf.releaseSpeed;if(m.rel>=1){m.rel=1;m.rd=-1}if(m.rel<=-1){m.rel=-1;m.rd=1}if(IN.pb){m.ph='aim';return}if(IN.pa)mtThrow()}}
+function mtThrow(){const m=G.mt,dk=m.bag[m.di],D0=ITEMS[dk],s=mtSolve(),clean=Math.abs(m.rel)<0.12,a=s.a+m.rel*TUNE.golf.releaseAim,cv=s.cv+m.rel*TUNE.golf.releaseCurve,e=golfPath(m.lie.x,m.lie.y,a,s.D*m.pw,cv);
+  G.shots.push({kind:'disc',pts:e.pts,pi:0,dk,x:m.lie.x,y:m.lie.y,vx:0,vy:0,r:4,from:'p',t:0,maxT:99,fade:0,dmg:0,pierce:0,glow:D0.glow,hit:new Set(),life:999,z:0,col:D0.col});
+  G.discOut=1;if(G.basket&&!G.basket.made)G.strokes=(G.strokes||0)+1;S.sel=dk;G.mt=null;G.mode='play';P.icd=14;P.ibuf=0;sfx('chak');
+  const dx=Math.cos(a),dy=Math.sin(a);P.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0);
+  G.floats.push({x:P.x+8,y:P.y-6,s:clean?'CLEAN RELEASE!':m.rel<0?'PULLED LEFT':'PUSHED RIGHT',t:40,c:clean?'#7fffd4':'#ffb060'})}
+// a marker-thrown disc follows its precomputed flight, one step a frame
+function updMDisc(s){const n=s.pts.length/2;if(s.pi>=n){s.dead=1;discLand(s);return}const px0=s.x,py0=s.y;s.x=s.pts[s.pi*2];s.y=s.pts[s.pi*2+1];s.pi++;s.t++;const f=s.pi/n;s.z=Math.sin(Math.PI*Math.min(1,f))*9;if(s.glow&&G.t%2===0)part(s.x,s.y-s.z,pick(['#ff7a2f','#ffd040']),(R()-0.5)*0.4,(R()-0.5)*0.4,14,2,0);if(s.t%10===0)sfx('chak');
+  const v=Math.hypot(s.x-px0,s.y-py0);if(s.pi===1)s.v0=v||1;const bk=G.basket;if(bk&&!bk.made&&Math.hypot(s.x-bk.cx,s.y-bk.cy)<9){if(v/s.v0<0.85){basketMade(s);s.dead=1;return}if(!s.spit){s.spit=1;sfx('chains');G.floats.push({x:bk.cx,y:bk.cy-14,s:'TOO FAST!',t:40,c:'#ffe060'});s.x=px0;s.y=py0;s.dead=1;discLand(s);return}}
+  const tl=tileAt(s.x,s.y);if(s.glow&&tl===BU){setTile(Math.floor(s.x/16),Math.floor(s.y/16),GR);puff(s.x,s.y,'#ff7a2f',8,1.2)}
+  else if(tl===null||blocksShot(tl)){s.x=px0;s.y=py0;s.dead=1;sfx('tink');discLand(s)}}
+function drawMT(){const m=G.mt;if(!m)return;const L=m.lie,gd=mtDisc();
+  ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(L.x,L.y,gd.max,0,6.29);ctx.stroke();
+  if(!m.pv){const so=mtSolve();m.pv=golfPath(L.x,L.y,so.a,so.D,so.cv).pts}for(let i=0;i<m.pv.length;i+=8){const k=i/m.pv.length;px(ctx,'rgba(255,255,255,'+(0.35+0.5*k)+')',Math.round(m.pv[i]),Math.round(m.pv[i+1]),1,1)}
+  const mx=Math.round(m.mk.x),my=Math.round(m.mk.y),col=(G.t>>3)%2?'#ff7a2f':'#ffe060';ctx.strokeStyle=col;ctx.beginPath();ctx.arc(mx+0.5,my+0.5,5,0,6.29);ctx.stroke();px(ctx,col,mx-9,my,4,1);px(ctx,col,mx+5,my,4,1);px(ctx,col,mx,my-9,1,4);px(ctx,col,mx,my+5,1,4);
+  const by=m.lie.y>PH*0.55?25:PH-28;px(ctx,'rgba(0,0,0,0.78)',0,by-25,PW,53);const dk=m.bag[m.di];  // the panel sits wherever Wren is not
+  txt('DISC: '+gd.nm,6,by-22,ITEMS[dk].col);txt('THROW '+Math.round(Math.hypot(m.mk.x-L.x,m.mk.y-L.y))+' FT',250,by-22,'#a0d0ff','right');
+  txt('SHAPE: '+SHAPES[m.shape][0],6,by-11,'#ffe060');txt('BASKET '+Math.round(Math.hypot(G.basket.cx-L.x,G.basket.cy-L.y)),250,by-11,'#8a7a9a','right');
+  txt('POWER',6,by,'#ffe060');px(ctx,'#000',62,by,112,7);px(ctx,'#3a3048',63,by+1,110,5);const pf=m.ph==='aim'?0:Math.round(110*m.pw/1.2);px(ctx,m.pw>1.04?'#ff5040':m.pw>0.96?'#7fffd4':'#60d860',63,by+1,pf,5);px(ctx,'#ffffff',63+Math.round(110/1.2),by-1,1,9);
+  txt('RELEASE',6,by+12,'#ffe060');px(ctx,'#000',62,by+12,112,7);px(ctx,'#3a3048',63,by+13,110,5);px(ctx,'#2a7a5a',111,by+13,14,5);px(ctx,'#ffffff',118,by+11,1,9);if(m.ph==='rel')px(ctx,'#ff7a2f',117+Math.round(m.rel*54),by+11,3,9);
+  txt(m.ph==='aim'?(m.bag.length>1?'A GO  B SHAPE  Q/E DISC':'A GO  B SHAPE  ITEM: BACK'):m.ph==='power'?'A LOCK POWER  B BACK':'A LOCK RELEASE  B BACK',128,by+20,'#ffffff','center')}
+
 function startDuel(type,o){o=o||{};const lvl=o.lvl||2;const D={type,t:0,phase:'ready',combo:0,comboT:0,saved:G.room.t.slice(),npcs:G.npcs,dojo:o.dojo,lvl,arena:G.arena,needClear:G.needClear,ents:G.ents.filter(e=>!e.dead&&!e.champ)};G.duel=D;
   G.npcs=[];G.ents=[];G.shots=[];G.bombs=[];G.needClear=0;G.arena=null;G.pendingArena=0;
   for(let i=0;i<176;i++){const c=i%16,w=i>>4,border=c===0||c===15||w===0||w===10,v=G.room.t[i];if(G.room.kind==='over'){if(border){if(WALK.has(v))G.room.t[i]=BA}else G.room.t[i]=GR}else if(v===DO)G.room.t[i]=SH}
@@ -1539,6 +1579,7 @@ function cycleItem(d){const own=usable();if(!own.length)return;let i=own.indexOf
 function useItem(){const k=S.sel;if(!k)return;const d=DIRS[P.dir],x=P.x+8,y=P.y+10;
   if(k.startsWith('m_')){const t=k.slice(2);if((S.bag[t]||0)<=0){cycleItem(1);return}S.bag[t]--;eatShroom(t);P.icd=20;if(S.bag[t]<=0){cycleItem(1);if(S.sel===k)S.sel=usable()[0]||null}save();return}
   if(CONS[k]){if((S.inv[k]||0)<=0){cycleItem(1);return}if(k==='s_return'&&(G.duel||G.bossDie)){sfx('tink');return}S.inv[k]--;useCons(k);P.icd=24;if(S.inv[k]<=0){cycleItem(1);if(S.sel===k)S.sel=usable()[0]||null}save();return}
+  if(k.startsWith('disc_')&&mtWanted()){startMT(k);return}
   if(k.startsWith('disc_')){const D=ITEMS[k];if(G.discOut){sfx('tink');G.floats.push({x:P.x+8,y:P.y-4,s:'DISC IS OUT',t:40,c:'#ffe060'});return}let vx=IN.x,vy=IN.y;if(!vx&&!vy){vx=d[0];vy=d[1]}const l=Math.hypot(vx,vy);
     G.shots.push({kind:'disc',bounce:D.bounce||0,dk:k,x,y,ox:x,oy:y,vx:vx/l*D.sp,vy:vy/l*D.sp,r:4,from:'p',t:0,maxT:D.t,fade:D.fade,dmg:D.dmg*(G.bf.iron>0?2:1),pierce:D.pierce||0,glow:D.glow,hit:new Set(),life:999,z:0,col:D.col});G.discOut=1;if(G.basket&&!G.basket.made)G.strokes=(G.strokes||0)+1;sfx('chak');P.icd=14;return}
   if(k==='pick'){if(P.atk>0)return;if(!stOk()){stTired();return}stSpend(TUNE.stamina.pick);P.wep='pick';P.atk=14;P.swing++;P.atkHeld=0;sfx('sword');P.icd=18;return}
@@ -1619,6 +1660,7 @@ function shieldBlocks(s){const lv=S.items.shield||0;if(!lv||P.atk>0||P.spin>0||P
   sfx('tink');G.floats.push({x:s.x,y:s.y-6,s:'BLOCK',t:24,c:'#c0e0ff'});if(lv>=2){s.from='p';s.vx*=-1.4;s.vy*=-1.4;s.dmg=2;s.life=120}else s.dead=1;return true}
 const sbox=s=>({x:s.x-s.r,y:s.y-s.r,w:s.r*2,h:s.r*2});
 function updShots(){for(const s of G.shots){if(s.dead)continue;
+  if(s.kind==='disc'&&s.pts){updMDisc(s);continue}
   if(s.kind==='disc'){s.t++;const f=s.t/s.maxT;if(f>0.55){const a=-s.fade*0.25*((f-0.55)/0.45),c=Math.cos(a),sn=Math.sin(a),vx=s.vx*c-s.vy*sn,vy=s.vx*sn+s.vy*c;s.vx=vx;s.vy=vy}
     s.x+=s.vx;s.y+=s.vy;s.z=Math.sin(Math.PI*Math.min(1,f))*9;if(s.glow&&G.t%2===0)part(s.x,s.y-s.z,pick(['#ff7a2f','#ffd040']),(R()-0.5)*0.4,(R()-0.5)*0.4,14,2,0);if(s.t%10===0)sfx('chak');
     const bk=G.basket;if(bk&&!bk.made&&Math.hypot(s.x-bk.cx,s.y-bk.cy)<10){basketMade(s);s.dead=1;continue}
@@ -1746,7 +1788,7 @@ function poll(){let x=0,y=0,a=0,b=0,it=0,st=0,l=0,r=0;
 // ================= GAME FLOW =================
 function newGame(){S=newState();G.bf={};if(G.konami){S.gold=1;S.secrets.push('konami')}G.lastArea=null;const rm=genScreen(START[0],START[1]);setRoom(rm);const f=findSafe(rm);P.x=f[0];P.y=f[1]+16;if(!freeP(P.x,P.y))P.y=f[1];P.dir=0;P.inv=0;G.mode='play';onEnter();
   S.items.disc_putt=1;S.sel='disc_putt';
-  playScene('opening',()=>say('Wren! You overslept again. The groundskeeper wants to see you throw before anything else. Your putter is in your hand: face the basket and press K/X (X) to throw.'))}
+  playScene('opening',()=>say('Wren! You overslept again. The groundskeeper wants to see you throw before anything else. Your putter is in your hand: walk up to the basket and press K/X (X) to line up a throw.'))}
 function startLoaded(){G.lastArea=null;if(S.inv)delete S.inv.p_slime;if(S.sel&&!INV.includes(S.sel)&&!(ITEMS[S.sel]&&S.items[S.sel]))S.sel=usable()[0]||null;let msg='';if(!S.wv||S.wv<2){S.wv=2;S.sx=START[0];S.sy=START[1];S.visited=[];S.opened=[];S.arenas=[];S.caves=S.caves.filter(c=>c===99);S.qgot=[];S.bounty={};msg='The land has grown to twice its size while you rested. You wake in Emberglen with all your gear.'}
   if(S.wv<3){S.wv=3;const k=Math.min(NHOLE,(S.shards||[]).filter(d=>d<HD0).length);S.shards=[];S.bk={};for(let i=1;i<=k;i++){const d=HD0+i;S.shards.push(d);S.dun[d]={unl:[],keys:[],item:1,boss:1,hc:1,vis:[],golf:1};S.bk[HOLES[i-1].key]={s:HOLES[i-1].par,o:i};const it=DUN[d].item;if(it&&ITEMS[it]&&ITEMS[it].give&&!S.items[it])try{ITEMS[it].give()}catch(e){}}S.swl=S.swl||1;S.swx=S.swx||0;S.hpc=S.hpc||0;msg+=(msg?' ':'')+'The Ember Crown has shattered into 27 pieces, one beneath each disc golf basket. Sink a basket to drop into its dungeon.'+(k?' Your '+k+' shards became the first '+k+' crown pieces.':'')}
   if(S.items.sword&&!S.items.disc_putt){S.items.disc_putt=1;msg+=(msg?' ':'')+'A disc golf PUTTER lies beside you! Baskets stand all over the land: sink a throw and the chains refill your hearts.'}
@@ -1807,6 +1849,7 @@ function tick(){poll();G.t++;
   case'over':updOver();break;
   case'win':updWin();break;
   case'card':updCard();break;
+  case'mthrow':updMT();break;
   case'golf':updGolf();break;
   case'admin':updAdmin();break;
   case'scene':updScene();break;
@@ -2082,7 +2125,7 @@ function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
     if(d===1){ox=-k*PW;nx=(1-k)*PW}else if(d===3){ox=k*PW;nx=-(1-k)*PW}else if(d===2){oy=-k*PH;ny=(1-k)*PH}else{oy=k*PH;ny=-(1-k)*PH}
     ctx.drawImage(tr.old,Math.round(ox),Math.round(oy));ctx.drawImage(G.bg,Math.round(nx),Math.round(ny));drawPlayer(Math.round(nx),Math.round(ny))}
   else if(G.mode==='golf'&&G.golf)drawGolf();
-  else drawWorld();
+  else{drawWorld();if(G.mode==='mthrow')drawMT()}
   ctx.filter='none';ctx.restore();
   drawHUD();if(G.mode==='golf')golfCoach();
   if(G.mode==='pause')drawPause();
