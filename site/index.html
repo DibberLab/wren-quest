@@ -134,6 +134,7 @@ const TUNE={
         mapRange:170,mapFoeClear:56},
   jumps:{hurdle:0.04,rune:0.075,moat:0.03},     // share of plain screens with each jump place: 11 hurdles, 10 rune gates, 17 moats today
   gates:{ember:0.4,crystal:0.3},
+  traps:{spikes:0.18,crumble:0.14,spikeDmg:1},   // share of hole-dungeon rooms with timed spikes / crumbling floor (grows with the hole number)
   // Kestrel's matches after holes 9, 18, 27: her power/release wobble (sd) and putting by match; win prizes
   rival:{holes:[9,18,27],powerSd:[0.07,0.05,0.035],releaseSd:[0.22,0.16,0.1],puttMiss:[0.4,0.3,0.2],landSd:[12,10,8],maxOver:3,driveFt:30,puttWide:1.35},              // share of moat islands that become Ember thorn rings / Crystal seal rings
   charm:{chance:0.3,chanceOwed:0.6},           // Marebear charm duel chance (owed = while she holds one of your hearts)
@@ -387,12 +388,17 @@ function drawIcon(k,x,y,nc){if(!k)return;if(k.startsWith('m_')){drawShroom(k.sli
 }}
 
 // ================= TILES =================
-const MO=25,LD=26,DG=27,BB=28,OR=29,HU=30,RU=31,RP=32,TH=33,SG=34,EY=35,LM=36;  // TH thorns (Ember burns), SG seal stone + EY crystal eye (Crystal wakes)
+const MO=25,LD=26,DG=27,BB=28,OR=29,HU=30,RU=31,RP=32,TH=33,SG=34,EY=35,LM=36,SPK=37,CF=38;  // SPK timed floor spikes, CF crumbling floor (dungeon traps)  // TH thorns (Ember burns), SG seal stone + EY crystal eye (Crystal wakes)
 const GR=0,WL=1,RK=2,WA=3,BU=4,CR=5,CV=6,DE=7,BR=8,LV=9,DW=10,DF=11,DO=12,LK=13,SH=14,BL=15,ST=16,BA=17,FL=18,EW=19,TB=20,PB=21,PL=22,CS=23,BZ=24;
-const WALK=new Set([GR,CV,DE,BR,DF,DO,ST,FL,PL,MO,LD,DG,RU]),EWALK=new Set([GR,DF,BR,FL,PL,DG,RU]);
+const WALK=new Set([GR,CV,DE,BR,DF,DO,ST,FL,PL,MO,LD,DG,RU,SPK,CF]),EWALK=new Set([GR,DF,BR,FL,PL,DG,RU,SPK]);
 const blocksShot=t=>!(WALK.has(t)||t===WA||t===LV);
 function rock(g,c,X,Y){disc(g,'#1a1020',X+8,Y+8,7);disc(g,c[0],X+8,Y+8,6);disc(g,c[1],X+6,Y+6,3);px(g,c[2],X+9,Y+11,4,2);px(g,c[2],X+4,Y+12,3,1)}
 function bricks(g,a,b,X,Y){px(g,b,X,Y,16,16);for(let r=0;r<4;r++){const segs=r%2?[[0,3],[4,7],[12,4]]:[[0,7],[8,7]];for(const [s,w] of segs)px(g,a,X+s,Y+r*4,w,3)}px(g,'rgba(255,255,255,0.12)',X,Y,16,1)}
+// dungeon floor styles: 0 plain, 1 checker, 2 a rug down the middle, 3 worn (cracks, moss, bones)
+function dunFloor(g,th,X,Y,c,w,room){const f=room.fl||0,h=h2(c+room.x*16,w+room.y*11,31);
+  if(f===1&&(c+w)%2===0)px(g,'rgba(255,255,255,0.05)',X,Y,16,16);
+  else if(f===2&&c>=5&&c<=10&&w>=3&&w<=7){px(g,'#4a1a24',X,Y,16,16);if(c===5||c===10)px(g,'#c09040',c===5?X+1:X+14,Y,1,16);if(w===3||w===7)px(g,'#c09040',X,w===3?Y+1:Y+14,16,1);if((c+w)%2)px(g,'#6a2a34',X+6,Y+6,4,4)}
+  else if(f===3){if(h<0.12){px(g,'#0e0a10',X+3,Y+5,6,1);px(g,'#0e0a10',X+8,Y+6,1,4)}else if(h<0.2){px(g,'#3a5a2a',X+2,Y+9,4,3);px(g,'#4a6a34',X+3,Y+10,2,1)}else if(h<0.24){px(g,'#d8d0c0',X+4,Y+7,7,2);px(g,'#d8d0c0',X+3,Y+6,2,4);px(g,'#d8d0c0',X+10,Y+6,2,4)}}}
 function drawTile(g,v,X,Y,th,c,w,room){
   const rx=room.x||0,ry=room.y||0;
   const gr=()=>{px(g,th.g,X,Y,16,16);if(th.kind==='over'||th.kind==='cav'){for(let i=0;i<3;i++){const a=Math.floor(h2(c+rx*16,w+ry*11,i)*14),b=1+Math.floor(h2(w+ry*11,c+rx*16,i+9)*13);px(g,th.g2,X+a,Y+b,2,1);px(g,th.g2,X+a+1,Y+b-1,1,1)}}else{px(g,th.g2,X,Y,16,1);px(g,th.g2,X,Y,1,16)}};
@@ -407,9 +413,11 @@ function drawTile(g,v,X,Y,th,c,w,room){
   case WA:case LV:{const lc=v===LV?['#d03a10','#ffa020']:th.lc;px(g,lc[0],X,Y,16,16);for(let i=0;i<2;i++){const a=Math.floor(h2(c,w,i+60)*12),b=Math.floor(h2(w,c,i+70)*14);px(g,lc[1],X+a,Y+b,v===LV?2:4,v===LV?2:1)}break}
   case BR:if(th.kind==='over'){px(g,th.lc[0],X,Y,16,16);px(g,'#3a2010',X,Y,16,16);for(let i=0;i<4;i++)px(g,'#a87040',X+i*4,Y+1,3,14);px(g,'#6a4020',X,Y+1,16,1);px(g,'#6a4020',X,Y+14,16,1)}else gr();break;
   case BU:gr();disc(g,'#1a1020',X+8,Y+8,7);disc(g,th.bush||'#3a9a3a',X+8,Y+8,6);disc(g,th.bush2||'#62c862',X+6,Y+6,2);px(g,'#1a1020',X+9,Y+10,2,1);px(g,'#1a1020',X+5,Y+11,1,1);px(g,'#1a1020',X+11,Y+6,1,1);break;
-  case DW:bricks(g,th.w,th.w2,X,Y);break;
+  case DW:bricks(g,th.w,th.w2,X,Y);if(room.kind==='dun'&&w===0&&(c===4||c===11)){px(g,'#3a2a1a',X+6,Y+8,4,6);px(g,'#ff7a2f',X+6,Y+3,4,5);px(g,'#ffd040',X+7,Y+5,2,3)}break;
   case EW:bricks(g,th.ew,th.ew2,X,Y);px(g,th.ew2,X,Y+15,16,1);break;
-  case DF:gr();break;
+  case DF:gr();if(room.kind==='dun'&&!room.boss)dunFloor(g,th,X,Y,c,w,room);break;
+  case SPK:gr();for(let k=0;k<3;k++)px(g,'#0a0810',X+3+k*5,Y+10,2,3);px(g,'rgba(0,0,0,0.25)',X+1,Y+1,14,14);break;
+  case CF:gr();px(g,'#1a1020',X+4,Y+3,1,5);px(g,'#1a1020',X+5,Y+8,4,1);px(g,'#1a1020',X+9,Y+8,1,4);px(g,'#1a1020',X+10,Y+4,3,1);px(g,'rgba(0,0,0,0.2)',X,Y,16,16);break;
   case DO:px(g,'#07050a',X,Y,16,16);break;
   case LK:bricks(g,th.w,th.w2,X,Y);px(g,'#1a1020',X+1,Y+1,14,14);px(g,'#7a4a24',X+2,Y+2,12,12);px(g,'#f0c040',X+2,Y+2,12,1);px(g,'#f0c040',X+2,Y+13,12,1);disc(g,'#000',X+8,Y+6,2);px(g,'#000',X+7,Y+7,2,4);break;
   case SH:px(g,'#07050a',X,Y,16,16);for(let i=0;i<4;i++)px(g,'#8a8a9a',X+1+i*4,Y,2,16);px(g,'#5a5a6a',X,Y+7,16,2);break;
@@ -818,6 +826,10 @@ function genDungeon(d){
   {const c=list.filter(o=>!o.start&&!o.boss&&!o.key&&!o.item);if(c.length){c[Math.floor(r()*c.length)].loot=CONSK[Math.floor(r()*CONSK.length)]}}
   list.forEach(o=>{if(o.start||o.boss)return;o.tpl=1+Math.floor(r()*6);const n=1+Math.floor(r()*3)+Math.floor(sz/4);for(let i=0;i<n;i++)o.en.push(DUN[d].en[Math.floor(r()*DUN[d].en.length)]);
     o.shut=r()<0.45||o.item;if(DUN[d].turret&&r()<0.35)o.turrets=1;if(r()<0.1&&!o.item&&!o.key)o.en=[]});
+  if(DUN[d].hole){const r2=rng(SEED+d*1013+77),bn=holeBiome(HOLES[DUN[d].hole-1]);
+    let pc=list.filter(o=>!o.start&&!o.boss&&!o.key&&!o.item&&!o.loot);if(!pc.length)pc=list.filter(o=>!o.start&&!o.boss&&!o.key&&!o.item);
+    if(pc.length){const o=pc[Math.floor(r2()*pc.length)];o.puz=HOLE_PUZ[bn]||'plates';o.tpl=0;o.en=[];o.shut=0;o.turrets=0;if(o.puz==='crystals'){const seq=[0,1,2,3];for(let i=3;i>0;i--){const j=Math.floor(r2()*(i+1));[seq[i],seq[j]]=[seq[j],seq[i]]}o.seq=seq;const pos=['3,2','12,2','12,8','3,8'];o.cs={};pos.forEach((k,i)=>o.cs[k]=i)}}
+    list.forEach(o=>{o.fl=Math.floor(r2()*4);if(o.start||o.boss||o.puz)return;const q=r2();if(q<TUNE.traps.spikes*(0.5+sz/14))o.trap='spikes';else if(q<(TUNE.traps.spikes+TUNE.traps.crumble)*(0.5+sz/14))o.trap='crumble'})}
   return{d,rooms,list,start:st,boss};
 }
 function edgeKey(o,dd){const a=o.x+','+o.y,b=(o.x+DIRS[dd][0])+','+(o.y+DIRS[dd][1]);return a<b?a+'|'+b:b+'|'+a}
@@ -833,9 +845,12 @@ function dunTiles(o){const D=DUN[o.d],ds=S.dun[o.d],t=new Uint8Array(176).fill(D
     if(c===7||c===8||w===5)v=DF;t[w*16+c]=v}
   o.doors.forEach((s,dd)=>{if(!s)return;const v=(s==='lock'&&!ds.unl.includes(edgeKey(o,dd)))?LK:DO;if(dd===0){t[7]=v;t[8]=v}else if(dd===2){t[167]=v;t[168]=v}else if(dd===3)t[80]=v;else t[95]=v});
   if(o.boss&&ds.boss)t[87]=ST;
-  if(o.puz&&!ds.solved){const S_=(c,w,v)=>t[w*16+c]=v;if(o.puz==='block'){S_(4,3,PB);S_(11,7,PL)}else if(o.puz==='crystals'){S_(3,2,CS);S_(12,2,CS);S_(12,8,CS);S_(3,8,CS)}else if(o.puz==='braziers'){for(const [c,w] of BZPOS)S_(c,w,BZ)}else if(o.puz==='silence'){S_(5,2,BL);S_(10,2,BL)}}
+  if(o.trap&&!(o.boss&&ds.boss)){for(let w=2;w<9;w++)for(let c=2;c<14;c++){if(c===7||c===8||w===5||t[w*16+c]!==DF)continue;if(o.trap==='spikes'&&(w===3||w===7)&&c%2===0)t[w*16+c]=SPK;if(o.trap==='crumble'&&(w===3||w===4||w===6||w===7)&&(c<=5||c>=10)&&((c+w)%3!==0))t[w*16+c]=CF}}
+  if(o.puz&&!(DUN[o.d].hole?ds.hps:ds.solved)){const S_=(c,w,v)=>t[w*16+c]=v;if(o.puz==='block'){S_(4,3,PB);S_(11,7,PL)}else if(o.puz==='crystals'){S_(3,2,CS);S_(12,2,CS);S_(12,8,CS);S_(3,8,CS)}else if(o.puz==='braziers'){for(const [c,w] of BZPOS)S_(c,w,BZ)}else if(o.puz==='silence'){S_(5,2,BL);S_(10,2,BL)}else if(o.puz==='plates'){for(const [c,w] of PLPOS)S_(c,w,PL)}}
   return t}
-const BZPOS=[[3,2],[12,2],[3,8],[12,8],[5,3],[10,7]];
+const BZPOS=[[3,2],[12,2],[3,8],[12,8],[5,3],[10,7]],PLPOS=[[3,2],[12,2],[3,8],[12,8]];
+// the puzzle each hole dungeon gets, by its biome
+const HOLE_PUZ={meadow:'plates',forest:'block',swamp:'silence',lake:'crystals',mountain:'plates',desert:'braziers',snow:'crystals',grave:'silence',volcano:'braziers'};
 const CAVE_TH={kind:'cave',g:'#1c1614',g2:'#221a17',w:'#5a4430',w2:'#2e2218'};
 function caveRoom(cv,key){const t=new Uint8Array(176).fill(DF);for(let c=0;c<16;c++){t[c]=DW;t[160+c]=DW}for(let w=0;w<11;w++){t[w*16]=DW;t[w*16+15]=DW}t[167]=DO;t[168]=DO;return{kind:'cave',t,cv,key,torch:1}}
 function themeOf(room){
@@ -1141,7 +1156,7 @@ function loadSave(){try{const s=localStorage.getItem(SKEY);return s?JSON.parse(s
 G.hasSave=!!loadSave();
 
 // ================= ROOMS =================
-function setRoom(room){G.slicks=[];G.mt=null;G.replayQ=0;G.capHint=0;G.gateHint=0;G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
+function setRoom(room){G.slicks=[];G.mt=null;G.crk={};G.replayQ=0;G.capHint=0;G.gateHint=0;G.holeEnter=null;G.tutEnter=0;G.golfWait=0;G.trail=[];G.strokes=0;G.basket=null;G.discOut=0;G.glowT=0;G.duelPending=0;G.puz=null;G.room=room;G.bg=buildBg(room);G.ents=[];G.shots=[];G.picks=[];G.bombs=[];G.parts=[];G.floats=[];G.npcs=[];G.arena=null;G.pendingShut=0;G.pendingArena=0;G.needClear=0;G.shutOn=0;G.bossPending=0;G.bossDie=null}
 function reachCells(){const sc=clamp(Math.floor((P.x+8)/16),0,15),sw=clamp(Math.floor((P.y+11)/16),0,10),seen=new Set([sw*16+sc]),q=[[sc,sw]],out=[];
   while(q.length){const [c,w]=q.shift();if(c>=1&&c<=14&&w>=1&&w<=9&&EWALK.has(G.room.t[w*16+c]))out.push([c,w]);for(const d of DIRS){const nc=c+d[0],nw=w+d[1];if(nc<0||nc>15||nw<0||nw>10)continue;const k=nw*16+nc;if(seen.has(k)||!WALK.has(G.room.t[k]))continue;seen.add(k);q.push([nc,nw])}}return out}
 function spawnList(types,n,lvl){const far=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8&&Math.hypot(c*16-P.x,w*16-P.y)>76);for(let i=0;i<n&&far.length;i++){const [c,w]=far.splice(ri(far.length),1)[0];G.ents.push(makeEnemy(pick(types),c*16,w*16,lvl))}}
@@ -1180,17 +1195,21 @@ function talkTo(n){P.atk=0;P.atkHeld=0;P.charge=0;if(n.sign){say(n.text);return}
   if(!res){const i=S.tk[n.id]||0;S.tk[n.id]=i+1;res=d.lines[i%d.lines.length]}if(res.asked)return;if(typeof res==='string')say(res);else say(res[0],res[1])}
 const BOUNTIES=[['slime',20,'SLIMES'],['bat',15,'BATS'],['skeleton',15,'SKELETONS'],['wolf',12,'WOLVES'],['knight',10,'KNIGHTS'],['ghost',10,'GHOSTS']];
 // ---- puzzles ----
-function initPuzzle(rm){const ds=S.dun[rm.d];const riddle={block:'Heavy things long to rest upon the glowing stone. Push.',braziers:'Light every flame before the first one fades. Swords and fire both will do.',silence:'Treasure comes only to those who do nothing at all.'}[rm.puz]||('The '+['FIRE','SEA','LEAF','CROWN'][rm.seq[0]]+' wakes the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[1]]+', the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[1]]+' wakes the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[2]]+', and last the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[3]]+'. (Red, blue, green, gold.)');
+function initPuzzle(rm){const ds=S.dun[rm.d],hole=DUN[rm.d].hole;const riddle={block:'Heavy things long to rest upon the glowing stone. Push.',braziers:'Light every flame before the first one fades. Swords and fire both will do.',silence:'Treasure comes only to those who do nothing at all.',plates:'Four stones remember a footstep. Wake them all before they forget.'}[rm.puz]||('The '+['FIRE','SEA','LEAF','CROWN'][rm.seq[0]]+' wakes the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[1]]+', the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[1]]+' wakes the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[2]]+', and last the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[3]]+'. (Red, blue, green, gold.)');
   G.npcs.push({sign:1,solid:1,x:96,y:16,text:riddle});
-  if(ds.solved){if(!ds.item)G.picks.push({kind:'chest',x:121,y:72,w:14,h:12,perm:1,content:DUN[rm.d].item});return}
+  if(hole){if(ds.hps){if(!ds.hpc)G.picks.push({kind:'chest',x:121,y:72,w:14,h:12,perm:1,content:'hpuz'});return}}
+  else if(ds.solved){if(!ds.item)G.picks.push({kind:'chest',x:121,y:72,w:14,h:12,perm:1,content:DUN[rm.d].item});return}
   G.puz={type:rm.puz,step:0,lit:[],bz:[0,0,0,0,0,0],still:0,cd:{},seq:rm.seq}}
-function solvePuzzle(){if(!G.puz||G.puz.done)return;G.puz.done=1;const ds=S.dun[G.dn];ds.solved=1;sfx('secret');G.shake=6;G.floats.push({x:128,y:60,s:'SOLVED!',t:90,c:'#ffe060'});puff(128,80,'#ffe060',20,2);if(!ds.item)G.picks.push({kind:'chest',x:121,y:72,w:14,h:12,perm:1,content:DUN[G.dn].item});save()}
+function solvePuzzle(){if(!G.puz||G.puz.done)return;G.puz.done=1;const ds=S.dun[G.dn],hole=DUN[G.dn].hole;sfx('secret');G.shake=6;G.floats.push({x:128,y:60,s:'SOLVED!',t:90,c:'#ffe060'});puff(128,80,'#ffe060',20,2);
+  if(hole){ds.hps=1;if(G.puz.type==='plates')for(const [c,w] of PLPOS)setTile(c,w,DF);G.picks.push({kind:'chest',x:121,y:72,w:14,h:12,perm:1,content:'hpuz'});save();return}
+  ds.solved=1;if(!ds.item)G.picks.push({kind:'chest',x:121,y:72,w:14,h:12,perm:1,content:DUN[G.dn].item});save()}
 function puzHitBox(b){if(!G.puz||G.puz.done)return;for(let w=0;w<11;w++)for(let c=0;c<16;c++){const v=G.room.t[w*16+c];if((v===CS||v===BZ)&&ov(b,{x:c*16,y:w*16,w:16,h:16}))puzHitTile(c,w)}}
 function puzHitTile(c,w){const z=G.puz;if(!z||z.done)return;const k=c+','+w;if(z.cd[k]>0)return;z.cd[k]=24;const v=G.room.t[w*16+c];
   if(v===CS){const ci=G.room.cs[k];if(z.lit.includes(ci))return;if(ci===z.seq[z.step]){z.lit.push(ci);z.step++;sfx('key');puff(c*16+8,w*16+8,'#ffffff',8,1.5);if(z.step>=4)solvePuzzle()}
     else{z.lit=[];z.step=0;sfx('hurt');G.floats.push({x:c*16+8,y:w*16-4,s:'WRONG!',t:50,c:'#ff4040'});spawnList(DUN[G.dn].en,2,DUN[G.dn].lvl)}}
   else if(v===BZ){const i=BZPOS.findIndex(q=>q[0]===c&&q[1]===w);if(i>=0){if(!z.bz[i])sfx('fire');z.bz[i]=720}}}
 function updPuzzle(){const z=G.puz;if(!z||z.done)return;for(const k in z.cd)if(z.cd[k]>0)z.cd[k]--;
+  if(z.type==='plates'){const pc=Math.floor((P.x+8)/16),pw=Math.floor((P.y+12)/16);z.bz=z.bz.map(v=>v>0?v-1:0);PLPOS.forEach(([c,w],i)=>{if(pc===c&&pw===w&&P.z===0){if(!z.bz[i])sfx('key');z.bz[i]=300}});if(z.bz.slice(0,4).every(v=>v>0))solvePuzzle()}
   if(z.type==='braziers'){z.bz=z.bz.map(v=>v>0?v-1:0);if(z.bz.every(v=>v>0))solvePuzzle()}
   if(z.type==='silence'){if(IN.x||IN.y||IN.a||IN.b||IN.i)z.still=0;else z.still++;if(z.still===240)G.floats.push({x:128,y:100,s:'...',t:60,c:'#9a9ac8'});if(z.still===420)G.floats.push({x:128,y:100,s:'...good...',t:60,c:'#9a9ac8'});if(z.still>=600)solvePuzzle()}}
 // ---- duels ----
@@ -1998,7 +2017,8 @@ function cavReward(pk){const c=pk.content;if(!S.cavr.includes(pk.cav))S.cavr.pus
   else if(c==='stash'){S.bag.giant=Math.min(9,(S.bag.giant||0)+2);S.bag.boom=Math.min(9,(S.bag.boom||0)+2);S.bag.frost=Math.min(9,(S.bag.frost||0)+1);giveItem('stash','A STASH of rare mushrooms! Giant, Boom and Red Caps.')}
   else if(c==='elix3'){S.inv.p_elixir=Math.min(9,(S.inv.p_elixir||0)+3);giveItem('p_elixir','THREE ELIXIRS, sealed in wax!')}
   else{ITEMS[c].give();giveItem(c,ITEMS[c].msg)}save()}
-function openChest(pk){if(pk.cav!==undefined){sfx('door');puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);cavReward(pk);return}sfx('door');const c=pk.content;if(c==='jump'){if(!S.opened.includes('j:'+pk.jk))S.opened.push('j:'+pk.jk);puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);const g=pk.wide?40:20;S.gems=Math.min(999,S.gems+g);if(pk.wide){giveItem('gems','A daring leap! '+g+' GEMS and a HEART PIECE.');heartPiece()}else giveItem('gems','Nice jump! You found '+g+' GEMS.');save();return}if(pk.cid!==undefined&&!S.caves.includes(pk.cid))S.caves.push(pk.cid);
+function openChest(pk){if(pk.cav!==undefined){sfx('door');puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);cavReward(pk);return}sfx('door');const c=pk.content;
+  if(c==='hpuz'){const ds=S.dun[G.dn];ds.hpc=1;puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);if(DUN[G.dn].hole>14){giveItem('heart','The puzzle chest holds a HEART PIECE!');heartPiece()}else{S.gems=Math.min(999,S.gems+50);giveItem('gems','The puzzle chest holds 50 GEMS!')}save();return}if(c==='jump'){if(!S.opened.includes('j:'+pk.jk))S.opened.push('j:'+pk.jk);puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);const g=pk.wide?40:20;S.gems=Math.min(999,S.gems+g);if(pk.wide){giveItem('gems','A daring leap! '+g+' GEMS and a HEART PIECE.');heartPiece()}else giveItem('gems','Nice jump! You found '+g+' GEMS.');save();return}if(pk.cid!==undefined&&!S.caves.includes(pk.cid))S.caves.push(pk.cid);
   puff(pk.x+7,pk.y+6,'#ffe060',12,1.6);
   if(c==='heartc'){S.maxHp=Math.min(32,S.maxHp+2);S.hp=S.maxHp;giveItem('heartc','HEART CONTAINER! Your life grows by one heart.')}
   else if(c==='gems50'){S.gems=Math.min(999,S.gems+50);giveItem('gems','You found 50 GEMS!')}
@@ -2078,7 +2098,7 @@ function updOver(){if(IN.pu||IN.pd){G.menu^=1;sfx('sel')}if(IN.pa||IN.pst){sfx('
 function updWin(){G.winT++;if(G.winT>150&&(IN.pa||IN.pst)){G.hasSave=true;G.mode='title';G.menu=0;play(null)}}
 // No random duel may start while the ground is opening, a practice hole is starting or a hole challenge is resuming.
 function countingDown(){return !!(G.holeEnter||G.tutEnter||G.golfWait)}
-function updatePlay(){
+function updatePlay(){updTraps();
   if(G.hitstop>0){G.hitstop--;return}
   if(IN.pst&&!G.bossDie){G.mode='pause';G.ppage=0;const i=INV.indexOf(S.sel);G.pcur=i>=0?i:0;sfx('sel');return}
   if(IN.pl)cycleItem(-1);if(IN.pr)cycleItem(1);
@@ -2254,6 +2274,13 @@ function drawNpc(n){if(n.lm)return;if(n.sign){px(ctx,'#5a3a1a',n.x+7,n.y+8,2,8);
   if(n.flipY){ctx.save();ctx.translate(n.x,n.y+16+by);ctx.scale(1,-1);ctx.drawImage(img,0,0);ctx.restore()}else ctx.drawImage(img,n.x,n.y+by);ctx.globalAlpha=1;
   if(!n.watch&&Math.hypot(n.x-P.x,n.y-P.y)<30&&(G.t>>4)%2===0){px(ctx,'#ffffff',n.x+5,n.y-10,7,8);px(ctx,'#1a1020',n.x+8,n.y-9,1,4);px(ctx,'#1a1020',n.x+8,n.y-4,1,1)}}
 function drawCaveDecor(){for(const tx of [64,176]){px(ctx,'#1a1020',tx,48,16,6);px(ctx,'#5a4030',tx+1,48,14,5);const f=(G.t>>2)%3;px(ctx,'#ff5a20',tx+4,40-f,8,8+f);px(ctx,'#ffd040',tx+6,43-f,4,5)}}
+// spikes are up for a third of each 96-frame cycle, staggered by column
+function spikeUp(c){return ((G.t+c*11)%96)<32}
+function updTraps(){const rm=G.room;if(!rm||rm.kind!=='dun'||P.z>0)return;const c=Math.floor((P.x+8)/16),w=Math.floor((P.y+12)/16),v=rm.t[w*16+c];
+  if(v===SPK&&spikeUp(c))hurtPlayer(TUNE.traps.spikeDmg,c*16+8,w*16+8);
+  if(v===CF){const k=c+','+w;G.crk=G.crk||{};G.crk[k]=(G.crk[k]||0)+1;if(G.crk[k]===10)sfx('tink');if(G.crk[k]>=28){setTile(c,w,BL);puff(c*16+8,w*16+8,'#5a4a3a',10,1.2);sfx('boom');P.x=P.safe[0];P.y=P.safe[1];hurtPlayer(1,c*16+8,w*16+8)}}}
+function drawTraps(){const rm=G.room;if(!rm||rm.kind!=='dun')return;for(let i=0;i<176;i++){const v=rm.t[i];if(v!==SPK)continue;const c=i%16,w=i>>4,X=c*16,Y=w*16;
+  if(spikeUp(c)){for(let k=0;k<3;k++){px(ctx,'#1a1020',X+2+k*5,Y+4,4,10);px(ctx,'#c8c8d8',X+3+k*5,Y+5,2,8);px(ctx,'#ffffff',X+3+k*5,Y+5,1,2)}}else if(((G.t+c*11)%96)>84){for(let k=0;k<3;k++)px(ctx,'#8a8a9a',X+3+k*5,Y+10,2,3)}}}
 function animTiles(){for(const [c,w,v] of G.room.anim||[]){const X=c*16,Y=w*16,f=G.t>>3;ctx.fillStyle=v===LV?((f+c+w)%2?'#ffd040':'#ff8020'):'rgba(255,255,255,0.4)';ctx.fillRect(X+((f+c*5+w*3)%12),Y+((c*7+w*5)%10)+2,3,1);ctx.fillRect(X+((f*2+c*3+w*7+6)%12),Y+((c*3+w*11)%10)+3,2,1)}}
 // ---- landmark art: drawn over the footprint each frame (footprint tiles are LM: ground that blocks) ----
 function drawLandmark(L,p){const X=p.c0*16,Y=p.w0*16,W=p.fw*16,H=p.fh*16,cx=X+W/2,t=G.t,sh=(x,y,w)=>px(ctx,'rgba(0,0,0,0.28)',x,y,w,4),K='#1a1020';
@@ -2288,7 +2315,7 @@ function lmTalk(id){const L=LMS[id];S.lm=S.lm||[];const first=!S.lm.includes(id)
   if(L.pay==='shrine'){S.hp=S.maxHp;P.st=stMax();G.bf.iron=1800;say(head+'You rest a moment. Hearts and stamina restored, and your blade feels heavy and sure (double damage for 30 s).');return}
   say(head+lore)}
 
-function drawWorld(){ctx.drawImage(G.bg,0,0);animTiles();drawPuzzle();if(G.room.kind==='cave')drawCaveDecor();
+function drawWorld(){ctx.drawImage(G.bg,0,0);animTiles();drawTraps();drawPuzzle();if(G.room.kind==='cave')drawCaveDecor();
   drawGoo();if(G.room.lm)drawLandmark(LMS[G.room.lm.id],G.room.lm);if(G.basket)drawBasket(G.basket);G.npcs.forEach(drawNpc);G.picks.forEach(drawPick);
   for(const b of G.bombs){ctx.drawImage(BOMBI,Math.round(b.x),Math.round(b.y));if(b.t<25&&(b.t>>1)%2)px(ctx,'rgba(255,80,40,0.6)',Math.round(b.x),Math.round(b.y),8,8)}
   G.ents.slice().sort((a,b)=>a.y-b.y).forEach(drawEnemy);
@@ -2354,6 +2381,7 @@ function drawDark(){if(G.room.kind!=='cav')return;dk.globalCompositeOperation='s
 function drawPuzzle(){const z=G.puz;if(!z)return;
   if(z.type==='crystals')for(const k in G.room.cs){const ci=G.room.cs[k];if(z.lit.includes(ci)){const [c,w]=k.split(',').map(Number);px(ctx,['rgba(255,80,80,0.55)','rgba(80,140,255,0.55)','rgba(80,220,100,0.55)','rgba(255,210,70,0.55)'][ci],c*16+2,w*16+1,12,12);if(G.t%5===0)part(c*16+8,w*16+4,'#ffffff',0,-0.5,14,1,0)}}
   if(z.type==='braziers')BZPOS.forEach(([c,w],i)=>{const v=z.bz[i];if(v>0){const f=(G.t>>2)%3,hgt=v<150&&(G.t>>3)%2?4:8;px(ctx,'#ff5a20',c*16+5,w*16+6-hgt-f,6,hgt+f);px(ctx,'#ffd040',c*16+7,w*16+7-hgt+2-f,2,hgt-2);px(ctx,'#ff7a2f',c*16+2,w*16+15,Math.round(12*v/720),1)}});
+  if(z.type==='plates')PLPOS.forEach(([c,w],i)=>{const v=z.bz[i];if(v>0){px(ctx,'rgba(127,255,212,'+(0.3+0.3*(v/300))+')',c*16+2,w*16+2,12,12);px(ctx,'#7fffd4',c*16+2,w*16+14,Math.round(12*v/300),1)}});
   if(z.type==='silence'&&z.still>60){px(ctx,'rgba(10,6,20,'+Math.min(0.6,z.still/900)+')',0,0,PW,PH)}}
 function drawDuelHUD(){const D=G.duel,ch=G.ents.find(e=>e.champ);px(ctx,'rgba(0,0,0,0.7)',0,0,PW,16);
   txt('WREN',6,1,'#7fffd4');px(ctx,'#000',6,10,100,5);px(ctx,'#3a1010',7,11,98,3);px(ctx,'#40e080',7,11,Math.round(98*Math.max(0,S.hp)/S.maxHp),3);
