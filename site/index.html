@@ -475,7 +475,7 @@ const NHOLE=27,HOLES=[],HOLEOF={};
   for(let i=1;i<CEN.length;i++){const L=byReg[i];if(L.length)picks.push(L[Math.floor(r()*L.length)])}
   const big=byReg.map((L,i)=>[L.length,i]).sort((a,b)=>b[0]-a[0]);let j=0;while(picks.length<NHOLE&&j<500){const L=byReg[big[j%3][1]];const c=L[Math.floor(r()*L.length)];if(!has(c))picks.push(c);j++}
   picks.sort((a,b)=>Math.hypot(a[0]-START[0],a[1]-START[1])-Math.hypot(b[0]-START[0],b[1]-START[1]));
-  picks.forEach((p,i)=>{const k=p[0]+','+p[1],q=h2(p[0],p[1],27),h={key:k,n:i+1,par:q<0.28?4:3,nm:CEN[regMap[p[1]][p[0]]][3]};HOLES.push(h);HOLEOF[k]=h})})();
+  picks.forEach((p,i)=>{const k=p[0]+','+p[1],q=h2(p[0],p[1],27),h={key:k,n:i+1,par:i===0?3:q<0.28?4:3,nm:CEN[regMap[p[1]][p[0]]][3]};HOLES.push(h);HOLEOF[k]=h})})();
 const BASKETS=new Set(HOLES.map(h=>h.key));
 const ARENA=new Set();for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y;if(k!==START.join(',')&&!DSCR[k]&&!CAVES[k]&&!BASKETS.has(k)&&regMap[y][x]!==0&&h2(x,y,99)<0.12)ARENA.add(k)}
 const CAVN=['Burrow Hollow','Glimmerdeep','Rootcellar Run','Mole Warren','Echo Grotto','Crystal Vein','Spider Gallery','Sunken Mine','Wisplight Caverns','Gemfall Hollow','Deepdark Passage',"Old King's Mine",'Fungal Depths','Magma Tubes','Frozen Underway','Bonepit Tunnels','The Long Dark'];
@@ -1112,15 +1112,32 @@ function updPuzzle(){const z=G.puz;if(!z||z.done)return;for(const k in z.cd)if(z
 // Field throws: move the target marker, B picks the shot shape, A locks power (100% lands on the marker), A locks the release.
 // Within PUTT_FT the putting mini-game takes over: lock left/right, then up/down, inside the chains.
 const GOLF_MAX=TUNE.golf.maxThrow,GDISCS=Object.keys(TUNE.golf.discs),PUTT_FT=TUNE.golf.puttFt,SHAPES=[['HYZER',-0.75],['STRAIGHT',0],['ANHYZER',0.75]];
+
+// ================= BIOME COURSES =================
+// Each hole's course takes the look and hazard of the biome its basket sits in. Hazards all play like water: +1 stroke, replay from the last lie.
+const COURSES={
+ meadow:  {nm:'EMBERGLEN GREEN', out:'#2e5a24',rough:'#3e7230',fleck:'#356628',fair:'#5a9a44',green:'#6ab052',ob:'tree',   hz:'water', lay:'band', dens:1,  wind:1,  msg:'SPLASH!'},
+ forest:  {nm:'DEEPWOOD FAIRWAY',out:'#1a3a1a',rough:'#24482a',fleck:'#1e3e22',fair:'#3e7a3a',green:'#58a050',ob:'pine',   hz:'water', lay:'band', dens:1.4,wind:0.7,msg:'IN THE BROOK!'},
+ swamp:   {nm:'BOGWATER BENDS',  out:'#2a3420',rough:'#3a4428',fleck:'#323c22',fair:'#5a6a3a',green:'#6a8048',ob:'cypress',hz:'bog',   lay:'pools',dens:1,  wind:0.8,msg:'SWALLOWED BY THE BOG!'},
+ lake:    {nm:'GLASSWATER LINKS',out:'#24503a',rough:'#346a44',fleck:'#2c5c3c',fair:'#58a060',green:'#70c070',ob:'tree',   hz:'water', lay:'two',  dens:0.8,wind:1.2,msg:'SPLASH!'},
+ mountain:{nm:'CRAG RIDGE',      out:'#3a3a44',rough:'#4e5058',fleck:'#44464e',fair:'#6a7a5a',green:'#7a9a60',ob:'rock',   hz:'chasm', lay:'band', dens:0.9,wind:1.5,msg:'INTO THE CHASM!'},
+ desert:  {nm:'SUNSCORCH DUNES', out:'#a07a40',rough:'#c09858',fleck:'#b08848',fair:'#d8b878',green:'#a8b060',ob:'cactus', hz:'sand',  lay:'pits', dens:0.8,wind:1.2,msg:'QUICKSAND!'},
+ snow:    {nm:'FROSTFANG FLATS', out:'#8a9ab0',rough:'#c8d4e0',fleck:'#b4c0d0',fair:'#e8f0f8',green:'#b8d8c8',ob:'snowpine',hz:'ice',  lay:'band', dens:1,  wind:1.3,msg:'THROUGH THE ICE!'},
+ grave:   {nm:'HOLLOW YARD',     out:'#2a2430',rough:'#3a3440',fleck:'#322c38',fair:'#4a5040',green:'#5a6a48',ob:'tomb',   hz:'grave', lay:'pits', dens:1,  wind:0.6,msg:'INTO AN OPEN GRAVE!'},
+ volcano: {nm:'CINDER PIT',      out:'#2a1a1a',rough:'#3a2420',fleck:'#4a2a20',fair:'#5a4030',green:'#6a5038',ob:'rock',   hz:'lava',  lay:'band', dens:0.9,wind:1.1,msg:'LAVA!'}};
+function holeBiome(h){if(!h||!h.key)return'meadow';if(!h.bn){const [x,y]=h.key.split(',').map(Number);h.bn=genScreen(x,y).bn}return COURSES[h.bn]?h.bn:'meadow'}
+function holeCourse(h){return COURSES[holeBiome(h)]}
 // Holes are sized to the longest disc a player can have by then (1.33x it for par 3, 2.09x for par 4: 340/500 ft with the Midrange).
 function holeReach(n){let m=TUNE.golf.discs.disc_putt.max;for(const k in TUNE.golf.discAt)if(+k<=n)m=Math.max(m,TUNE.golf.discs[TUNE.golf.discAt[k]].max);return m}
-function golfCourse(h){const r=rng(SEED+h.n*7717),par=h.par,L=Math.round(62+(par===3?TUNE.golf.par3Reach:TUNE.golf.par4Reach)*holeReach(h.n)),tee={x:128+(r()-0.5)*60,y:L-26},bk={x:52+r()*152,y:36},mid=par>=4?{x:r()<0.5?40+r()*30:186+r()*30,y:L*0.52}:null;
+function golfCourse(h){const r=rng(SEED+h.n*7717),th=holeCourse(h),easy=h.n===1,par=h.par,L=Math.round(62+(par===3?TUNE.golf.par3Reach:TUNE.golf.par4Reach)*holeReach(h.n)),tee={x:128+(r()-0.5)*60,y:L-26},bk={x:easy?128:52+r()*152,y:36},mid=par>=4?{x:r()<0.5?40+r()*30:186+r()*30,y:L*0.52}:null;
   const path=mid?[tee,mid,bk]:[tee,bk],sd=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1);return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
   const near=(x,y,m)=>{for(let i=0;i<path.length-1;i++)if(sd({x,y},path[i],path[i+1])<m)return true;return false};
-  const trees=[];let g=0;const nt=Math.round(L/15*(0.55+0.45*h.n/27));while(trees.length<nt&&g++<600){const x=10+r()*236,y=18+r()*(L-36);if(near(x,y,24)||Math.hypot(x-tee.x,y-tee.y)<30||Math.hypot(x-bk.x,y-bk.y)<30||trees.some(t=>Math.hypot(t.x-x,t.y-y)<17))continue;trees.push({x,y,r:6+r()*3})}
+  const trees=[];let g=0;const nt=Math.round(L/15*(0.55+0.45*h.n/27)*(easy?0.45:th.dens));while(trees.length<nt&&g++<600){const x=10+r()*236,y=18+r()*(L-36);if(near(x,y,24)||Math.hypot(x-tee.x,y-tee.y)<30||Math.hypot(x-bk.x,y-bk.y)<30||trees.some(t=>Math.hypot(t.x-x,t.y-y)<17))continue;trees.push({x,y,r:6+r()*3})}
   if(mid)for(let k=1;k<=5;k++){const f=0.3+k*0.08,x=tee.x+(bk.x-tee.x)*f,y=tee.y+(bk.y-tee.y)*f;if(!near(x,y,20))trees.push({x,y,r:8})}
-  const water=[];if(r()<0.7){let y=Math.round(L*(0.42+r()*0.16));const hh=16+Math.round(r()*10);if(mid&&y<mid.y+28&&y+hh>mid.y-28)y=Math.round(mid.y+30);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
-  const a=r()*6.28,ws=(0.03+r()*0.12)*Math.min(1,0.4+h.n/27);
+  const water=[];if(easy){}else if(th.lay==='pits'||th.lay==='pools'){const k=th.lay==='pits'?3:2+Math.floor(r()*2);for(let i=0;i<k*6&&water.length<k;i++){const w=th.lay==='pits'?34:48,hh=th.lay==='pits'?24:30,x=8+r()*(240-w),y=40+r()*(L-110);if(Math.hypot(x+w/2-tee.x,y+hh/2-tee.y)<60||Math.hypot(x+w/2-bk.x,y+hh/2-bk.y)<55||(mid&&Math.hypot(x+w/2-mid.x,y+hh/2-mid.y)<40)||water.some(o=>Math.abs(o.x-x)<w+10&&Math.abs(o.y-y)<hh+10))continue;water.push({x,y,w,h:hh})}}
+  else if(r()<(th.lay==='two'?1:0.7)){let y=Math.round(L*(0.42+r()*0.16));const hh=16+Math.round(r()*10);if(mid&&y<mid.y+28&&y+hh>mid.y-28)y=Math.round(mid.y+30);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
+  if(th.lay==='two'&&!easy&&water.length){const y=Math.round(L*0.22),x=r()<0.5?8:190;if(!(mid&&Math.abs(mid.y-y)<50))water.push({x,y,w:58,h:34})}
+  const a=r()*6.28,ws=easy?0.02:(0.03+r()*0.12)*Math.min(1,0.4+h.n/27)*th.wind;
   return{L,tee,bk,mid,path,trees,water,wind:{x:Math.cos(a)*ws,y:Math.sin(a)*ws,s:ws,a},par}}
 function tutCourse(){const L=170,tee={x:128,y:L-26},bk={x:128,y:36};return{L,tee,bk,mid:null,path:[tee,bk],trees:[{x:60,y:90,r:8},{x:196,y:70,r:8},{x:40,y:40,r:7},{x:214,y:120,r:7}],water:[],wind:{x:0,y:0,s:0,a:0},par:3}}
 function startGolf(hn,tut){const h=tut?{n:0,par:3,key:null,nm:'PRACTICE'}:HOLES[(hn||DUN[G.dn].hole)-1],c=tut?tutCourse():golfCourse(h);G.shake=0;G.golf={admin:!!hn,tut:!!tut,h,c,lie:{x:c.tee.x,y:c.tee.y},prev:{x:c.tee.x,y:c.tee.y},strokes:0,tries:1,fails:0,ph:'intro',t:0,shape:1,pw:0,pd:1,rel:-1,rd:1,disc:null,msg:null,trail:[],held:0};golfHome();G.mode='golf';play('title')}
@@ -1167,7 +1184,7 @@ function golfIn(){const g=G.golf,c=g.c;g.made=1;sfx('chains');jingle('get',null)
 function golfEnd(how){const g=G.golf,c=g.c,d=g.disc;g.strokes++;
   if(how==='in'){golfIn();return}
   const wet=c.water.some(w=>d.x>=w.x&&d.x<=w.x+w.w&&d.y>=w.y&&d.y<=w.y+w.h);
-  if(how==='ob'||wet){g.strokes++;golfMsg(wet?'SPLASH! +1 STROKE':'OUT OF BOUNDS! +1','#80c0ff',90);sfx(wet?'land':'tink');if(wet)for(let i=0;i<10;i++)part(d.x,d.y,'#a0d0ff',(R()-0.5)*2,-R()*2,20,2,0.1);g.lie={x:g.prev.x,y:g.prev.y}}
+  if(how==='ob'||wet){g.strokes++;golfMsg(wet?(g.tut?'SPLASH!':holeCourse(g.h).msg)+' +1':'OUT OF BOUNDS! +1','#80c0ff',90);sfx(wet?'land':'tink');if(wet)for(let i=0;i<10;i++)part(d.x,d.y,'#a0d0ff',(R()-0.5)*2,-R()*2,20,2,0.1);g.lie={x:g.prev.x,y:g.prev.y}}
   else golfLie(d.x,d.y);
   g.ph='land';g.lt=50}
 function golfLie(x,y){const g=G.golf,c=g.c;for(const t of c.trees){const q=Math.hypot(x-t.x,y-t.y);if(q<t.r+4){x=t.x+(x-t.x)/(q||1)*(t.r+5);y=t.y+(y-t.y)/(q||1)*(t.r+5)}}
@@ -1220,14 +1237,29 @@ function storyBeat(){const n=S.shards.length;S.beats=S.beats||[];const b=n>=NSH?
 function golfCoach(){const g=G.golf;if(!g||!g.tut)return;const L={aim:['MOVE THE MARKER WITH ARROWS','THEN PRESS A TO START'],power:['THE BAR FILLS UP. PRESS A','ON THE WHITE LINE (100%)'],rel:['PRESS A AGAIN WHEN THE','NEEDLE IS IN THE GREEN'],putt:['STOP EACH NEEDLE SO THE','DOT LANDS IN THE CHAINS']}[g.ph];if(!L)return;
   // drawn over the HUD strip after drawHUD(), so the course stays clear
   px(ctx,'#000',0,0,PW,HUD);px(ctx,'#7fffd4',6,6,2,HUD-12);txt('PRACTICE HOLE',14,6,'#ffe060');txt(L[0],14,22,'#7fffd4');txt(L[1],14,34,'#ffffff')}
+const HZC={water:['#1a3a80','#2a5ab0','#6aa8f8'],bog:['#14200e','#4e5c26','#8a9a48'],chasm:['#0a0a10','#14141c','#3a3a4a'],sand:['#8a6a38','#b89458','#d8bc88'],ice:['#6a8ab0','#a8c8e8','#ffffff'],grave:['#120c10','#241a20','#4a3a30'],lava:['#6a1a08','#c03a10','#ffb030']};
+function drawHazard(kind,w,Y){const c=HZC[kind]||HZC.water,y=Y(w.y);px(ctx,c[0],w.x,y-1,w.w,w.h+2);px(ctx,c[1],w.x,y,w.w,w.h);
+  if(kind==='sand'){for(let i=4;i<w.w-4;i+=8)for(let j=4;j<w.h-3;j+=6)px(ctx,c[2],w.x+i+((i+j+(G.t>>5))%5),y+j,3,1)}
+  else if(kind==='ice'){for(let i=0;i<w.w;i+=12){px(ctx,c[2],w.x+i+2,y+2+(i%7),4,1);px(ctx,'#6a8ab0',w.x+i+5,y+4+(i%9),1,4)}}
+  else if(kind==='grave'||kind==='chasm'){px(ctx,c[2],w.x,y,w.w,2);px(ctx,'#000',w.x+2,y+4,w.w-4,w.h-6)}
+  else for(let i=0;i<w.w;i+=14)px(ctx,c[2],w.x+i+((G.t>>4)+i)%8,y+3+(i*7)%Math.max(1,w.h-5),kind==='lava'?3:5,1)}
+function drawObstacle(kind,x,y,r){px(ctx,'rgba(0,0,0,0.25)',x-r,y+2,r*2,4);
+  switch(kind){
+  case'pine':case'snowpine':{const d=kind==='pine'?'#12301a':'#1e3a2a',m=kind==='pine'?'#24502a':'#2e5a3a';px(ctx,'#4a2a14',x-1,y-2,3,5);for(let k=0;k<3;k++){const w=r*2-k*4,yy=y-4-k*5;px(ctx,d,x-w/2-1,yy-1,w+2,5);px(ctx,m,x-w/2,yy,w,4)}if(kind==='snowpine'){px(ctx,'#ffffff',x-2,y-17,4,2);px(ctx,'#ffffff',x-r+2,y-5,4,1)}break}
+  case'cypress':px(ctx,'#3a2a1a',x-2,y-3,5,6);disc(ctx,'#1a2a14',x,y-8,r);disc(ctx,'#3a5028',x,y-8,r-1);px(ctx,'#5a6a3a',x-r+2,y-6,3,4);px(ctx,'#5a6a3a',x+r-4,y-9,2,5);break;
+  case'rock':disc(ctx,'#1a1a20',x,y-4,r+1);disc(ctx,'#6a6a76',x,y-4,r);disc(ctx,'#8a8a96',x-2,y-6,Math.max(2,r-3));px(ctx,'#4a4a54',x+1,y-2,r-2,2);break;
+  case'cactus':px(ctx,'#1a3a1a',x-3,y-14,6,16);px(ctx,'#3a7a3a',x-2,y-13,4,14);px(ctx,'#3a7a3a',x-7,y-9,3,6);px(ctx,'#3a7a3a',x-7,y-9,5,2);px(ctx,'#3a7a3a',x+4,y-11,3,5);px(ctx,'#3a7a3a',x+2,y-7,5,2);px(ctx,'#ff6080',x-1,y-15,2,2);break;
+  case'tomb':px(ctx,'#1a1420',x-6,y-13,12,15);px(ctx,'#7a7486',x-5,y-12,10,13);px(ctx,'#9a94a6',x-5,y-12,10,2);px(ctx,'#4a4456',x-1,y-9,2,6);px(ctx,'#4a4456',x-3,y-7,6,2);break;
+  default:px(ctx,'#5a3a1a',x-1,y-2,3,5);disc(ctx,'#14301a',x,y-6,r+1);disc(ctx,'#2f6a2a',x,y-6,r);disc(ctx,'#4a8a3a',x-2,y-8,Math.max(2,r-4))}}
+
 function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();return}const z=g.z||1,cy=0,Y=v=>Math.round(v);
-  px(ctx,'#2e5a24',0,0,PW,PH);ctx.save();ctx.translate(PW/2,PH/2);ctx.scale(z,z);ctx.translate(-128,-Math.round(g.cy));
-  px(ctx,'#3e7230',-40,-60,336,c.L+120);px(ctx,'rgba(0,0,0,0.12)',-40,-60,44,c.L+120);px(ctx,'rgba(0,0,0,0.12)',252,-60,44,c.L+120);for(let i=0;i<60;i++){const x=Math.floor(h2(i,g.h.n,1)*256),y=Math.floor(h2(g.h.n,i,2)*c.L);px(ctx,'#356628',x,y,3,1)}
-  ctx.fillStyle='#5a9a44';for(let i=0;i<c.path.length-1;i++){const a=c.path[i],b=c.path[i+1],n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/8);for(let k=0;k<=n;k++){const x=a.x+(b.x-a.x)*k/n,y=a.y+(b.y-a.y)*k/n;ctx.beginPath();ctx.ellipse(x,Y(y),24,20,0,0,6.29);ctx.fill()}}
-  ctx.fillStyle='#6ab052';ctx.beginPath();ctx.ellipse(c.bk.x,Y(c.bk.y),30,22,0,0,6.29);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(c.bk.x,Y(c.bk.y),PUTT_FT,0,6.29);ctx.stroke();
-  for(const w of c.water){px(ctx,'#1a3a80',w.x,Y(w.y)-1,w.w,w.h+2);px(ctx,'#2a5ab0',w.x,Y(w.y),w.w,w.h);for(let i=0;i<w.w;i+=14)px(ctx,'#6aa8f8',w.x+i+((G.t>>4)+i)%8,Y(w.y)+3+(i*7)%Math.max(1,w.h-5),5,1)}
+  const th=g.tut?COURSES.meadow:holeCourse(g.h);px(ctx,th.out,0,0,PW,PH);ctx.save();ctx.translate(PW/2,PH/2);ctx.scale(z,z);ctx.translate(-128,-Math.round(g.cy));
+  px(ctx,th.rough,-40,-60,336,c.L+120);px(ctx,'rgba(0,0,0,0.12)',-40,-60,44,c.L+120);px(ctx,'rgba(0,0,0,0.12)',252,-60,44,c.L+120);for(let i=0;i<60;i++){const x=Math.floor(h2(i,g.h.n,1)*256),y=Math.floor(h2(g.h.n,i,2)*c.L);px(ctx,th.fleck,x,y,3,1)}
+  ctx.fillStyle=th.fair;for(let i=0;i<c.path.length-1;i++){const a=c.path[i],b=c.path[i+1],n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/8);for(let k=0;k<=n;k++){const x=a.x+(b.x-a.x)*k/n,y=a.y+(b.y-a.y)*k/n;ctx.beginPath();ctx.ellipse(x,Y(y),24,20,0,0,6.29);ctx.fill()}}
+  ctx.fillStyle=th.green;ctx.beginPath();ctx.ellipse(c.bk.x,Y(c.bk.y),30,22,0,0,6.29);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(c.bk.x,Y(c.bk.y),PUTT_FT,0,6.29);ctx.stroke();
+  for(const w of c.water)drawHazard(th.hz,w,Y);
   px(ctx,'#1a1020',c.tee.x-9,Y(c.tee.y)-3,18,10);px(ctx,'#9a8a78',c.tee.x-8,Y(c.tee.y)-2,16,8);
-  for(const t of c.trees){const x=Math.round(t.x),y=Y(t.y);px(ctx,'rgba(0,0,0,0.25)',x-t.r,y+2,t.r*2,4);px(ctx,'#5a3a1a',x-1,y-2,3,5);disc(ctx,'#14301a',x,y-6,t.r+1);disc(ctx,'#2f6a2a',x,y-6,t.r);disc(ctx,'#4a8a3a',x-2,y-8,Math.max(2,t.r-4))}
+  for(const t of c.trees)drawObstacle(th.ob,Math.round(t.x),Y(t.y),t.r);
   drawBasket({x:Math.round(c.bk.x)-8,y:Y(c.bk.y)-5,cx:c.bk.x,cy:Y(c.bk.y),made:g.made});
   const aiming=g.ph==='aim'||g.ph==='power'||g.ph==='rel';
   if(aiming){if(!g.pv){const s=golfAim(),e=golfPath(g.lie.x,g.lie.y,s.a,s.D,s.cv);g.pv=e.pts}for(let i=0;i<g.pv.length;i+=8){const k=i/g.pv.length,q=Math.max(1,Math.round(1/z));px(ctx,'rgba(255,255,255,'+(0.35+0.5*k)+')',Math.round(g.pv[i]),Y(g.pv[i+1]),q,q)}
@@ -1247,7 +1279,7 @@ function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();retu
     txt('RELEASE',6,by+12,'#ffe060');px(ctx,'#000',62,by+12,112,7);px(ctx,'#3a3048',63,by+13,110,5);px(ctx,'#2a7a5a',118-7,by+13,14,5);px(ctx,'#ffffff',118,by+11,1,9);if(g.ph==='rel')px(ctx,'#ff7a2f',117+Math.round(g.rel*54),by+11,3,9);
     }
   const big=(a,b,col,b2)=>{px(ctx,'rgba(0,0,0,0.7)',0,56,PW,b2?60:48);txt(a,128,62,col,'center',16);if(b)txt(b,128,84,'#ffffff','center');if(b2)txt(b2,128,98,'#a0d0ff','center')};
-  if(g.ph==='intro')g.tut?big('PRACTICE HOLE','NOTHING TO LOSE HERE','#7fffd4'):big('HOLE '+g.h.n+'  PAR '+g.h.par,'SINK IT IN PAR OR BETTER','#ffe060',g.admin?'':'B: WALK AWAY FOR NOW');
+  if(g.ph==='intro')g.tut?big('PRACTICE HOLE','NOTHING TO LOSE HERE','#7fffd4'):big('HOLE '+g.h.n+'  PAR '+g.h.par,holeCourse(g.h).nm,'#ffe060',g.admin?'SINK IT IN PAR OR BETTER':'PAR OR BETTER  B: WALK AWAY');
   if(g.ph==='retry'&&g.tut)big('OVER PAR','NO HARM DONE IN PRACTICE','#ff6040',g.t>50?'A: AGAIN   B: SKIP':'');
   else if(g.ph==='retry'){const left=TUNE.golf.failsPerHeart-(g.fails%TUNE.golf.failsPerHeart);big('OVER PAR',g.heartLost===1?'YOU LOST A HEART CONTAINER!':g.heartLost===2?'3 MISSES, BUT YOUR HEART HOLDS':golfHeartsLeft(g)<=0?'NO MORE HEARTS AT STAKE HERE':left+' TR'+(left>1?'IES':'Y')+' LEFT, THEN A HEART','#ff6040',g.t>50?'A: PLAY IT AGAIN   B: '+(g.admin?'QUIT':'LEAVE'):'')}
   if(g.ph==='done'&&g.tut)big('IN THE CHAINS!',g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  PRACTICE DONE','#7fffd4');
@@ -1767,7 +1799,7 @@ function shopBuy(pk){const it=pk.item;
 function giveItem(kind,msg){G.mode='hold';G.holdT=80;G.holdKind=kind;G.holdMsg=msg;jingle(kind==='shard'?'shard':'get');P.atk=0;P.spin=0;P.charge=0;P.atkHeld=0}
 function bossDeath(e){G.bossDie={t:0,x:ecx(e),y:ecy(e),final:!!e.cfg.final};G.ents.forEach(o=>{if(o!==e)o.dead=1});G.shots=[];play(null)}
 function updBossDie(){const b=G.bossDie;b.t++;if(b.t%6===0){const x=b.x+(R()-0.5)*36,y=b.y+(R()-0.5)*36;puff(x,y,pick(['#ff7a2f','#ffd040','#ffffff']),12,2.2);sfx('boom');G.shake=5}
-  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1],dk=TUNE.golf.discAt[h.n],got=dk&&!S.items[dk];if(got){S.items[dk]=1;save();sfx('get')}say((got?'The keeper drops a disc: the '+ITEMS[dk].n+'! '+TUNE.golf.discs[dk].nm+' throws up to '+TUNE.golf.discs[dk].max+' ft. Press Q/E to pick a disc for each throw. ':'')+'The keeper falls. The Old Course remembers this hole, and a ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again. Three misses cost a heart container, but never more than one per hole. Press B at the tee or after a miss to walk away; the basket will wait here.',()=>{S.dun[G.dn].bossDown=1;save();startGolf()});return}
+  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1],dk=TUNE.golf.discAt[h.n],got=dk&&!S.items[dk];if(got){S.items[dk]=1;save();sfx('get')}say((got?'The keeper drops a disc: the '+ITEMS[dk].n+'! '+TUNE.golf.discs[dk].nm+' throws up to '+TUNE.golf.discs[dk].max+' ft. Press Q/E to pick a disc for each throw. ':'')+'The keeper falls, and its lair opens onto the Old Course: '+holeCourse(h).nm+'. A ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again. Three misses cost a heart container, but never more than one per hole. Press B at the tee or after a miss to walk away; the basket will wait here.',()=>{S.dun[G.dn].bossDown=1;save();startGolf()});return}
   if(b.t>=96){G.bossDie=null;const ds=S.dun[G.dn];ds.boss=1;swordXP(5);if(b.final){winGame();return}G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');sfx('secret');save()}}
 function winGame(){S.won=1;save();playScene('ending',()=>{G.mode='win';G.winT=0;jingle('win','title')})}
 
