@@ -118,8 +118,12 @@ const TUNE={
   drops:{cons:0.008,mush:0.015,gem:0.11,gem5:0.14,heart:0.25,bombs:0.32,comboEvery:8}, // dropAt(): cumulative chances per kill
   sword:{needBase:5,needPerLevel:2,dmgPerLevel:0.25,foeHpPerLevel:0.15,foeSpeedPerLevel:0.008,foeDmgBumpAt:15,bossHpPerLevel:0.1},
   stamina:{roll:28,jump:24,sprint:0.55,spin:34,axe:12,hammer:18,pick:6,regen:1.2,regenWinded:0.9},
-  golf:{maxThrow:210,puttFt:30,par3Len:340,par4Len:500,powerSpeed:0.03,releaseSpeed:0.06,releaseAim:0.28,releaseCurve:0.35,
-        puttZone:0.22,puttZonePerFt:0.0055,puttZoneMin:0.05,puttSpeed:0.02,puttSpeedPerFt:0.0008,failsPerHeart:3,heartsPerHole:1},
+  golf:{maxThrow:210,puttFt:30,par3Reach:1.33,par4Reach:2.09,powerSpeed:0.03,releaseSpeed:0.06,releaseAim:0.28,releaseCurve:0.35,
+        puttZone:0.22,puttZonePerFt:0.0055,puttZoneMin:0.05,puttSpeed:0.02,puttSpeedPerFt:0.0008,failsPerHeart:3,heartsPerHole:1,
+        // max = longest throw in ft, cv = how much the shape bends, wind = wind drift, turn = extra right turn, ric = glances off trees
+        discs:{disc_putt:{nm:'PUTTER',max:120,cv:0.3,wind:1},disc_mid:{nm:'MIDRANGE',max:210,cv:1,wind:1},disc_drive:{nm:'DRIVER',max:280,cv:1.4,wind:1.3},
+               disc_crystal:{nm:'CRYSTAL',max:240,cv:1,wind:1,turn:0.3,ric:1},disc_glow:{nm:'EMBER',max:250,cv:0.9,wind:0.3}},
+        discAt:{1:'disc_mid',3:'disc_drive',6:'disc_crystal',9:'disc_glow'}},
   charm:{chance:0.3,chanceOwed:0.6},           // Marebear charm duel chance (owed = while she holds one of your hearts)
   folk:0.22                                     // share of eligible overworld screens with a wandering person
 };
@@ -469,7 +473,7 @@ const NHOLE=27,HOLES=[],HOLEOF={};
 const BASKETS=new Set(HOLES.map(h=>h.key));
 const ARENA=new Set();for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y;if(k!==START.join(',')&&!DSCR[k]&&!CAVES[k]&&!BASKETS.has(k)&&regMap[y][x]!==0&&h2(x,y,99)<0.12)ARENA.add(k)}
 const CAVN=['Burrow Hollow','Glimmerdeep','Rootcellar Run','Mole Warren','Echo Grotto','Crystal Vein','Spider Gallery','Sunken Mine','Wisplight Caverns','Gemfall Hollow','Deepdark Passage',"Old King's Mine",'Fungal Depths','Magma Tubes','Frozen Underway','Bonepit Tunnels','The Long Dark'];
-const CAVR=['pick','lamp','heartc','geode','disc_crystal','heartc','silk','geode','oremail','heartc','stash','geode','stash','heartc','geode','elix3','heartc'];
+const CAVR=['pick','lamp','heartc','geode','stash','heartc','silk','geode','oremail','heartc','stash','geode','stash','heartc','geode','elix3','heartc'];
 const CAVM=[1,1,2,1,1,1,2,1,1,1,3,1,1,2,1,1,2];
 const CAVS=[],MOUTHAT={},DIGAT={},MOPT=[[10,3,10,4],[5,3,5,4],[10,6,10,5],[5,6,5,5]];
 (()=>{const r=rng(SEED+4242),cand=[];for(let y=0;y<WH;y++)for(let x=0;x<WW;x++){const k=x+','+y;if(k===START.join(',')||DSCR[k]||CAVES[k]||ARENA.has(k)||BASKETS.has(k))continue;cand.push([x,y])}
@@ -1096,13 +1100,15 @@ function updPuzzle(){const z=G.puz;if(!z||z.done)return;for(const k in z.cd)if(z
 // ================= HOLE CHALLENGE: DISC GOLF AFTER THE BOSS =================
 // Field throws: move the target marker, B picks the shot shape, A locks power (100% lands on the marker), A locks the release.
 // Within PUTT_FT the putting mini-game takes over: lock left/right, then up/down, inside the chains.
-const GOLF_MAX=TUNE.golf.maxThrow,PUTT_FT=TUNE.golf.puttFt,SHAPES=[['HYZER',-0.75],['STRAIGHT',0],['ANHYZER',0.75]];
-function golfCourse(h){const r=rng(SEED+h.n*7717),par=h.par,L=par===3?TUNE.golf.par3Len:TUNE.golf.par4Len,tee={x:128+(r()-0.5)*60,y:L-26},bk={x:52+r()*152,y:36},mid=par>=4?{x:r()<0.5?40+r()*30:186+r()*30,y:L*0.52}:null;
+const GOLF_MAX=TUNE.golf.maxThrow,GDISCS=Object.keys(TUNE.golf.discs),PUTT_FT=TUNE.golf.puttFt,SHAPES=[['HYZER',-0.75],['STRAIGHT',0],['ANHYZER',0.75]];
+// Holes are sized to the longest disc a player can have by then (1.33x it for par 3, 2.09x for par 4: 340/500 ft with the Midrange).
+function holeReach(n){let m=TUNE.golf.discs.disc_putt.max;for(const k in TUNE.golf.discAt)if(+k<=n)m=Math.max(m,TUNE.golf.discs[TUNE.golf.discAt[k]].max);return m}
+function golfCourse(h){const r=rng(SEED+h.n*7717),par=h.par,L=Math.round(62+(par===3?TUNE.golf.par3Reach:TUNE.golf.par4Reach)*holeReach(h.n)),tee={x:128+(r()-0.5)*60,y:L-26},bk={x:52+r()*152,y:36},mid=par>=4?{x:r()<0.5?40+r()*30:186+r()*30,y:L*0.52}:null;
   const path=mid?[tee,mid,bk]:[tee,bk],sd=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1);return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
   const near=(x,y,m)=>{for(let i=0;i<path.length-1;i++)if(sd({x,y},path[i],path[i+1])<m)return true;return false};
   const trees=[];let g=0;const nt=Math.round(L/15*(0.55+0.45*h.n/27));while(trees.length<nt&&g++<600){const x=10+r()*236,y=18+r()*(L-36);if(near(x,y,24)||Math.hypot(x-tee.x,y-tee.y)<30||Math.hypot(x-bk.x,y-bk.y)<30||trees.some(t=>Math.hypot(t.x-x,t.y-y)<17))continue;trees.push({x,y,r:6+r()*3})}
   if(mid)for(let k=1;k<=5;k++){const f=0.3+k*0.08,x=tee.x+(bk.x-tee.x)*f,y=tee.y+(bk.y-tee.y)*f;if(!near(x,y,20))trees.push({x,y,r:8})}
-  const water=[];if(r()<0.7){const y=Math.round(L*(0.42+r()*0.16)),hh=16+Math.round(r()*10);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
+  const water=[];if(r()<0.7){let y=Math.round(L*(0.42+r()*0.16));const hh=16+Math.round(r()*10);if(mid&&y<mid.y+28&&y+hh>mid.y-28)y=Math.round(mid.y+30);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
   const a=r()*6.28,ws=(0.03+r()*0.12)*Math.min(1,0.4+h.n/27);
   return{L,tee,bk,mid,path,trees,water,wind:{x:Math.cos(a)*ws,y:Math.sin(a)*ws,s:ws,a},par}}
 function tutCourse(){const L=170,tee={x:128,y:L-26},bk={x:128,y:36};return{L,tee,bk,mid:null,path:[tee,bk],trees:[{x:60,y:90,r:8},{x:196,y:70,r:8},{x:40,y:40,r:7},{x:214,y:120,r:7}],water:[],wind:{x:0,y:0,s:0,a:0},par:3}}
@@ -1110,19 +1116,23 @@ function startGolf(hn,tut){const h=tut?{n:0,par:3,key:null,nm:'PRACTICE'}:HOLES[
 function golfReset(){const g=G.golf,c=g.c;g.lie={x:c.tee.x,y:c.tee.y};g.prev={x:c.tee.x,y:c.tee.y};g.strokes=0;g.made=0;g.failed=0;g.heartLost=0;g.disc=null;g.trail=[];g.pt=null;g.tries++;g.ph='aim';g.t=0;golfHome();golfMsg('TRY '+g.tries+'  -  PAR '+g.h.par,'#ffe060',90)}
 function golfMsg(s,c,t){G.golf.msg={s,c:c||'#ffffff',t:t||90}}
 function golfDist(){const g=G.golf;return Math.hypot(g.c.bk.x-g.lie.x,g.c.bk.y-g.lie.y)}
-function golfHome(){const g=G.golf,c=g.c;let tx=c.bk.x,ty=c.bk.y;if(c.mid&&g.lie.y>c.mid.y+20&&golfDist()>GOLF_MAX*0.9&&Math.hypot(c.mid.x-g.lie.x,c.mid.y-g.lie.y)>60){tx=c.mid.x;ty=c.mid.y}const d=Math.hypot(tx-g.lie.x,ty-g.lie.y)||1,k=Math.min(1,GOLF_MAX/d);g.mk={x:g.lie.x+(tx-g.lie.x)*k,y:g.lie.y+(ty-g.lie.y)*k};g.pv=null}
+function golfBag(){const b=GDISCS.filter(k=>S.items[k]);return b.length?b:['disc_putt']}
+function gDisc(){const g=G.golf;return TUNE.golf.discs[g.bag[g.di]]}
+function golfPick(){const g=G.golf,need=golfDist()-PUTT_FT*0.5;let best=g.bag.length-1,bm=1e9;g.bag.forEach((k,i)=>{const m=TUNE.golf.discs[k].max;if(m>=need&&m<bm){bm=m;best=i}});if(bm===1e9){let mx=0;g.bag.forEach((k,i)=>{if(TUNE.golf.discs[k].max>mx){mx=TUNE.golf.discs[k].max;best=i}})}g.di=best}
+function golfHome(){const g=G.golf,c=g.c;if(!g.bag)g.bag=golfBag();golfPick();const GM=gDisc().max;let tx=c.bk.x,ty=c.bk.y;if(c.mid&&g.lie.y>c.mid.y+20&&golfDist()>GM*0.9&&Math.hypot(c.mid.x-g.lie.x,c.mid.y-g.lie.y)>60){tx=c.mid.x;ty=c.mid.y}const d=Math.hypot(tx-g.lie.x,ty-g.lie.y)||1,k=Math.min(1,GM/d);g.mk={x:g.lie.x+(tx-g.lie.x)*k,y:g.lie.y+(ty-g.lie.y)*k};g.pv=null}
 function golfPath(x,y,a,D,cv,wind){const v0=Math.sqrt(2*0.05*Math.max(1,D));let v=v0;const pts=[];while(v>0){const sp=v/v0;a+=cv*0.022*(0.25+(1-sp)*1.2);x+=Math.cos(a)*v+(wind?wind.x:0);y+=Math.sin(a)*v+(wind?wind.y:0);v-=0.05;pts.push(x,y)}return{x,y,pts}}
-function golfAim(){const g=G.golf,cv=SHAPES[g.shape][1],T=Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y),base=Math.atan2(g.mk.y-g.lie.y,g.mk.x-g.lie.x);let a=base,D=T;
+function golfAim(){const g=G.golf,gd=gDisc(),cv=SHAPES[g.shape][1]*gd.cv+(gd.turn||0),T=Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y),base=Math.atan2(g.mk.y-g.lie.y,g.mk.x-g.lie.x);let a=base,D=T;
   for(let i=0;i<5;i++){const e=golfPath(g.lie.x,g.lie.y,a,D,cv),ch=Math.hypot(e.x-g.lie.x,e.y-g.lie.y)||1;a-=Math.atan2(e.y-g.lie.y,e.x-g.lie.x)-base;D*=T/ch}return{a,D,cv}}
 function updGolf(){const g=G.golf;if(!g)return;const c=g.c;g.t++;if(G.shake>0)G.shake--;if(g.msg&&--g.msg.t<=0)g.msg=null;
   const aimC=g.ph==='aim'||g.ph==='power'||g.ph==='rel';let tz=1,ty=g.lie.y-10;
-  if(g.ph==='intro'){tz=Math.min(1,(PH-10)/c.L);ty=c.L/2}else if(aimC){const span=Math.abs(g.lie.y-g.mk.y)+70,spx=Math.abs(g.lie.x-g.mk.x)+50;tz=clamp(Math.min((PH-56)/span,PW/spx),0.42,1);ty=(g.lie.y+g.mk.y)/2+14/tz}else if(g.ph==='fly'&&g.disc){tz=Math.max(0.6,g.z);ty=g.disc.y}
+  if(g.ph==='intro'){tz=Math.min(1,(PH-10)/c.L);ty=c.L/2}else if(aimC){const span=Math.abs(g.lie.y-g.mk.y)+70,spx=Math.abs(g.lie.x-g.mk.x)+50;tz=clamp(Math.min((PH-68)/span,PW/spx),0.36,1);ty=(g.lie.y+g.mk.y)/2+19/tz}else if(g.ph==='fly'&&g.disc){tz=Math.max(0.6,g.z);ty=g.disc.y}
   if(g.z===undefined){g.z=tz;g.cy=ty}g.z+=(tz-g.z)*0.1;g.cy+=(ty-g.cy)*(g.ph==='fly'?0.18:0.12);
   for(const p of G.parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.t--}G.parts=G.parts.filter(p=>p.t>0);
   switch(g.ph){
   case'intro':if(!g.admin&&!g.tut&&g.t>20&&IN.pb){golfLeave();break}if(g.t>150||(g.t>30&&IN.pa)){g.ph=golfDist()<=PUTT_FT?'aim':'aim';g.t=0}break;
-  case'aim':{if(IN.x||IN.y){g.held++;const sp=0.9+Math.min(2.6,g.held*0.06);let nx=clamp(g.mk.x+IN.x*sp,6,250),ny=clamp(g.mk.y+IN.y*sp,6,c.L-6);const dx=nx-g.lie.x,dy=ny-g.lie.y,dd=Math.hypot(dx,dy);if(dd>GOLF_MAX){nx=g.lie.x+dx/dd*GOLF_MAX;ny=g.lie.y+dy/dd*GOLF_MAX}g.mk.x=nx;g.mk.y=ny;g.pv=null}else g.held=0;
-    if(IN.pb){g.shape=(g.shape+1)%3;g.pv=null;sfx('text')}if(IN.pa&&Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y)>4){g.ph='power';g.pw=0;g.pd=1;sfx('sel')}break}
+  case'aim':{if(IN.x||IN.y){g.held++;const sp=0.9+Math.min(2.6,g.held*0.06);let nx=clamp(g.mk.x+IN.x*sp,6,250),ny=clamp(g.mk.y+IN.y*sp,6,c.L-6);const dx=nx-g.lie.x,dy=ny-g.lie.y,dd=Math.hypot(dx,dy);const GM=gDisc().max;if(dd>GM){nx=g.lie.x+dx/dd*GM;ny=g.lie.y+dy/dd*GM}g.mk.x=nx;g.mk.y=ny;g.pv=null}else g.held=0;
+    if(IN.pb){g.shape=(g.shape+1)%3;g.pv=null;sfx('text')}
+    if((IN.pl||IN.pr)&&g.bag.length>1){g.di=(g.di+(IN.pr?1:g.bag.length-1))%g.bag.length;const GM=gDisc().max,dx=g.mk.x-g.lie.x,dy=g.mk.y-g.lie.y,dd=Math.hypot(dx,dy);if(dd>GM){g.mk.x=g.lie.x+dx/dd*GM;g.mk.y=g.lie.y+dy/dd*GM}g.pv=null;sfx('sel')}if(IN.pa&&Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y)>4){g.ph='power';g.pw=0;g.pd=1;sfx('sel')}break}
   case'power':g.pw+=g.pd*TUNE.golf.powerSpeed;if(g.pw>=1.2){g.pw=1.2;g.pd=-1}if(g.pw<=0){g.pw=0;g.pd=1}if(IN.pb){g.ph='aim';break}if(IN.pa){g.ph='rel';g.rel=-1;g.rd=1;sfx('sel')}break;
   case'rel':g.rel+=g.rd*TUNE.golf.releaseSpeed;if(g.rel>=1){g.rel=1;g.rd=-1}if(g.rel<=-1){g.rel=-1;g.rd=1}if(IN.pb){g.ph='aim';break}if(IN.pa)golfThrow();break;
   case'fly':golfFly();break;
@@ -1132,14 +1142,14 @@ function updGolf(){const g=G.golf;if(!g)return;const c=g.c;g.t++;if(G.shake>0)G.
   case'done':if(g.t>100&&(IN.pa||g.t>260))golfFinish();break}}
 function golfThrow(){const g=G.golf,s=golfAim(),clean=Math.abs(g.rel)<0.12;
   const a=s.a+g.rel*TUNE.golf.releaseAim,cv=s.cv+g.rel*TUNE.golf.releaseCurve,D=s.D*g.pw,v0=Math.sqrt(2*0.05*Math.max(1,D));
-  g.disc={x:g.lie.x,y:g.lie.y,a,v:v0,v0,cv,t:0,T:v0/0.05,zm:Math.min(18,6+12*D/GOLF_MAX),z:0,hitB:0};g.ph='fly';g.trail=[];sfx('chak');
+  g.disc={x:g.lie.x,y:g.lie.y,a,v:v0,v0,cv,t:0,T:v0/0.05,zm:Math.min(18,6+12*D/GOLF_MAX),z:0,hitB:0,gd:gDisc()};g.ph='fly';g.trail=[];sfx('chak');
   golfMsg(clean?'CLEAN RELEASE!':g.rel<0?'PULLED LEFT':'PUSHED RIGHT',clean?'#7fffd4':'#ffb060',50);
   P.dir=Math.abs(Math.cos(a))>Math.abs(Math.sin(a))?(Math.cos(a)>0?1:3):(Math.sin(a)>0?2:0)}
-function golfFly(){const g=G.golf,c=g.c,d=g.disc;const sp=d.v/d.v0;d.a+=d.cv*0.022*(0.25+(1-sp)*1.2);d.x+=Math.cos(d.a)*d.v+c.wind.x;d.y+=Math.sin(d.a)*d.v+c.wind.y;d.v-=0.05;d.t++;d.z=d.zm*Math.sin(Math.PI*Math.min(1,d.t/d.T));
+function golfFly(){const g=G.golf,c=g.c,d=g.disc;const sp=d.v/d.v0;d.a+=d.cv*0.022*(0.25+(1-sp)*1.2);const wk=d.gd?d.gd.wind:1;d.x+=Math.cos(d.a)*d.v+c.wind.x*wk;d.y+=Math.sin(d.a)*d.v+c.wind.y*wk;d.v-=0.05;d.t++;d.z=d.zm*Math.sin(Math.PI*Math.min(1,d.t/d.T));
   if(d.t%3===0)g.trail.push({x:d.x,y:d.y-d.z,t:30});for(const q of g.trail)q.t--;g.trail=g.trail.filter(q=>q.t>0);
   const bd=Math.hypot(d.x-c.bk.x,d.y-c.bk.y);
   if(bd<7&&d.z<10){if(sp<0.85){golfEnd('in');return}if(!d.hitB){d.hitB=1;d.v*=0.3;d.a+=Math.PI*(0.7+R()*0.6);sfx('chains');golfMsg('CHAINS... SPIT OUT!','#ffe060',60)}}
-  for(const t of c.trees)if(d.z<13&&Math.hypot(d.x-t.x,d.y-t.y)<t.r+2){d.x-=Math.cos(d.a)*4;d.y-=Math.sin(d.a)*4;sfx('tink');golfMsg('TREE!','#a0e060',50);for(let i=0;i<8;i++)part(t.x,t.y-6,pick(['#2f6a2a','#5aa84a']),(R()-0.5)*2,-R()*1.5,24,2,0.08);golfEnd('stop');return}
+  for(const t of c.trees)if(d.z<13&&Math.hypot(d.x-t.x,d.y-t.y)<t.r+2){if(d.gd&&d.gd.ric&&!d.ric){d.ric=1;const nx=d.x-t.x,ny=d.y-t.y,ta=Math.atan2(ny,nx);d.a=2*ta-d.a+Math.PI;d.v*=0.6;d.x=t.x+Math.cos(ta)*(t.r+3);d.y=t.y+Math.sin(ta)*(t.r+3);sfx('tink');golfMsg('CRYSTAL GLANCE!','#a0f0ff',50);break}d.x-=Math.cos(d.a)*4;d.y-=Math.sin(d.a)*4;sfx('tink');golfMsg('TREE!','#a0e060',50);for(let i=0;i<8;i++)part(t.x,t.y-6,pick(['#2f6a2a','#5aa84a']),(R()-0.5)*2,-R()*1.5,24,2,0.08);golfEnd('stop');return}
   if(d.x<4||d.x>252||d.y<4||d.y>c.L-4){golfEnd('ob');return}
   if(d.v<=0)golfEnd('stop')}
 function golfIn(){const g=G.golf,c=g.c;g.made=1;sfx('chains');jingle('get',null);G.shake=6;for(let i=0;i<30;i++)part(c.bk.x,c.bk.y-6,pick(['#ffe060','#ffffff','#7fffd4']),(R()-0.5)*4,(R()-0.5)*4-1,40,2,0.04);g.ph='done';g.t=0}
@@ -1210,7 +1220,7 @@ function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();retu
   drawBasket({x:Math.round(c.bk.x)-8,y:Y(c.bk.y)-5,cx:c.bk.x,cy:Y(c.bk.y),made:g.made});
   const aiming=g.ph==='aim'||g.ph==='power'||g.ph==='rel';
   if(aiming){if(!g.pv){const s=golfAim(),e=golfPath(g.lie.x,g.lie.y,s.a,s.D,s.cv);g.pv=e.pts}for(let i=0;i<g.pv.length;i+=8){const k=i/g.pv.length,q=Math.max(1,Math.round(1/z));px(ctx,'rgba(255,255,255,'+(0.35+0.5*k)+')',Math.round(g.pv[i]),Y(g.pv[i+1]),q,q)}
-    ctx.strokeStyle='rgba(255,255,255,0.14)';ctx.lineWidth=1/z;ctx.beginPath();ctx.arc(g.lie.x,Y(g.lie.y),GOLF_MAX,0,6.29);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.14)';ctx.lineWidth=1/z;ctx.beginPath();ctx.arc(g.lie.x,Y(g.lie.y),gDisc().max,0,6.29);ctx.stroke();
     const mx=Math.round(g.mk.x),my=Y(g.mk.y),pul=(G.t>>3)%2,k=1/z,col=pul?'#ff7a2f':'#ffe060';ctx.strokeStyle=col;ctx.lineWidth=k;ctx.beginPath();ctx.arc(mx+0.5,my+0.5,5*k,0,6.29);ctx.stroke();px(ctx,col,mx-9*k,my,4*k,k);px(ctx,col,mx+5*k,my,4*k,k);px(ctx,col,mx,my-9*k,k,4*k);px(ctx,col,mx,my+5*k,k,4*k)}
   for(const q of g.trail)px(ctx,'rgba(255,255,255,'+(q.t/40)+')',Math.round(q.x),Y(q.y),1,1);
   if(g.ph!=='intro'||g.t>70)ctx.drawImage(heroImg(P.dir,0),Math.round(g.lie.x)-8,Y(g.lie.y)-14);
@@ -1219,8 +1229,8 @@ function drawGolf(){const g=G.golf,c=g.c;if(g.ph==='putt'&&g.pt){drawPutt();retu
   ctx.restore();
   px(ctx,'rgba(0,0,0,0.72)',0,0,PW,13);txt('PAR '+g.h.par+' TRY '+g.tries,4,3,'#ffe060');txt('THROW '+(g.strokes+(g.ph==='done'||g.ph==='retry'?0:1)),136,3,'#ffffff','center');
   const w=c.wind;txt('WIND',206,3,'#a0d0ff','right');const wx=226,wy=6,wl=3+Math.round(w.s*60);px(ctx,'#a0d0ff',wx-1,wy-1,3,3);for(let i=0;i<wl;i++)px(ctx,'#a0d0ff',Math.round(wx+Math.cos(w.a)*i),Math.round(wy+Math.sin(w.a)*i),1,1);txt(''+Math.round(w.s*60),252,3,'#a0d0ff','right');
-  if(aiming){const by=PH-28;px(ctx,'rgba(0,0,0,0.72)',0,by-14,PW,42);
-    const hint=g.ph==='aim'?'ARROWS MARK  B SHAPE  A GO':g.ph==='power'?'A LOCK POWER  B BACK':'A LOCK RELEASE  B BACK';txt(hint,128,by+20,'#ffffff','center');txt('SHAPE: '+SHAPES[g.shape][0],6,by-11,'#ffe060');
+  if(aiming){const by=PH-28;px(ctx,'rgba(0,0,0,0.72)',0,by-25,PW,53);{const gd=gDisc();txt('DISC: '+gd.nm,6,by-22,ITEMS[g.bag[g.di]].col);txt('MAX '+gd.max+' FT',250,by-22,'#a0d0ff','right')}
+    const hint=g.ph==='aim'?(g.bag.length>1?'Q/E DISC  B SHAPE  A THROW':'ARROWS MARK  B SHAPE  A GO'):g.ph==='power'?'A LOCK POWER  B BACK':'A LOCK RELEASE  B BACK';txt(hint,128,by+20,'#ffffff','center');txt('SHAPE: '+SHAPES[g.shape][0],6,by-11,'#ffe060');
     txt('POWER',6,by,'#ffe060');px(ctx,'#000',62,by,112,7);px(ctx,'#3a3048',63,by+1,110,5);const pf=g.ph==='aim'?0:Math.round(110*g.pw/1.2);px(ctx,g.pw>1.04?'#ff5040':g.pw>0.96?'#7fffd4':'#60d860',63,by+1,pf,5);px(ctx,'#ffffff',63+Math.round(110/1.2),by-1,1,9);
     txt('THROW '+Math.round(Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y))+' FT',250,by-11,'#a0d0ff','right');txt('TO GO '+Math.round(golfDist()),250,by,'#8a7a9a','right');
     txt('RELEASE',6,by+12,'#ffe060');px(ctx,'#000',62,by+12,112,7);px(ctx,'#3a3048',63,by+13,110,5);px(ctx,'#2a7a5a',118-7,by+13,14,5);px(ctx,'#ffffff',118,by+11,1,9);if(g.ph==='rel')px(ctx,'#ff7a2f',117+Math.round(g.rel*54),by+11,3,9);
@@ -1429,7 +1439,7 @@ function caveSetup(rm){const cv=rm.cv,ty=cv.type,taken=S.caves.includes(cv.id);
   else if(ty==='dojo')G.npcs.push({cave:1,solid:1,x:112,y:36,spr:'knight',pal:{a:'#e0b040',d:'#806010',r:'#ffffff'},pk:'master'});
   else{G.npcs.push(sage);if((ty==='gift'||ty==='gems')&&!taken)G.picks.push({kind:'chest',x:121,y:84,w:14,h:12,perm:1,content:ty==='gift'?'heartc':'gems50',cid:cv.id})}}
 function shopStock(cv,taken){if(cv.type==='hcshop')return taken?[{item:'p_heal',price:40},{item:'s_return',price:30},{item:'bombs',price:20}]:[{item:'heartc',price:150},{item:'p_heal',price:40},{item:'s_return',price:30}];
-  if(cv.type==='proshop')return['disc_mid','disc_drive','disc_glow'].filter(w=>!S.items[w]).map(w=>({item:w,price:ITEMS[w].price})).concat([{item:'p_vigor',price:50}]);
+  if(cv.type==='proshop')return[{item:'p_vigor',price:50},{item:'p_heal',price:40}];
   if(cv.type==='smith'){const pr=[['boomerang','knives'],['axe','lantern'],['spear','fan'],['hammer','thunder'],['axe','hammer'],['thunder','fan']][cv.sm%6];return pr.filter(w=>!S.items[w]).map(w=>({item:w,price:ITEMS[w].price})).concat([{item:'p_power',price:60}])}
   const r=rng(SEED+cv.id*31),pool=CONSK;const a=pool[Math.floor(r()*pool.length)];let b=pool[Math.floor(r()*pool.length)];if(b===a)b=pool[(pool.indexOf(a)+3)%pool.length];
   return[{item:'bombs',price:20},{item:a,price:CONS[a].price},{item:b,price:CONS[b].price}]}
@@ -1697,7 +1707,7 @@ function shopBuy(pk){const it=pk.item;
 function giveItem(kind,msg){G.mode='hold';G.holdT=80;G.holdKind=kind;G.holdMsg=msg;jingle(kind==='shard'?'shard':'get');P.atk=0;P.spin=0;P.charge=0;P.atkHeld=0}
 function bossDeath(e){G.bossDie={t:0,x:ecx(e),y:ecy(e),final:!!e.cfg.final};G.ents.forEach(o=>{if(o!==e)o.dead=1});G.shots=[];play(null)}
 function updBossDie(){const b=G.bossDie;b.t++;if(b.t%6===0){const x=b.x+(R()-0.5)*36,y=b.y+(R()-0.5)*36;puff(x,y,pick(['#ff7a2f','#ffd040','#ffffff']),12,2.2);sfx('boom');G.shake=5}
-  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1];say('The keeper falls. The Old Course remembers this hole, and a ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again. Three misses cost a heart container, but never more than one per hole. Press B at the tee or after a miss to walk away; the basket will wait here.',()=>{S.dun[G.dn].bossDown=1;save();startGolf()});return}
+  if(b.t>=96&&DUN[G.dn].hole){G.bossDie=null;swordXP(5);play(null);const h=HOLES[DUN[G.dn].hole-1],dk=TUNE.golf.discAt[h.n],got=dk&&!S.items[dk];if(got){S.items[dk]=1;save();sfx('get')}say((got?'The keeper drops a disc: the '+ITEMS[dk].n+'! '+TUNE.golf.discs[dk].nm+' throws up to '+TUNE.golf.discs[dk].max+' ft. Press Q/E to pick a disc for each throw. ':'')+'The keeper falls. The Old Course remembers this hole, and a ghostly basket rises: HOLE '+h.n+', PAR '+h.par+'. Play it honestly, par or better, and the seal breaks. Miss par and you play it again. Three misses cost a heart container, but never more than one per hole. Press B at the tee or after a miss to walk away; the basket will wait here.',()=>{S.dun[G.dn].bossDown=1;save();startGolf()});return}
   if(b.t>=96){G.bossDie=null;const ds=S.dun[G.dn];ds.boss=1;swordXP(5);if(b.final){winGame();return}G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');sfx('secret');save()}}
 function winGame(){S.won=1;save();playScene('ending',()=>{G.mode='win';G.winT=0;jingle('win','title')})}
 
