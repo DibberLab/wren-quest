@@ -44,7 +44,14 @@ An 8-bit top-down action-adventure game (original IP: hero Wren, the Ember Crown
 - Save version: `S.wv`=3. Older saves turn k old shards into the first k crown pieces (with those holes' items) and reset `S.bk`.
 - Admin (Andrew only, per device): open the site with `?admin` to turn it on (stored in localStorage `wrenquest-admin`); `?admin=off` turns it off. Then the backtick key or the Admin button under the game opens `openAdmin()`: every hole (1-27) can jump to its dungeon (`enterDungeon(HD0+n)`, return point saved) or straight into its golf challenge (`startGolf(n)`, `G.golf.admin`); the last row enters the Obsidian Throne without the 27-piece check. Admin golf counts: par or better awards the crown piece and marks the hole won; over par offers A to replay or B to quit.
 - Sprites are pixel strings in `SPR`; palettes are swapped per enemy tier. The hero's floppy cap is drawn procedurally in `drawCap()`.
-- Test in a browser before shipping: start a new game, walk a few screens, open the inventory (Enter), enter a dungeon, and check the console is clean.
+- Tests: `python3 tests/run.py` (or name suites: `world golf flows layout stress`). Needs Playwright (`pip install playwright && playwright install chromium`, or `CHROME=/path/to/chrome`). The runner injects `tests/hook.js` into a temp copy of the game (after the top-level `requestAnimationFrame(frame);` line), so tests can reach internals through `window.__WQ`. Nothing test-related ships.
+  - world: every overworld exit connects (jumps allowed), all 27 hole dungeons, the throne and side dungeons generate with a boss, every cavern joins up
+  - golf: every hole is par 3 or 4 and makeable in par by perfect play
+  - flows: the hole loop (basket → dungeon → boss → golf, over par replays, third miss costs a heart, putting, par → crown + stairs → back to the basket), admin gate, ambush restore, sword level 30, heart pieces, old-save migration
+  - layout: about 30 screens drawn with worst-case values (16 hearts, 999 gems, level 30, try 12, long names); fails on any text drawn over other text or off screen. Widths assume Press Start 2P (1em per character). When you add or change a screen, add it here.
+  - stress: random input across overworld, dungeons and caverns with no console errors
+  Run the suite before every PR and put its result in the PR description. Add a flow or layout case for each new feature.
+- Balance numbers live in `TUNE` at the top of the script (foes per screen, spawn shares, drop chances, sword scaling, stamina costs, golf meters and putting, charm and folk chances). Change them there, not inline.
 
 ## How changes ship
 

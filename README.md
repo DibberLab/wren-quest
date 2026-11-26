@@ -19,6 +19,15 @@ An 8-bit top-down action-adventure in the spirit of classic NES games, with an o
 
 Open the site once with `?admin` (for example https://quest.dibberlab.me/?admin) to turn on admin on that device; `?admin=off` turns it off. Press the backtick key (`` ` ``) or the Admin button to fast travel to any hole's dungeon, straight into any hole's golf challenge, or into the Obsidian Throne.
 
+## Tests
+
+```bash
+pip install playwright && playwright install chromium   # once
+python3 tests/run.py                                    # all suites, about a minute
+```
+
+Suites: `world` (map, dungeons and caverns connect), `golf` (every hole makeable in par), `flows` (the hole loop and other key paths), `layout` (no overlapping or off-screen text on about 30 screens drawn with worst-case values) and `stress` (random input, no console errors). Balance numbers are in `TUNE` at the top of `site/index.html`.
+
 ## How it runs
 
 A static site: everything is in `site/index.html` (HTML, CSS and JS in one file, no build step, no dependencies beyond Google Fonts). nginx serves `site/` on the DibberLab droplet.
