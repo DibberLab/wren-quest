@@ -225,6 +225,19 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  step(Q.G.heartQ&&Q.S.cardGold.includes(1),'birdie or better on all nine holes of card 1 earns a heart container');Q.G.heartQ=null;Q.recordScore(Q.HOLES[0],1);step(!Q.G.heartQ,'the card bonus is paid once');
  fresh();Q.S.bk={};const h4=Q.HOLES[3],[x4,y4]=h4.key.split(',').map(Number);Q.S.shards=[Q.HD0+4];Q.recordScore(h4,h4.par);go(x4,y4);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.npcs=[];
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(3);step(Q.G.mode==='dialog'&&Q.G.dlg.opts&&/Replay hole 4/.test(Q.G.dlg.pages.flat().join(' ')),'sinking a won hole\'s basket offers a replay')}Q.G.mode='play';Q.G.dlg=null}
+// landmarks: 60 (two per region + 12 Warden Stones), each fits and can be reached; fewer jump places; each payload works
+{const L=Q.LMS,per={};for(const l of L)if(l.kind==='site')per[l.rn]=(per[l.rn]||0)+1;step(L.length===60&&L.filter(l=>l.kind==='warden').length===12,'60 landmarks, 12 of them Warden Stones');
+ step(Q.CEN.every(r=>per[r[3]]===2),'two landmarks in every region');let fits=0,reach=0;for(const l of L){const [x,y]=l.key.split(',').map(Number),rm=Q.genScreen(x,y);if(rm.lm){fits++;const seen=Q.reachFromExits(rm.t);if(seen[rm.lm.fw2*16+rm.lm.fc])reach++}}
+ step(fits===60&&reach===60,'every landmark fits and the spot in front of it can be reached ('+fits+'/'+reach+')');
+ const J={hurdle:0,rune:0,moat:0};for(let y=0;y<Q.WH;y++)for(let x=0;x<Q.WW;x++){const rm=Q.genScreen(x,y);if(rm.jf)J[rm.jf.kind]++}step(J.hurdle<=14&&J.rune<=14&&J.moat<=20&&J.hurdle>=6&&J.rune>=6&&J.moat>=10,'jump places cut to about 10-15 each '+JSON.stringify(J));
+ fresh();const pick=pay=>L.find(l=>l.pay===pay);const visit=l=>{const [x,y]=l.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;return Q.G.npcs.find(n=>n.lm)};
+ const v=pick('vista'),n0=Q.S.visited.length;const lv=visit(v);step(!!lv,'a landmark has a talk point');Q.G.banner=null;const nv=Q.S.visited.length;Q.lmTalk(v.id);adv();step(Q.S.visited.length>nv+10&&Q.S.lm.includes(v.id),'a vista fills in the map around it');
+ const c=pick('chest'),g0=Q.S.gems,hp0=Q.S.hpc;visit(c);Q.lmTalk(c.id);adv();T(3);step(Q.S.gems>g0||Q.S.hpc!==hp0||Q.G.heartQ,'a chest landmark gives a reward');const g1=Q.S.gems;Q.lmTalk(c.id);adv();step(Q.S.gems===g1,'a chest pays out only once');
+ const sh=pick('shrine');Q.S.hp=1;visit(sh);Q.lmTalk(sh.id);adv();step(Q.S.hp===Q.S.maxHp&&Q.G.bf.iron>0,'a shrine heals and blesses the blade');
+ fresh();Q.G.heartQ=null;const ws=L.filter(l=>l.kind==='warden');ws.slice(0,11).forEach(w=>{Q.lmTalk(w.id);adv()});step(!Q.G.heartQ&&!Q.S.secrets.includes('wardens'),'eleven Warden Stones are not enough');
+ const mhw=Q.S.maxHp;Q.lmTalk(ws[11].id);adv();T(5);adv();T(5);step((Q.G.heartQ||Q.S.maxHp===mhw+2)&&Q.S.secrets.includes('wardens'),'the twelfth Warden Stone gives a heart container and a secret');Q.G.heartQ=null;Q.G.mode='play';
+ step(Q.progress().some(r=>r[0]==='LANDMARKS'&&r[1]==='12/60'),'the progress report counts landmarks');
+ fresh();const nl=L[5],[x5,y5]=nl.key.split(',').map(Number);go(x5,y5);Q.G.banner=null;Q.placeExtras(Q.G.room);step(Q.G.banner&&Q.G.banner.s===nl.nm,'a new landmark shows its name')}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -260,6 +273,9 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+shot('landmark lore',()=>{worst();const l=Q.LMS.find(q=>q.nm==='BURIED COLOSSUS');const [x,y]=l.key.split(',').map(Number);go(x,y);Q.S.lm=[l.id];Q.lmTalk(l.id);const d=Q.G.dlg;d.ch=999});
+shot('warden stone',()=>{worst();const l=Q.LMS.find(q=>q.kind==='warden');const [x,y]=l.key.split(',').map(Number);go(x,y);Q.lmTalk(l.id);const d=Q.G.dlg;d.ch=999});
+shot('landmark banner',()=>{worst();go(18,23);Q.G.banner={s:'BURIED COLOSSUS',t:100}});
 const rshot=(name,f)=>shot('replay '+name,()=>{worst();go(18,23);Q.S.bk={};Q.recordScore(Q.HOLES[26],12);Q.startReplay(27);T(3);const g=Q.G.golf;g.tries=12;g.strokes=9;f(g)});
 rshot('intro',g=>{g.ph='intro';g.t=20});rshot('retry',g=>{g.ph='retry';g.t=80;g.failed=1});rshot('done',g=>{g.ph='done';g.made=1;g.t=50});
 shot('scorecard with medals',()=>{worst();go(18,23);Q.S.bk={};Q.HOLES.forEach((h,i)=>Q.recordScore(h,i%3===0?1:i%3===1?h.par-1:h.par+2));Q.openCard(1);Q.G.card.t=60});
