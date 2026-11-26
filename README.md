@@ -15,6 +15,10 @@ An 8-bit top-down action-adventure in the spirit of classic NES games, with an o
 - Keyboard, gamepad and touch controls; Web Audio chiptune music (epic, doomy minor-key themes with drones, galloping bass and toms) and sound effects
 - Progress saves in the player's browser (localStorage key `wrenquest-save-v3`)
 
+## Admin
+
+Open the site once with `?admin` (for example https://quest.dibberlab.me/?admin) to turn on admin on that device; `?admin=off` turns it off. Press the backtick key (`` ` ``) or the Admin button to fast travel to any hole's dungeon, straight into any hole's golf challenge, or into the Obsidian Throne.
+
 ## How it runs
 
 A static site: everything is in `site/index.html` (HTML, CSS and JS in one file, no build step, no dependencies beyond Google Fonts). nginx serves `site/` on the DibberLab droplet.

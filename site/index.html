@@ -71,6 +71,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;width
       <button id="bMusic" aria-pressed="true">Music</button>
       <button id="bSfx" aria-pressed="true">Sound FX</button>
       <button id="bFull">Fullscreen</button>
+      <button id="bAdmin" hidden>Admin</button>
       <span class="pad" id="pad">No controller detected. Plug one in and press a button.</span>
     </div>
   </div>
@@ -1090,11 +1091,11 @@ function golfCourse(h){const r=rng(SEED+h.n*7717),par=h.par,L=par<=2?240:par===3
   const water=[];if(par>=3&&r()<0.75){const y=Math.round(L*(0.42+r()*0.16)),hh=16+Math.round(r()*10);water.push({x:0,y,w:256,h:hh})}else if(r()<0.5){const x=r()<0.5?8:190,y=Math.round(L*0.3+r()*L*0.3);water.push({x,y,w:58,h:40})}
   const a=r()*6.28,ws=(0.03+r()*0.12)*Math.min(1,0.4+h.n/27);
   return{L,tee,bk,mid,path,trees,water,wind:{x:Math.cos(a)*ws,y:Math.sin(a)*ws,s:ws,a},par}}
-function startGolf(){const h=HOLES[DUN[G.dn].hole-1],c=golfCourse(h);G.golf={h,c,lie:{x:c.tee.x,y:c.tee.y},prev:{x:c.tee.x,y:c.tee.y},strokes:0,ph:'intro',t:0,aim:Math.atan2(c.bk.y-c.tee.y,c.bk.x-c.tee.x),pw:0,pd:1,cv:-1,cd:1,disc:null,cam:0,msg:null,trail:[]};G.mode='golf';play('title')}
+function startGolf(hn){const h=HOLES[(hn||DUN[G.dn].hole)-1],c=golfCourse(h);G.shake=0;G.golf={admin:!!hn,h,c,lie:{x:c.tee.x,y:c.tee.y},prev:{x:c.tee.x,y:c.tee.y},strokes:0,ph:'intro',t:0,aim:Math.atan2(c.bk.y-c.tee.y,c.bk.x-c.tee.x),pw:0,pd:1,cv:-1,cd:1,disc:null,cam:0,msg:null,trail:[]};G.mode='golf';play('title')}
 function golfMsg(s,c,t){G.golf.msg={s,c:c||'#ffffff',t:t||90}}
 function golfAimHome(){const g=G.golf,c=g.c;let tx=c.bk.x,ty=c.bk.y;if(c.mid&&g.lie.y>c.mid.y+20&&Math.hypot(c.bk.x-g.lie.x,c.bk.y-g.lie.y)>GOLF_MAX*0.9){tx=c.mid.x;ty=c.mid.y}g.aim=Math.atan2(ty-g.lie.y,tx-g.lie.x)}
 function golfPutt(){const g=G.golf;return Math.hypot(g.c.bk.x-g.lie.x,g.c.bk.y-g.lie.y)<GOLF_PUTT}
-function updGolf(){const g=G.golf,c=g.c;if(!g)return;g.t++;if(g.msg&&--g.msg.t<=0)g.msg=null;
+function updGolf(){const g=G.golf,c=g.c;if(!g)return;g.t++;if(G.shake>0)G.shake--;if(g.msg&&--g.msg.t<=0)g.msg=null;
   const camT=g.ph==='fly'&&g.disc?g.disc.y-96:g.ph==='intro'?(g.t<70?c.bk.y-60:c.bk.y-60+(g.lie.y-c.bk.y)*Math.min(1,(g.t-70)/70)):g.lie.y-96;g.cam+=(clamp(camT,0,c.L-PH+48)-g.cam)*(g.ph==='intro'?0.2:0.12);
   for(const p of G.parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.t--}G.parts=G.parts.filter(p=>p.t>0);
   switch(g.ph){
@@ -1104,7 +1105,7 @@ function updGolf(){const g=G.golf,c=g.c;if(!g)return;g.t++;if(g.msg&&--g.msg.t<=
   case'curve':g.cv+=g.cd*0.034;if(g.cv>=1){g.cv=1;g.cd=-1}if(g.cv<=-1){g.cv=-1;g.cd=1}if(IN.pb){g.ph='aim';break}if(IN.pa)golfThrow();break;
   case'fly':golfFly();break;
   case'land':if(--g.lt<=0)golfAfter();break;
-  case'done':if(g.t>100&&(IN.pa||g.t>260))golfFinish();break}}
+  case'done':if(g.admin&&g.failed){if(g.t>60&&IN.pa){startGolf(g.h.n);break}if(g.t>60&&(IN.pb||IN.pst)){G.golf=null;G.mode='play';G.parts=[];areaMusic();break}break}if(g.t>100&&(IN.pa||g.t>260))golfFinish();break}}
 function golfThrow(){const g=G.golf,putt=golfPutt(),maxD=putt?92:GOLF_MAX,D=maxD*(0.12+0.88*g.pw),v0=Math.sqrt(2*0.05*D);
   g.disc={x:g.lie.x,y:g.lie.y,a:g.aim,v:v0,v0,cv:g.cv*(putt?0.35:1),t:0,T:v0/0.05,zm:putt?5:7+11*g.pw,z:0,hitB:0,putt};g.ph='fly';g.trail=[];sfx('chak');P.dir=Math.abs(Math.cos(g.aim))>Math.abs(Math.sin(g.aim))?(Math.cos(g.aim)>0?1:3):(Math.sin(g.aim)>0?2:0)}
 function golfFly(){const g=G.golf,c=g.c,d=g.disc;const sp=d.v/d.v0;d.a+=d.cv*0.022*(0.25+(1-sp)*1.2);d.x+=Math.cos(d.a)*d.v+c.wind.x*(d.putt?0.3:1);d.y+=Math.sin(d.a)*d.v+c.wind.y*(d.putt?0.3:1);d.v-=0.05;d.t++;d.z=d.zm*Math.sin(Math.PI*Math.min(1,d.t/d.T));
@@ -1122,7 +1123,10 @@ function golfEnd(how){const g=G.golf,c=g.c,d=g.disc;g.strokes++;
   if(how==='ob'||wet)g.lie={x:g.prev.x,y:g.prev.y};
   g.ph='land';g.lt=50}
 function golfAfter(){const g=G.golf;if(g.strokes>=g.c.par){g.ph='done';g.t=0;g.failed=1;sfx('hurt');return}g.ph='aim';g.disc=null;golfAimHome()}
-function golfFinish(){const g=G.golf,h=g.h,ds=S.dun[G.dn];G.golf=null;G.mode='play';G.parts=[];P.x=112;P.y=110;P.dir=0;
+function golfFinish(){const g=G.golf,h=g.h,ds=S.dun[G.dn];G.golf=null;G.mode='play';G.parts=[];
+  if(g.admin){areaMusic();if(!g.made)return;const d=HD0+h.n,st=g.strokes,dd=st-h.par;S.dun[d]=Object.assign(S.dun[d]||{unl:[],keys:[],item:0,hc:0,vis:[]},{boss:1,golf:1});if(!S.shards.includes(d))S.shards.push(d);if(!S.bk[h.key])S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};S.hp=S.maxHp;save();
+    giveItem('shard',(st===1?'AN ACE':(SCORENM[String(dd)]||'PAR').replace('!',''))+'! CROWN PIECE '+S.shards.length+' OF '+NSH+'!');if(dd<0)heartPiece('Under par!');return}
+  P.x=112;P.y=110;P.dir=0;
   if(g.failed||!g.made){say('OVER PAR! The ghostly basket shatters... and the boss rises again! Beat it, then try the hole again.',()=>{G.bossPending=80;play(null)});return}
   const st=g.strokes,dd=st-h.par;ds.boss=1;ds.golf=1;G.room.t=dunTiles(G.room);G.bg=buildBg(G.room);G.shutOn=0;bossLoot(G.room);play('dun');
   if(!S.shards.includes(G.dn))S.shards.push(G.dn);if(!S.bk[h.key]){S.bk[h.key]={s:st,o:Object.keys(S.bk).length+1};const n=Object.keys(S.bk).length;if(n%9===0||n===NHOLE)G.cardPending={n:Math.ceil(h.n/9),t:200};if(n===NHOLE){S.gems=Math.min(999,S.gems+200);addSecret('course')}}
@@ -1151,8 +1155,26 @@ function drawGolf(){const g=G.golf,c=g.c,cy=Math.round(g.cam),Y=v=>Math.round(v-
     const hint=g.ph==='aim'?'ARROWS AIM  A: START':g.ph==='power'?'A: LOCK POWER  B: BACK':'A: LOCK CURVE + THROW';txt(hint,6,by-11,'#ffffff');txt(Math.round(Math.hypot(c.bk.x-g.lie.x,c.bk.y-g.lie.y))+' FT',250,by-11,'#a0d0ff','right')}
   const big=(a,b,col)=>{px(ctx,'rgba(0,0,0,0.65)',0,62,PW,44);txt(a,128,68,col,'center',16);if(b)txt(b,128,90,'#ffffff','center')};
   if(g.ph==='intro')big('HOLE '+g.h.n+'  PAR '+g.h.par,'SINK IT IN PAR OR BETTER','#ffe060');
-  if(g.ph==='done'){if(g.failed)big('OVER PAR','THE BOSS STIRS...','#ff6040');else{const dd=g.strokes-g.h.par;big(g.strokes===1?'ACE!!':(SCORENM[String(dd)]||'PAR'),g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  CROWN PIECE!','#7fffd4')}}
+  if(g.ph==='done'){if(g.failed)big('OVER PAR',g.admin?'A: RETRY   B: QUIT':'THE BOSS STIRS...','#ff6040');else{const dd=g.strokes-g.h.par;big(g.strokes===1?'ACE!!':(SCORENM[String(dd)]||'PAR'),g.strokes+' THROW'+(g.strokes>1?'S':'')+'  -  CROWN PIECE!','#7fffd4')}}
   if(g.msg)txt(g.msg.s,128,40,g.msg.c,'center')}
+
+
+// ================= ADMIN (per device: ?admin turns it on, ?admin=off turns it off) =================
+const ADMIN=(()=>{try{const q=new URLSearchParams(location.search);if(q.has('admin')){if(q.get('admin')==='off')localStorage.removeItem('wrenquest-admin');else localStorage.setItem('wrenquest-admin','1')}return localStorage.getItem('wrenquest-admin')==='1'}catch(e){return false}})();
+function areaMusic(){const k=G.room&&G.room.kind;play(k==='over'?'over':k==='dun'?'dun':k==='cav'?'deep':k==='cave'?'cave':null)}
+function openAdmin(){if(!ADMIN||!S||!['play','pause'].includes(G.mode)||G.duel||G.bossDie)return;G.adm=G.adm||{i:0,col:1};G.mode='admin';sfx('sel')}
+function adminRet(){return G.room&&G.room.kind==='over'?{x:G.room.x,y:G.room.y,px:P.x,py:P.y}:{x:S.sx,y:S.sy,px:112,py:110}}
+function updAdmin(){const a=G.adm,N=NHOLE+1;if(IN.pu)a.i=(a.i+N-1)%N;if(IN.pd)a.i=(a.i+1)%N;if(IN.pL||IN.pR){a.col^=1;sfx('sel')}if(IN.pu||IN.pd)sfx('text');
+  if(IN.pb||IN.pst){G.mode='play';sfx('sel');return}
+  if(IN.pa){G.mode='play';G.duelPending=0;G.holeEnter=null;if(a.i===NHOLE){G.holeRet=null;enterDungeon(NDUN);return}const n=a.i+1;
+    if(a.col===0){G.holeRet=adminRet();enterDungeon(HD0+n)}else{startGolf(n)}}}
+function drawAdmin(){const a=G.adm;px(ctx,'rgba(8,10,24,0.95)',8,HUD+4,240,PH-8);txt('ADMIN: FAST TRAVEL',128,HUD+8,'#ff7a2f','center');
+  txt('DUNGEON',162,HUD+19,a.col===0?'#ffffff':'#5a6a8a','center');txt('GOLF',220,HUD+19,a.col===1?'#ffffff':'#5a6a8a','center');
+  const rows=12,st=Math.max(0,Math.min(a.i-5,NHOLE+1-rows));for(let j=0;j<rows;j++){const i=st+j;if(i>NHOLE)break;const y=HUD+31+j*10,sel=i===a.i;
+    if(i===NHOLE){txt('OBSIDIAN THRONE',18,y,sel?'#ffffff':'#a080c0');if(sel)txt('>',12,y,'#7fffd4');txt('ENTER',166,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');continue}
+    const h=HOLES[i],won=S.shards.includes(HD0+h.n),b=S.bk[h.key];txt((h.n<10?' ':'')+h.n+' '+h.nm.toUpperCase().slice(0,7),18,y,sel?'#ffffff':won?'#7fffd4':'#a0a8c0');if(sel)txt('>',12,y,'#7fffd4');
+    txt('P'+h.par+(b?' '+b.s:''),134,y,won?'#7fffd4':'#8a8aa0','right');txt(sel&&a.col===0?'[GO]':'GO',162,y,sel&&a.col===0?'#7fffd4':'#5a6a8a','center');txt(sel&&a.col===1?'[PLAY]':'PLAY',220,y,sel&&a.col===1?'#7fffd4':'#5a6a8a','center')}
+  txt('UP/DN HOLE   L/R MODE',128,HUD+PH-22,'#6a7a9a','center');txt('A GO   B CLOSE',128,HUD+PH-12,'#6a7a9a','center')}
 
 function startDuel(type,o){o=o||{};const lvl=o.lvl||2;const D={type,t:0,phase:'ready',combo:0,comboT:0,saved:G.room.t.slice(),npcs:G.npcs,dojo:o.dojo,lvl,arena:G.arena,needClear:G.needClear,ents:G.ents.filter(e=>!e.dead&&!e.champ)};G.duel=D;
   G.npcs=[];G.ents=[];G.shots=[];G.bombs=[];G.needClear=0;G.arena=null;G.pendingArena=0;
@@ -1551,7 +1573,7 @@ function updDialog(){const d=G.dlg,len=d.pages[d.pi].join('').length;d.len=len;
 // ================= INPUT =================
 const K={},TOUCH={},IN={x:0,y:0};let prevIn={},padName='';
 const GAMEKEYS=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyW','KeyA','KeyS','KeyD','KeyJ','KeyK','KeyL','KeyZ','KeyX','KeyC','Enter','Escape','KeyQ','KeyE','KeyP','ShiftLeft','ShiftRight']);
-addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Enter'||e.code==='Space'))return;if(GAMEKEYS.has(e.code))e.preventDefault();K[e.code]=1;auInit();if(G.mode==='title'&&!e.repeat){G.kseq.push(e.code);G.kseq=G.kseq.slice(-10);if(G.kseq.join()==='ArrowUp,ArrowUp,ArrowDown,ArrowDown,ArrowLeft,ArrowRight,ArrowLeft,ArrowRight,KeyB,KeyA'&&!G.konami){G.konami=1;sfx('secret')}}if(e.code==='KeyM'&&!e.repeat)setMusic(!AU.musicOn)});
+addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Enter'||e.code==='Space'))return;if(e.code==='Backquote'&&ADMIN&&!e.repeat){e.preventDefault();if(G.mode==='admin')G.mode='play';else openAdmin();return}if(GAMEKEYS.has(e.code))e.preventDefault();K[e.code]=1;auInit();if(G.mode==='title'&&!e.repeat){G.kseq.push(e.code);G.kseq=G.kseq.slice(-10);if(G.kseq.join()==='ArrowUp,ArrowUp,ArrowDown,ArrowDown,ArrowLeft,ArrowRight,ArrowLeft,ArrowRight,KeyB,KeyA'&&!G.konami){G.konami=1;sfx('secret')}}if(e.code==='KeyM'&&!e.repeat)setMusic(!AU.musicOn)});
 addEventListener('keyup',e=>{K[e.code]=0});
 addEventListener('blur',()=>{for(const k in K)K[k]=0});
 cvs.addEventListener('pointerdown',()=>{auInit();cvs.focus()});
@@ -1632,6 +1654,7 @@ function tick(){poll();G.t++;
   case'win':updWin();break;
   case'card':updCard();break;
   case'golf':updGolf();break;
+  case'admin':updAdmin();break;
   case'warp':updWarp();break}}
 
 // ================= RENDER =================
@@ -1898,6 +1921,7 @@ function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
   if(G.mode==='over')drawOver();
   if(G.mode==='win')drawWin();
   if(G.mode==='card')drawCard();
+  if(G.mode==='admin')drawAdmin();
   if(G.mode==='fade'){const f=G.fade.t;px(ctx,'rgba(0,0,0,'+(f<20?f/20:(40-f)/20)+')',0,HUD,PW,PH)}}
 
 // ================= LOOP & UI =================
@@ -1906,6 +1930,7 @@ function frame(ts){requestAnimationFrame(frame);const dt=Math.min(100,ts-last);l
 requestAnimationFrame(frame);
 document.getElementById('bMusic').addEventListener('click',()=>{auInit();setMusic(!AU.musicOn);cvs.focus()});
 document.getElementById('bSfx').addEventListener('click',()=>{auInit();setSfx(!AU.sfxOn);cvs.focus()});
+{const ab=document.getElementById('bAdmin');if(ADMIN){ab.hidden=false;ab.addEventListener('click',()=>{auInit();openAdmin();cvs.focus()})}}
 document.getElementById('bFull').addEventListener('click',()=>{const el=document.getElementById('screen');try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen)el.requestFullscreen().catch(()=>{})}catch(e){}cvs.focus()});
 }
 </script>
