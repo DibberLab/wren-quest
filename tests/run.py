@@ -151,6 +151,12 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
   Q.gateHit({x:0,y:0,dk:'disc_drive'},Q.EY);step([...Q.G.room.t].includes(Q.SG),'another disc does not wake the eye');
   Q.gateHit({x:0,y:0,dk:'disc_crystal'},Q.EY);step(![...Q.G.room.t].includes(Q.SG)&&![...Q.G.room.t].includes(Q.EY),'the Crystal disc opens the seal');
   const again=go(x,y);step(![...again.t].includes(Q.SG),'an opened seal stays open')}}
+// biome courses: hole 1 is a short straight par 3; each course takes its biome's name and hazard
+{const h1=Q.HOLES[0],c1=Q.golfCourse(h1);step(h1.par===3&&!c1.mid&&!c1.water.length&&c1.bk.x===128&&c1.wind.s<=0.02,'hole 1 is a straight par 3 with no water and little wind');
+ const seen=new Set();for(const h of Q.HOLES)seen.add(Q.holeBiome(h));step(seen.size>=8,'holes span '+seen.size+' biome courses');
+ const v=Q.HOLES.find(h=>Q.holeBiome(h)==='volcano');fresh();go(18,23);Q.startGolf(v.n);T(3);const g=Q.G.golf;g.ph='aim';const w=g.c.water[0];
+ if(w){g.disc={x:w.x+w.w/2,y:w.y+w.h/2,gd:Q.gDisc()};Q.golfEnd('stop');step(g.msg&&/LAVA/.test(g.msg.s),'volcano hazards are lava')}
+ Q.G.golf=null;Q.G.mode='play'}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -183,6 +189,7 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+for(const bn of ['forest','swamp','desert','grave','volcano'])shot('course '+bn,()=>{worst();go(18,23);const h=Q.HOLES.find(h=>Q.holeBiome(h)===bn);Q.startGolf(h.n);T(5);const g=Q.G.golf;g.ph='intro';g.t=20;g.admin=false});
 const mts=(name,f)=>shot('map throw '+name,()=>{worst();for(const k of ['disc_mid','disc_drive','disc_glow','disc_crystal'])Q.S.items[k]=1;const h=Q.HOLES[3],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;Q.G.ents=[];Q.G.npcs=[];const b=Q.G.basket;Q.P.x=b.cx-8;Q.P.y=Math.min(150,b.cy+60);Q.startMT('disc_drive');f(Q.G.mt)});
 shot('disc gate hint',()=>{worst();const L=[];for(let y=0;y<Q.WH&&!L.length;y++)for(let x=0;x<Q.WW&&!L.length;x++){const rm=Q.genScreen(x,y);if(rm.jf&&rm.jf.gate==='ember')L.push([x,y])}go(L[0][0],L[0][1]);Q.G.gateHint=0;Q.gateHit({x:120,y:80,dk:'disc_mid'},Q.TH)});
 mts('aim',m=>{m.ph='aim'});mts('aim panel top',m=>{m.ph='aim';m.lie.y=150});mts('power',m=>{m.ph='power';m.pw=1.1});mts('release',m=>{m.ph='rel';m.pw=1;m.rel=0.9});
