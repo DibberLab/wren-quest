@@ -531,7 +531,7 @@ const NPCS=[
    if(!q.cat){q.cat=1;save();return'Oh dear, oh dear. My cat Mittens chased a butterfly all the way to the Sunscar Dunes, east of here. Would you bring her home?'}
    if(q.cat===1)return'Mittens loves warm sand. Look in the dunes to the east, dearie.';
    if(q.cat===2){q.cat=3;return['MITTENS! You found her! Here, I knitted you something. It is a heart. Do not ask how.',()=>giveHeart('Granny gave you a HEART CONTAINER! It is still a little fuzzy.')]}
-   return'Mittens says thank you. Well, she said mrrp. Same thing.'}},
+   if(beatTalk('granny'))return{asked:1};return'Mittens says thank you. Well, she said mrrp. Same thing.'}},
  {id:'mittens',spr:'cat',pal:{g:'#f0a040',w:'#40ff60',p:'#ff90a0'},bio:['desert'],hide:()=>S.q.cat>=2,say(){if(S.q.cat===1){S.q.cat=2;save();return'Mrrp? ... Mittens inspects you, decides you are acceptable, and starts following you. Take her back to Granny near the start.'}return'A cat with a tiny bell. She ignores you completely, as cats do.'}},
  {id:'barth',spr:'ghost',pal:{w:'#e0f0ff',c:'#80a0e0'},bio:['grave'],say(){const q=S.q,n=S.qgot.filter(i=>i.startsWith('bone')).length;
    if(!q.bones){q.bones=1;save();return'Boo. Sorry, force of habit. I am Bartholomew. Some rascal scattered my three favorite bones around the graveyards. Find them? I cannot exactly pick things up.'}
@@ -1090,7 +1090,7 @@ for(const w of ['boomerang','knives','lantern','axe','spear','fan','hammer','thu
 const swordLv=()=>S.items.sword||0,SWNAME=['NO SWORD','SWORD','EMBER BLADE','SUNFIRE BLADE'];
 const HINTS=['27 baskets hide 27 dungeons and 27 crown pieces. After each boss, sink the ghostly hole in par or better: aim, lock power, then lock the curve. Watch the wind.','Hold the sword button to charge, then let go for a spin slash.','Roll through danger! Nothing can touch you mid-roll. Hold the roll button to sprint. Rolling, sprinting, jumping and spin attacks use the green stamina bar.','Low wooden hurdles block some paths: jump them. Land a jump on a glowing rune stone to sink stone pillars. Some chests sit on islands; wide moats need a sprinting jump.','Folk wander the land. Some chat, some trade, some give gifts. Some steal: chase a thief down, even into the next screen, to get your gems back.','Out of stamina? You are WINDED until the bar refills a little. Marebears ooze sticky white goo that slows you down, and a smitten Marebear may try to steal your heart for good.','Cracked rocks hide caves. A bomb will open them up.','Swing your sword at enemy shots to parry them back.','At full health your sword fires a beam.','The Obsidian Throne lies in the far northeast, past the lava fields.','Supply caves refill your bombs for free.','Huge caverns run beneath the land. Some hide under boulders, some under soft soil.','Underground, wisps burn bright. Do not let one get close.','Moles only show themselves to bite. Strike when they surface.','Ore veins sparkle in cavern walls. A pick-shovel turns them into gems.','Arrows cost a gem each. Spend wisely, or find the Endless Quiver.','Some cracked rocks hide secret dungeons. Solve their puzzles for relics you do not need, but will love.','Champions roam the wilds. Block, dodge, and strike while they recover.','A dojo master will arrange a fair fight with a champion.','Mushrooms do strange things. Red ones heal. The jester ones... who knows.','A rock somewhere talks. Keep talking back.','Every dungeon hides an upgrade in a treasure chest.','Ambushes seal you in. Clear both waves for a prize.','Chain kills quickly for combo bonuses.','Frozen foes take double damage. Try it on a boss.'];
 const SKEY='wrenquest-save-v3';
-function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],golfLost:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
+function newState(){return{maxHp:8,hp:8,gems:0,bombs:0,arrows:0,items:{},sel:null,shards:[],keys:{},dun:{},caves:[],opened:[],arenas:[],visited:[],sx:START[0],sy:START[1],deaths:0,time:0,swl:1,swx:0,hpc:0,bk:{},champs:0,cavr:[],cvis:[],dug:[],q:{},gone:[],qgot:[],tk:{},kills:{},beats:[],cast:{},golfLost:{},mareHearts:0,bounty:{},inv:{},relics:{},secrets:[],bag:{},seen:{},featherUsed:0,gold:0}}
 function save(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SKEY);return s?JSON.parse(s):null}catch(e){return null}}
 G.hasSave=!!loadSave();
@@ -1122,7 +1122,7 @@ function onEnter(){const rm=G.room;unstick();
     const avoid=[];if(R()<0.12){const sp=placeSpot(rm,61,avoid);if(sp)G.picks.push({kind:'mush',mt:pickShroom(),x:sp[0]+4,y:sp[1]+4,perm:1})}save()}}
 function placeSpot(rm,seed,avoid){const cells=reachCells().filter(([c,w])=>c>=2&&c<=13&&w>=2&&w<=8);const tx=3+Math.floor(h2(seed,rm.x,rm.y)*10),ty=2+Math.floor(h2(rm.y,seed,rm.x)*6);
   cells.sort((a,b)=>Math.hypot(a[0]-tx,a[1]-ty)-Math.hypot(b[0]-tx,b[1]-ty));for(const [c,w] of cells){if(avoid.some(a=>a[0]===c&&a[1]===w))continue;if(Math.hypot(c*16-P.x,w*16-P.y)<44)continue;avoid.push([c,w]);return[c*16,w*16]}return null}
-function placeExtras(rm){const avoid=[];if(rm.jf&&rm.jf.kind==='moat'&&!S.opened.includes('j:'+rm.key))G.picks.push({kind:'chest',x:rm.jf.ic*16+9,y:rm.jf.iw*16+10,w:14,h:12,perm:1,content:'jump',jk:rm.key,wide:rm.jf.wide});if(BASKETS.has(rm.key)){const sp=placeSpot(rm,777,avoid);if(sp)G.basket={x:sp[0],y:sp[1],cx:sp[0]+8,cy:sp[1]+5,made:0}}(NPCAT[rm.key]||[]).forEach((id,i)=>{const d=NPCM[id];if(S.gone.includes(id)||(d.hide&&d.hide()))return;const sp=placeSpot(rm,i*31+7,avoid);if(!sp)return;
+function placeExtras(rm){const avoid=[];if(rm.jf&&rm.jf.kind==='moat'&&!S.opened.includes('j:'+rm.key))G.picks.push({kind:'chest',x:rm.jf.ic*16+9,y:rm.jf.iw*16+10,w:14,h:12,perm:1,content:'jump',jk:rm.key,wide:rm.jf.wide});if(BASKETS.has(rm.key)){const sp=placeSpot(rm,777,avoid);if(sp)G.basket={x:sp[0],y:sp[1],cx:sp[0]+8,cy:sp[1]+5,made:0};const hh=HOLEOF[rm.key],cid=hh&&!S.shards.includes(HD0+hh.n)?castDue():null;if(cid){const c=CAST[cid],cp=placeSpot(rm,4242,avoid);if(cp)G.npcs.push({cast:cid,x:cp[0],y:cp[1],spr:c.spr,pal:c.pal,pk:'c'+cid,solid:1})}}(NPCAT[rm.key]||[]).forEach((id,i)=>{const d=NPCM[id];if(S.gone.includes(id)||(d.hide&&d.hide()))return;const sp=placeSpot(rm,i*31+7,avoid);if(!sp)return;
     G.npcs.push({id,x:sp[0],y:sp[1],spr:d.spr,pal:d.pal,pk:'n'+id,solid:!d.watch,watch:d.watch,flipY:d.flipY});G.ents=G.ents.filter(e=>Math.hypot(e.x-sp[0],e.y-sp[1])>20)});
   const nm=R()<0.1?1:0;for(let i=0;i<nm;i++){const sp=placeSpot(rm,50+i*13+ri(40),avoid);if(sp)G.picks.push({kind:'mush',mt:pickShroom(),x:sp[0]+4,y:sp[1]+4,perm:1})}
   if(rm.kind==='over'){if(G.thief&&G.thief.key===rm.key){const th=G.thief;G.thief=null;const sp=placeSpot(rm,500+ri(99),avoid);if(sp){const e=makeEnemy('thief',sp[0],sp[1],Math.max(1,th.lvl));e.spawn=0;e.pal=th.pal;e.pk=th.pk;e.name=th.name;e.loot=th.loot;e.hops=th.hops;e.harmless=1;G.ents.push(e);G.floats.push({x:sp[0]+8,y:sp[1]-8,s:'THERE IS THE THIEF!',t:90,c:'#ffe060'})}}
@@ -1131,8 +1131,8 @@ function placeExtras(rm){const avoid=[];if(rm.jf&&rm.jf.kind==='moat'&&!S.opened
 function vanish(n,perm){puff(n.x+8,n.y+8,'#c0c0d0',14,1.6);puff(n.x+8,n.y+8,'#40304a',10,1);sfx('low');G.npcs=G.npcs.filter(o=>o!==n)}
 function giveHeart(msg){S.maxHp=Math.min(32,S.maxHp+2);S.hp=S.maxHp;save();giveItem('heartc',msg)}
 function npcNear(){const b=swordBox(),g={x:b.x-3,y:b.y-3,w:b.w+6,h:b.h+6};return G.npcs.find(n=>!n.fairy&&!n.watch&&ov(g,{x:n.x+2,y:n.y+2,w:12,h:14}))}
-function talkTo(n){P.atk=0;P.atkHeld=0;P.charge=0;if(n.sign){say(n.text);return}if(n.wand){folkTalk(n);return}if(n.cave){caveTalk();return}const d=NPCM[n.id];let res=d.say?d.say(n):null;
-  if(!res){const i=S.tk[n.id]||0;S.tk[n.id]=i+1;res=d.lines[i%d.lines.length]}if(typeof res==='string')say(res);else say(res[0],res[1])}
+function talkTo(n){P.atk=0;P.atkHeld=0;P.charge=0;if(n.sign){say(n.text);return}if(n.wand){folkTalk(n);return}if(n.cave){caveTalk();return}if(n.cast){castTalk(n);return}const d=NPCM[n.id];let res=d.say?d.say(n):null;
+  if(!res){const i=S.tk[n.id]||0;S.tk[n.id]=i+1;res=d.lines[i%d.lines.length]}if(res.asked)return;if(typeof res==='string')say(res);else say(res[0],res[1])}
 const BOUNTIES=[['slime',20,'SLIMES'],['bat',15,'BATS'],['skeleton',15,'SKELETONS'],['wolf',12,'WOLVES'],['knight',10,'KNIGHTS'],['ghost',10,'GHOSTS']];
 // ---- puzzles ----
 function initPuzzle(rm){const ds=S.dun[rm.d];const riddle={block:'Heavy things long to rest upon the glowing stone. Push.',braziers:'Light every flame before the first one fades. Swords and fire both will do.',silence:'Treasure comes only to those who do nothing at all.'}[rm.puz]||('The '+['FIRE','SEA','LEAF','CROWN'][rm.seq[0]]+' wakes the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[1]]+', the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[1]]+' wakes the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[2]]+', and last the '+['FIRE','SEA','LEAF','CROWN'][rm.seq[3]]+'. (Red, blue, green, gold.)');
@@ -1407,6 +1407,60 @@ function drawScene(){const sc=G.scene;if(!sc)return;const pg=sc.pages[Math.min(s
   px(ctx,'#000',0,150,W,82);px(ctx,'#ff7a2f',4,152,W-8,1);let y=158;if(pg[1]){txt(pg[1],10,y,'#ff9a50');y+=12}
   const lines=paginate(pg[2])[0].concat(paginate(pg[2]).slice(1).flat()),n=Math.floor(sc.ch);let used=0;for(const ln of lines){const sh=ln.slice(0,Math.max(0,n-used));used+=ln.length+1;txt(sh,10,y,'#ffffff');y+=11}
   txt((sc.i+1)+'/'+sc.pages.length,250,4,'#6a5a7a','right');txt('START: SKIP',6,4,'#6a5a7a');if(sc.ch>=pg[2].length&&(G.t>>4)%2)px(ctx,'#ff7a2f',242,222,6,4)}
+
+// ================= RECURRING CAST =================
+// Each cast member has beats: one short conversation each, met at the basket of a hole you haven't won yet once you hold `min` crown pieces.
+// Wren picks a reply; `d` nudges rapport (S.cast[id].r), which later lines read. One cast member per screen, in CAST_ORDER.
+const CAST={
+ kestrel:{nm:'KESTREL',spr:'hd',pal:{h:'#e0603a',d:'#8a2a1a',r:'#ffe060'},beats:[
+  {min:1,say:()=>"So YOU'RE the groundskeeper's apprentice. I'm Kestrel. I've parred every hole on this course. Twice.",
+   opts:[['Nice to meet you.',"Polite. Cute. You'll need more than manners out there.",0],['Prove it.',"Ha! I like you. After hole nine, then. Don't be late.",1],['Twice? Really?',"...Once and a half. Whatever. See you at hole nine.",1]]},
+  {min:3,say:r=>r>0?"Still standing? The keepers usually eat apprentices. Not that I was worried.":"Oh. You again. The keepers didn't eat you?",
+   opts:[['They tried.',"Hm. Good. I want to beat you fair and square.",1],['Were you worried?',"Me? Worried? I was... warming up. Shut up.",1],['Go away, Kestrel.',"Fine! Fine. Hole nine. You'll see.",-1]]},
+  {min:6,say:()=>"Hole nine is coming. You and me, head to head. Loser carries the winner's bag. Bring your best disc.",
+   opts:[["You're on.","That's the spirit. I'll even let you throw first.",1],['What if I win?',"Then I carry your bag. Which won't happen. Probably.",0],['I bet you cheat.',"I would NEVER. The Course would turn me to glass!",0]]},
+  {min:10,say:r=>r>1?"Okay. Truth? You throw better than anyone I've played. Don't let it go to your head.":"That last match was a fluke. Everyone knows it.",
+   opts:[['Thanks, Kestrel.',"Don't make it weird. ...You're welcome.",1],['It was no fluke.',"...Fine. It wasn't. Happy now?",1],['Want a rematch?',"Hole eighteen. Count on it.",0]]},
+  {min:13,say:()=>"My grandmother caddied for the King, back before the glass. She said he cried on the last tee. Then he cheated.",
+   opts:[['Why did he cheat?',"She said he'd never won anything. Not once. I think about that a lot.",1],['That is so sad.',"Yeah. Don't tell anyone I told you.",1],['Glad I am not him.',"Me too. But some days I get it. Losing is the worst.",0]]},
+  {min:20,say:r=>r>2?"The night's getting heavy. When you go to the throne, I'm coming with you. Don't argue.":"The night's getting heavy. Try not to lose to him, apprentice.",
+   opts:[['Okay. Together.',"Together. Bring snacks. Big ones.",1],['I can do it alone.',"I know you can. That's why I'm worried.",0],['You just want glory.',"...Maybe a little. Mostly I want my friend back in one piece.",1]]}]},
+ morrow:{nm:'MORROW',spr:'mage',pal:{p:'#3a2a4a',q:'#1a1020',y:'#ff6040'},beats:[
+  {min:2,say:()=>"Hark. I am Morrow, herald of His Glassy Majesty. He bids you stop at once. He also bids you keep your elbow in when you putt.",
+   opts:[['Tell him no.',"I shall. He will sulk. He sulks magnificently.",0],['...Thanks for the tip?',"It is a good tip. He has had a hundred years to think about putting.",1],['Is he all right?',"No one has asked that in a century. ...I will tell him you asked.",2]]},
+  {min:11,say:()=>"His Majesty counts your crown pieces at night. One. Two. Eleven. He has not slept in a hundred years, so this is new for him.",
+   opts:[['Does he hate me?',"He does not know you. That is the trouble with being made of glass.",1],["I'm coming for him.","He knows. He has polished the throne. Twice.",0],['Is he lonely?',"Heralds do not answer that. ...Yes.",2]]},
+  {min:21,say:r=>r>2?"My last message: 'Come alone, play fair, bring snacks.' The snacks were my idea. And Wren... he is afraid. Be kind, if you can.":"My last message: 'Come alone, play fair, bring snacks.' The snacks were my idea.",
+   opts:[["I'll be fair.","Then you are already better than he was. Go well.",1],['What snacks?',"Something crunchy. He has not eaten in a hundred years.",0],['Will you be there?',"Heralds are always there. That is the job.",1]]}]},
+ rowan:{nm:'OLD ROWAN',spr:'mage',pal:{p:'#c8b8a0',q:'#8a7a68',y:'#ffffff'},beats:[
+  {min:5,say:()=>"Wren! I came out to listen to the chains. They sing when a disc goes in, you know. Most folk never listen.",
+   opts:[['What do they sing?',"Old tunes. The Course remembers every honest round. Every single one.",1],['Should you be out here?',"Probably not. My knees say no. My heart says chains.",1],["I'm doing fine.","I know you are. I just like to see it with my own eyes.",0]]},
+  {min:14,say:()=>"Halfway round. Your sword has grown, I see. Mind it doesn't grow your head along with it.",
+   opts:[['I will be careful.',"Good lad. Good lass. Good Wren.",1],['It is a good sword.',"It is. And you are a better apprentice than I was.",1],['Any advice?',"Throw soft into wind. Swing hard at keepers. Never the other way round.",1]]},
+  {min:23,say:()=>"When this is done... will you play a round with me? Just for fun. I have not played for fun since I was your age.",
+   opts:[['Of course I will.',"Then I'll oil the chains. Here, take this. For luck.",1,()=>heartPiece('Old Rowan gave you a heart piece!')],['Only if I win.',"Ha! Cheeky. Take this anyway.",0,()=>heartPiece('Old Rowan gave you a heart piece!')],['You will win, Rowan.',"Flatterer. Take this before I change my mind.",1,()=>heartPiece('Old Rowan gave you a heart piece!')]]}]},
+ mittens:{nm:'MITTENS',spr:'cat',pal:{g:'#f0a040',w:'#40ff60',p:'#ff90a0'},need:()=>S.q.cat===3,beats:[
+  {min:7,say:()=>"Mrrp.",opts:[['Hi, Mittens!',"Mittens blinks at you slowly. That's cat for 'I love you'.",1],['Pet her.',"She purrs like a tiny engine, then bites you gently. Fair.",1],['Does Granny know?',"Mittens looks away. Granny does not know.",0]]},
+  {min:16,say:()=>"Mittens drops something at your feet. It is a very small, very dead mouse. It is a gift. For you.",
+   opts:[['Thank you, Mittens.',"Mittens looks deeply proud of herself.",1],['Oh no.',"Mittens does not understand your culture.",0],['Put it in the bag.',"You put it in the bag. Mittens approves. The bag does not.",1]]},
+  {min:24,say:()=>"Mittens is sitting on your disc. She will not move.",
+   opts:[['Please move.',"She does not. Under her paw you find 30 gems. Cats.",1,()=>{S.gems=Math.min(999,S.gems+30)}],['Wait it out.',"An hour later she leaves. 30 gems were under her. Of course.",1,()=>{S.gems=Math.min(999,S.gems+30)}],['Lift her off.',"She goes limp like soup. Beneath her: 30 gems.",1,()=>{S.gems=Math.min(999,S.gems+30)}]]}]}};
+ CAST.granny={nm:'GRANNY',beats:[
+  {min:0,say:()=>"Sit with me, dearie. Do you know why they call it the Old Course? Because it's older than me. Only just.",
+   opts:[['How old are you?',"Old enough to remember when the crown glowed. Young enough to want it back.",1],['Tell me a story.',"Once there was a cat who found her way home with a brave little golfer. The end.",1],['I should go.',"Off you go then. Mind the bears.",0]]},
+  {min:9,say:()=>"Mittens keeps wandering off to find you. She has good taste, that cat.",
+   opts:[['She is a good cat.',"She's a terrible cat. The very best terrible cat.",1],['I will look after her.',"I know you will. You've a kind face under all that hat.",1],['She brought me a mouse.',"Oh, she likes you! Mice are her highest honour.",1]]},
+  {min:18,say:()=>"The nights are so dark now. Here, take this. It isn't a heart this time. It's soup. In a bottle.",
+   opts:[['Thank you, Granny.',"Drink it when you're poorly. Not before. It's very strong soup.",1,()=>{S.inv.p_heal=(S.inv.p_heal||0)+1}],['Soup in a bottle?',"Don't question an old woman's soup. Take it.",0,()=>{S.inv.p_heal=(S.inv.p_heal||0)+1}],['Is it safe?',"Mostly. Take it.",0,()=>{S.inv.p_heal=(S.inv.p_heal||0)+1}]]}]};
+const CAST_ORDER=['kestrel','morrow','rowan','mittens'];
+function castState(id){S.cast=S.cast||{};return S.cast[id]=S.cast[id]||{i:0,r:0}}
+function castDue(){if(!S.items.sword)return null;for(const id of CAST_ORDER){const c=CAST[id],st=castState(id),b=c.beats[st.i];if(b&&pieces()>=b.min&&(!c.need||c.need()))return id}return null}
+function castTalk(n){beatTalk(n.cast,()=>{G.npcs=G.npcs.filter(q=>q!==n);puff(n.x+8,n.y+8,'#ffffff',10,1.2)})}
+// play a cast member's next beat (if due); returns false when there is none
+function beatTalk(id,done){const c=CAST[id],st=castState(id),b=c.beats[st.i];if(!b||pieces()<b.min)return false;
+  ask(c.nm+': '+b.say(st.r),b.opts.map(o=>[o[0],()=>{st.r+=o[2];st.i++;save();say(c.nm+': '+o[1],()=>{if(o[3])o[3]();if(done)done()})}]));return true}
+// a dialog that ends with 2-3 replies to pick from (up/down, A)
+function ask(t,opts){say(t);G.dlg.opts=opts;G.dlg.sel=0}
 
 // ================= DISC GATES =================
 function gateOpen(kind){const k=(kind==='ember'?'e:':'c:')+G.room.key;if(S.opened.includes(k))return;S.opened.push(k);let n=0;
@@ -1864,6 +1918,7 @@ function paginate(t){const words=t.split(' '),lines=[];let cur='';for(const w of
 function say(t,after){if(G.bf)G.bf.flip=0;G.dlg={pages:paginate(t),pi:0,ch:0,after,len:0};G.mode='dialog'}
 function updDialog(){const d=G.dlg,len=d.pages[d.pi].join('').length;d.len=len;
   if(d.ch<len){d.ch+=1;if(G.t%3===0)sfx('text')}
+  if(d.opts&&d.pi===d.pages.length-1&&d.ch>=len){if(IN.pu){d.sel=(d.sel+d.opts.length-1)%d.opts.length;sfx('text')}if(IN.pd){d.sel=(d.sel+1)%d.opts.length;sfx('text')}if(IN.pa||IN.pi){const o=d.opts[d.sel];G.mode='play';G.dlg=null;P.atkHeld=0;sfx('sel');o[1]()}return}
   if(IN.pa||IN.pi||IN.pb||IN.pst){if(d.ch<len)d.ch=len;else if(d.pi<d.pages.length-1){d.pi++;d.ch=0}else{G.mode='play';G.dlg=null;P.atkHeld=0;if(d.after)d.after()}}}
 
 // ================= INPUT =================
@@ -2167,7 +2222,9 @@ function drawBuffs(){if(G.room&&(G.mode==='play'||G.mode==='hold')){const mx=stM
 function drawWarp(){const w=G.warp;px(ctx,'rgba(8,10,24,0.94)',20,10,216,156);txt('WIND WHISTLE: WARP TO',128,18,'#a0e0ff','center');const st=Math.max(0,Math.min(w.i-5,w.o.length-11));w.o.slice(st,st+11).forEach((o,j)=>{const i=st+j;txt(o.n,40,36+j*11,i===w.i?'#ffffff':'#7a8aaa');if(i===w.i)txt('>',28,36+j*11,'#7fffd4')})}
 function drawDialog(){const d=G.dlg,top=P.y>80,by=top?6:PH-64;px(ctx,'#000',6,by,244,58);ctx.strokeStyle='#ff7a2f';ctx.lineWidth=2;ctx.strokeRect(7,by+1,242,56);
   const lines=d.pages[d.pi];let n=Math.floor(d.ch);for(let i=0;i<lines.length;i++){const s=lines[i].slice(0,Math.max(0,n));n-=lines[i].length;txt(s,14,by+8+i*12,'#ffffff')}
-  if(d.ch>=d.len&&(G.t>>4)%2)txt('>',240,by+46,'#ff7a2f')}
+  if(d.ch>=d.len&&!(d.opts&&d.pi===d.pages.length-1)&&(G.t>>4)%2)txt('>',240,by+46,'#ff7a2f');
+  if(d.opts&&d.pi===d.pages.length-1&&d.ch>=d.len){const n=d.opts.length,h=8+n*12,oy=top?by+62:by-h-4;px(ctx,'#000',40,oy,210,h);ctx.strokeStyle='#7fffd4';ctx.lineWidth=1;ctx.strokeRect(40.5,oy+0.5,209,h-1);
+    d.opts.forEach((o,i)=>{const on=i===d.sel;if(on)px(ctx,'#2a4a44',42,oy+3+i*12,206,11);txt((on?'> ':'  ')+o[0],46,oy+5+i*12,on?'#7fffd4':'#c8c0d8')})}}
 function drawMap(x0,y0,big){const r=G.room;
   if(r.kind==='cav'){const C=CAVS[r.cv],cw=big?16:8,chh=big?8:5,ox=x0+((big?216:72)-9*cw)/2;for(const k of C.cells.keys()){const q=k.split(',').map(Number),vis=S.cvis.includes('c'+r.cv+':'+k);if(vis)px(ctx,'#5a4a3a',ox+q[0]*cw,y0+q[1]*chh,cw-1,chh-1);
       if(vis&&C.mouths.some(m=>m.gx===q[0]&&m.gy===q[1]))px(ctx,'#a0e060',ox+q[0]*cw+1,y0+q[1]*chh+1,2,2);if((S.items.lamp||S.relics.lens)&&C.rwc[0]===q[0]&&C.rwc[1]===q[1]&&!S.cavr.includes(r.cv))px(ctx,'#ffe060',ox+q[0]*cw+cw-3,y0+q[1]*chh+1,2,2);

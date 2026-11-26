@@ -36,6 +36,7 @@ press=k=>{K[k]=1;T(1);K[k]=0;T(1)},
 adv=()=>{for(let i=0;i<120&&['dialog','hold','fade'].includes(Q.G.mode);i++){K.KeyJ=1;T(1);K.KeyJ=0;T(20)}},
 fresh=()=>{Q.S=Q.newState();Q.G.bf={};Q.S.items.sword=1;Q.S.items.disc_putt=1;Q.S.maxHp=20;Q.S.hp=20;Q.G.mode='play';Q.G.dlg=null;Q.G.duel=null;Q.G.golf=null;Q.G.lastDuelT=1e12;Q.G.duelPending=0},  // lastDuelT in the future: no random duels in tests
 waitDun=()=>{for(let i=0;i<400&&Q.G.room.kind!=='dun';i++){if(['dialog','hold'].includes(Q.G.mode))adv();T(1)}for(let i=0;i<80&&Q.G.mode!=='play';i++){adv();T(1)}},
+toOpts=()=>{for(let i=0;i<400;i++){const d=Q.G.dlg;if(!d)return;const last=d.pi===d.pages.length-1;if(d.opts&&last&&d.ch>=d.len)return;if(d.ch>=d.len)press('KeyJ');else T(1)}},
 go=(x,y)=>{const rm=Q.genScreen(x,y);Q.setRoom(rm);Q.G.duelPending=0;Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.G.picks=[];Q.G.banner=null;Q.G.floats=[];return rm};"""
 
 WORLD = PRE + r"""
@@ -184,6 +185,19 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  step(gain(()=>{const e=mk();Q.swordMark(e,'spin');Q.killEnemy(e)})===3,'a clean spin kill earns 3');
  Q.S.swx=5;Q.P.inv=0;Q.P.roll=0;Q.G.mode='play';Q.hurtPlayer(1,Q.P.x+20,Q.P.y);step(Q.S.swx===4,'a hit taken costs sword progress');Q.P.inv=0;
  Q.S.swx=0;Q.G.fightHurt=0;Q.bossXP();step(Q.S.swx===10,'a boss beaten without a hit pays 10');Q.S.swx=0;Q.G.fightHurt=2;Q.bossXP();step(Q.S.swx===5,'a boss beaten after hits pays 5');Q.G.ents=[]}
+// recurring cast: meets you at an unwon basket once due; reply choices move rapport and advance the beat
+{fresh();const setPc=n=>{Q.S.shards=[];for(let i=1;i<=n;i++)Q.S.shards.push(Q.HD0+i)};const at=n=>{const h=Q.HOLES[n-1],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;return Q.G.npcs.find(o=>o.cast)};
+ setPc(0);step(!at(5),'no cast before the first crown piece');setPc(1);step(!at(1),'the cast never waits at a hole already won');
+ const k=at(5);step(k&&k.cast==='kestrel','Kestrel waits at the next unwon basket after the first piece');
+ if(k){Q.talkTo(k);toOpts();
+  step(Q.G.mode==='dialog'&&Q.G.dlg.opts&&Q.G.dlg.opts.length===3,'Kestrel offers three replies');press('ArrowDown');step(Q.G.dlg&&Q.G.dlg.sel===1,'down moves the reply cursor');press('KeyJ');
+  step(Q.G.mode==='dialog'&&/hole nine/i.test(Q.G.dlg.pages.flat().join(' ')),'Kestrel answers the reply you picked');adv();adv();
+  step(Q.S.cast.kestrel.i===1&&Q.S.cast.kestrel.r===1&&!Q.G.npcs.some(o=>o.cast),'the reply sets rapport, the beat advances and Kestrel leaves');
+  step(!at(5),'the next beat waits for more crown pieces')}
+ setPc(3);const k2=at(5);step(k2&&k2.cast==='kestrel'&&/Not that I was worried/.test(Q.CAST.kestrel.beats[1].say(Q.S.cast.kestrel.r)),'with rapport, Kestrel warms up');
+ fresh();setPc(7);Q.S.cast={kestrel:{i:9,r:0},morrow:{i:9,r:0},rowan:{i:9,r:0}};Q.S.q.cat=1;step(!at(9),'Mittens waits until she is home with Granny');Q.S.q.cat=3;const m=at(9);step(m&&m.cast==='mittens','then Mittens comes to visit');
+ fresh();Q.S.q.cat=3;setPc(18);Q.S.inv.p_heal=0;for(let b=0;b<3;b++){step(Q.beatTalk('granny'),'Granny has chat '+(b+1)+' after the cat quest');toOpts();press('KeyJ');adv();adv()}
+ step(Q.S.inv.p_heal===1&&!Q.beatTalk('granny'),"Granny's soup arrives and her chats run out");Q.G.mode='play';Q.G.dlg=null}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -219,6 +233,7 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+for(const [nm,py] of [['bottom',40],['top',130]])shot('reply choices '+nm,()=>{worst();go(18,23);Q.P.y=py;Q.ask('MITTENS: Mittens drops something at your feet. It is a very small, very dead mouse.',[['She brought me a mouse.',()=>{}],['I will look after her.',()=>{}],['...Thanks for the tip?',()=>{}]]);const d=Q.G.dlg;d.pi=d.pages.length-1;d.ch=999;d.len=d.pages[d.pi].join('').length;d.sel=1});
 shot('sword limit banner',()=>{worst();go(18,23);Q.G.banner={s:'SWORD LIMIT: WIN CROWN PIECES',t:100}});
 shot('sword perk banner',()=>{worst();go(18,23);Q.G.banner={s:'LV 25: THIRD-HIT DOUBLE',t:100}});
 shot('boss banner',()=>{worst();Q.enterDungeon(Q.HD0+18);T(60);Q.G.mode='play';Q.G.banner={s:Q.DUN[Q.HD0+18].boss.n,t:100}});
