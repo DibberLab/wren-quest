@@ -249,8 +249,14 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  let tt1=0;while(!Q.spikeUp(sc)&&tt1++<200){Q.P.x=sc*16;Q.P.y=sw*16-4;T(1)}Q.P.inv=0;Q.P.x=sc*16;Q.P.y=sw*16-4;T(2);step(Q.S.hp<h0,'raised spikes hurt');
  // crumbling floor gives way and drops Wren back to safe ground
  const hc=Q.HOLES.find(h=>Q.genDungeon(Q.HD0+h.n).list.some(o=>o.trap==='crumble'));Q.enterDungeon(Q.HD0+hc.n);T(60);adv();Q.G.mode='play';const co=Q.G.dg.list.find(o=>o.trap==='crumble');co.t=Q.dunTiles(co);Q.setRoom(co);Q.G.ents=[];Q.G.mode='play';
- const ci=[...Q.G.room.t].indexOf(Q.CF),cc=ci%16,cw=ci>>4;Q.P.safe=[112,124];Q.P.inv=0;for(let i=0;i<40&&Q.G.room.t[ci]===Q.CF;i++){Q.P.x=cc*16;Q.P.y=cw*16-4;T(1)}step(Q.G.room.t[ci]===Q.BL&&Math.abs(Q.P.x-112)<20,'cracked floor gives way and drops Wren back')
- // the plates puzzle and its chest
+ const ci=[...Q.G.room.t].indexOf(Q.CF),cc=ci%16,cw=ci>>4;Q.P.safe=[112,124];Q.P.inv=0;for(let i=0;i<40&&Q.G.room.t[ci]===Q.CF;i++){Q.P.x=cc*16;Q.P.y=cw*16-4;T(1)}step(Q.G.room.t[ci]===Q.PT&&Math.abs(Q.P.x-112)<20,'cracked floor gives way and drops Wren back')
+ // a fall from crumbling floor never lands Wren inside anything, and a wedged Wren steps out on his own
+ {Q.enterDungeon(Q.HD0+hc.n);T(60);adv();Q.G.mode='play';const co2=Q.G.dg.list.find(o=>o.trap==='crumble');co2.t=Q.dunTiles(co2);Q.setRoom(co2);Q.G.ents=[];Q.G.mode='play';
+  let tile=-1;for(let i=0;i<176;i++){const c=i%16,w=i>>4;if(Q.G.room.t[i]===Q.CF&&Q.G.room.t[i-1]===Q.DF)tile=i}
+  if(step(tile>=0,'found cracked floor beside plain floor')){const c=tile%16,w=tile>>4;Q.P.x=(c-1)*16+3;Q.P.y=w*16-4;Q.P.inv=0;T(2);const sf=Q.P.safe.slice();
+   for(let i=0;i<40&&Q.G.room.t[tile]===Q.CF;i++){Q.P.x=c*16;Q.P.y=w*16-4;T(1)}T(2);step(Q.G.room.t[tile]===Q.PT&&Q.freeP(Q.P.x,Q.P.y),'a crumbled tile becomes a pit and Wren lands clear of it')}
+  const bi=[...Q.G.room.t].findIndex((v,i)=>v===Q.BL&&i%16>1&&i%16<14&&(i>>4)>1&&(i>>4)<9);if(bi>=0){Q.P.x=(bi%16)*16;Q.P.y=(bi>>4)*16-6;Q.P.kbT=0;Q.P.roll=0;T(30);step(Q.freeP(Q.P.x,Q.P.y),'Wren wedged inside a block steps out on his own')}}
+// the plates puzzle and its chest
  const hp=Q.HOLES.find(h=>Q.HOLE_PUZ[Q.holeBiome(h)]==='plates'&&h.n>14)||Q.HOLES.find(h=>Q.HOLE_PUZ[Q.holeBiome(h)]==='plates');fresh();Q.enterDungeon(Q.HD0+hp.n);T(60);adv();Q.G.mode='play';const po=Q.G.dg.list.find(o=>o.puz);po.t=Q.dunTiles(po);Q.setRoom(po);Q.onEnter();Q.G.ents=[];Q.G.mode='play';Q.G.dlg=null;
  step(Q.G.puz&&Q.G.puz.type==='plates','the plates puzzle starts');for(const [c,w] of Q.PLPOS){Q.P.x=c*16;Q.P.y=w*16-4;T(2)}step(Q.G.puz.done&&Q.S.dun[Q.HD0+hp.n].hps===1,'stepping on all four plates in time solves it');
  const ch=Q.G.picks.find(p=>p.content==='hpuz');step(!!ch,'solving it brings out the puzzle chest');if(ch){const g0=Q.S.gems,hp0=Q.S.hpc,mh0=Q.S.maxHp;Q.openChest(ch);adv();T(3);adv();step(hp.n>14?(Q.S.hpc!==hp0||Q.S.maxHp>mh0):Q.S.gems===g0+50,'the chest pays '+(hp.n>14?'a heart piece':'50 gems'));
