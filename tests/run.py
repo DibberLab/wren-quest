@@ -37,6 +37,7 @@ adv=()=>{for(let i=0;i<120&&['dialog','hold','fade'].includes(Q.G.mode);i++){K.K
 fresh=()=>{Q.S=Q.newState();Q.G.bf={};Q.S.items.sword=1;Q.S.items.disc_putt=1;Q.S.maxHp=20;Q.S.hp=20;Q.G.mode='play';Q.G.dlg=null;Q.G.duel=null;Q.G.golf=null;Q.G.lastDuelT=1e12;Q.G.duelPending=0},  // lastDuelT in the future: no random duels in tests
 waitDun=()=>{for(let i=0;i<400&&Q.G.room.kind!=='dun';i++){if(['dialog','hold'].includes(Q.G.mode))adv();T(1)}for(let i=0;i<80&&Q.G.mode!=='play';i++){adv();T(1)}},
 toOpts=()=>{for(let i=0;i<400;i++){const d=Q.G.dlg;if(!d)return;const last=d.pi===d.pages.length-1;if(d.opts&&last&&d.ch>=d.len)return;if(d.ch>=d.len)press('KeyJ');else T(1)}},
+openMT=()=>{for(let k=0;k<3&&Q.G.mode!=='mthrow';k++){if(['dialog','hold'].includes(Q.G.mode))adv();Q.G.mode='play';Q.G.ents=[];Q.G.discOut=0;Q.P.icd=0;Q.P.ibuf=0;press('KeyK')}return Q.G.mode==='mthrow'},
 go=(x,y)=>{const rm=Q.genScreen(x,y);Q.setRoom(rm);Q.G.duelPending=0;Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.G.picks=[];Q.G.banner=null;Q.G.floats=[];return rm};"""
 
 WORLD = PRE + r"""
@@ -73,7 +74,7 @@ for(const h of Q.HOLES){if(h.par<3||h.par>4)bad.push('hole '+h.n+' is par '+h.pa
 return {checks:Q.HOLES.length,bad,info:out.join(' ')};"""
 
 FLOWS = PRE + r"""
-const bad=[],ck=(c,m)=>{if(!c)bad.push(m)};let n=0;const step=(c,m)=>{n++;ck(c,m)};
+const bad=[],ck=(c,m)=>{if(!c)bad.push(m)};let n=0;const step=(c,m)=>{n++;ck(c,m);return !!c};
 // new game says the intro
 
 // all pars 3 or 4
@@ -95,7 +96,7 @@ let g=Q.G.golf;if(g){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);step(g.ph==='retr
 step(Q.S.shards.includes(Q.HD0+1)&&[...Q.G.room.t].includes(Q.ST),'par gives the crown piece and opens the stairs');
 Q.exitDungeon();T(60);adv();step(Q.G.room.kind==='over'&&Q.G.room.key===h.key,'stairs return to the basket screen');
 // disc bag: Q/E picks a disc, range follows the disc, the shortest disc that reaches is picked at each lie, pro shop sells no discs
-fresh();go(18,23);Q.S.items.disc_mid=1;Q.S.items.disc_drive=1;Q.S.items.disc_glow=1;Q.startGolf(5);T(3);{const g=Q.G.golf;g.ph='aim';g.t=200;
+fresh();go(18,23);Q.S.items.disc_mid=1;Q.S.items.disc_drive=1;Q.S.items.disc_glow=1;Q.startGolf(5);T(3);if(step(!!Q.G.golf,'the hole 5 challenge opens')){const g=Q.G.golf;g.ph='aim';g.t=200;
  step(g.bag.length===4,'the bag holds every disc owned');const d0=Q.golfDist();step(Q.gDisc().max>=d0-Q.PUTT_FT*0.5||Q.gDisc().max===280,'the tee picks a disc that reaches');
  const before=g.di;press('KeyE');step(g.di===(before+1)%4,'E picks the next disc');press('KeyQ');step(g.di===before,'Q picks the previous disc');
  g.di=0;g.mk={x:g.lie.x,y:g.lie.y-200};g.pv=null;press('KeyQ');press('KeyE');g.di=0;press('ArrowUp');step(Math.hypot(g.mk.x-g.lie.x,g.mk.y-g.lie.y)<=120.5,'the putter cannot mark past 120 ft');
@@ -133,11 +134,11 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
    for(const [ox,oy] of [[0,70],[0,-70],[70,0],[-70,0],[50,50],[-50,50],[0,40],[40,0]]){const px=b.cx+ox-8,py=b.cy+oy-10;if(!Q.freeP(px,py))continue;let ok=true;for(let k=1;k<20;k++){const tl=Q.tileAt(b.cx+ox*(1-k/20),b.cy+oy*(1-k/20));if(tl===null||Q.blocksShot(tl))ok=false}if(ok){Q.P.x=px;Q.P.y=py;return b}}return null};
  const b=mtAt(4);step(!!b,'found a clear lie near a map basket');if(b){Q.S.sel='disc_putt';Q.P.icd=0;press('KeyK');step(Q.G.mode==='mthrow','the disc button near a basket opens the marker');
   press('KeyK');step(Q.G.mode==='play','pressing it again backs out with no throw');step(!Q.G.strokes,'backing out costs no stroke');
-  Q.P.icd=0;press('KeyK');const m=Q.G.mt;m.mk={x:b.cx,y:b.cy};m.pv=null;press('KeyL');step(m.shape===2,'B changes the shape');m.shape=1;
+  if(step(openMT(),'the marker throw opens')){const m=Q.G.mt;m.mk={x:b.cx,y:b.cy};m.pv=null;press('KeyL');step(m.shape===2,'B changes the shape');m.shape=1;
   press('KeyJ');step(m.ph==='power','A starts the power bar');m.pw=1;m.pd=0;press('KeyJ');step(m.ph==='rel','A locks power');m.rel=0;m.rd=0;Q.mtThrow();step(Q.G.discOut&&Q.G.strokes===1,'the throw counts a stroke');
-  for(let i=0;i<200&&!Q.G.basket.made;i++)T(1);step(Q.G.basket.made===1,'a perfect marker throw sinks the basket')}
- const b2=mtAt(5);if(b2){Q.S.sel='disc_putt';Q.P.icd=0;press('KeyK');const m=Q.G.mt;m.mk={x:b2.cx,y:b2.cy};m.pv=null;m.pw=0.5;m.rel=0;Q.mtThrow();for(let i=0;i<200&&Q.G.shots.length;i++)T(1);
-  step(!Q.G.basket.made&&Q.G.picks.some(p=>p.kind==='discdrop'),'a short marker throw lands where Wren can pick it up')}
+  for(let i=0;i<200&&!Q.G.basket.made;i++)T(1);step(Q.G.basket.made===1,'a perfect marker throw sinks the basket')}}
+ const b2=mtAt(5);if(b2){Q.S.sel='disc_putt';if(step(openMT(),'the marker throw opens')){const m=Q.G.mt;m.mk={x:b2.cx,y:b2.cy};m.pv=null;m.pw=0.5;m.rel=0;Q.mtThrow();for(let i=0;i<200&&Q.G.shots.length;i++)T(1);
+  step(!Q.G.basket.made&&Q.G.picks.some(p=>p.kind==='discdrop'),'a short marker throw lands where Wren can pick it up')}}
  const b3=mtAt(6);if(b3){Q.S.sel='disc_putt';{const fe=Q.makeEnemy(Object.keys(Q.EN)[0],Q.P.x+20,Q.P.y,1);fe.spawn=0;Q.G.ents.push(fe)}Q.P.icd=0;press('KeyK');step(Q.G.mode==='play'&&Q.G.shots.some(s=>s.kind==='disc'&&!s.pts),'with a foe close by, the disc is a quick throw');Q.G.ents=[];Q.G.shots=[];Q.G.discOut=0}
  fresh();go(18,23);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.P.x=16;Q.P.y=140;Q.S.sel='disc_putt';Q.P.icd=0;if(Math.hypot(Q.G.basket.cx-24,Q.G.basket.cy-150)>Q.TUNE.golf.mapRange){press('KeyK');step(Q.G.mode==='play','far from the basket, the disc is a quick throw')}}
 // disc gates on moat islands: Ember burns thorns, Crystal wakes the eye; nothing else opens them, jumps can't clear them, they stay open
@@ -198,6 +199,20 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  fresh();setPc(7);Q.S.cast={kestrel:{i:9,r:0},morrow:{i:9,r:0},rowan:{i:9,r:0}};Q.S.q.cat=1;step(!at(9),'Mittens waits until she is home with Granny');Q.S.q.cat=3;const m=at(9);step(m&&m.cast==='mittens','then Mittens comes to visit');
  fresh();Q.S.q.cat=3;setPc(18);Q.S.inv.p_heal=0;for(let b=0;b<3;b++){step(Q.beatTalk('granny'),'Granny has chat '+(b+1)+' after the cat quest');toOpts();press('KeyJ');adv();adv()}
  step(Q.S.inv.p_heal===1&&!Q.beatTalk('granny'),"Granny's soup arrives and her chats run out");Q.G.mode='play';Q.G.dlg=null}
+// Kestrel's matches: offered after holes 9/18/27, she tees off first, lower total wins, ties and losses rematch, wins upgrade discs
+{fresh();go(18,23);for(const k of ['disc_mid','disc_drive'])Q.S.items[k]=1;Q.G.mode='play';
+ Q.rivalQueue(9);T(2);step(Q.G.mode==='dialog'&&Q.G.dlg.opts&&/Kestrel|KESTREL/.test(Q.G.dlg.pages.flat().join(' ')),'winning hole 9 brings Kestrel\'s challenge');toOpts();press('KeyJ');
+ const g=Q.G.golf;step(g&&g.match&&g.match.idx===0&&!g.admin,'accepting starts the hole 9 match');
+ if(g&&g.match){g.t=40;press('KeyJ');for(let i=0;i<600&&g.ph==='rival';i++)T(1);step(g.match.ks>=1&&g.ph==='aim','Kestrel tees off first, then it is Wren\'s turn');
+  const m=g.match;m.kin=1;m.ks=4;g.strokes=2;Q.golfIn();for(let i=0;i<120&&g.ph!=='mres';i++)T(1);step(g.ph==='mres'&&m.res==='win','a lower total wins the match');
+  const d0=Q.discStat('disc_drive').max;g.t=60;press('KeyJ');step(Q.S.upg.drive&&Q.discStat('disc_drive').max===d0+30&&Q.S.rival.won.includes(0)&&!Q.S.rival.pend.includes(0),'the win upgrades the Driver by 30 ft');adv()}
+ Q.G.mode='play';Q.G.dlg=null;Q.startMatch(1);const g2=Q.G.golf;g2.ph='aim';g2.match.kin=1;g2.match.ks=2;g2.strokes=3;Q.S.rival.pend=[1];Q.golfIn();for(let i=0;i<120&&g2.ph!=='mres';i++)T(1);
+ step(g2.match.res==='lose','a higher total loses');g2.t=60;press('KeyL');adv();step(!Q.G.golf&&Q.S.rival.pend.includes(1)&&!Q.S.upg.wind,'B leaves the rematch for later, with no prize');
+ {const h=Q.HOLES[17],[x,y]=h.key.split(',').map(Number);go(x,y);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;step(Q.G.npcs.some(o=>o.rivalMatch===2),'Kestrel waits by the hole 18 basket for the rematch')}
+ Q.G.mode='play';Q.startMatch(1);const g3=Q.G.golf;g3.ph='aim';g3.match.kin=1;g3.match.ks=3;g3.strokes=3;Q.golfIn();for(let i=0;i<120&&g3.ph!=='mres';i++)T(1);step(g3.match.res==='tie','an equal total is a tie');
+ g3.t=60;press('KeyJ');step(Q.G.golf&&Q.G.golf.match&&Q.G.golf.match.ks===0&&Q.G.golf.strokes===0,'A replays a tie straight away');
+ const g4=Q.G.golf;g4.ph='aim';g4.match.kin=0;g4.strokes=g4.c.par+3;g4.disc={x:g4.lie.x,y:g4.lie.y};Q.golfAfter();for(let i=0;i<600&&g4.ph!=='mres';i++)T(1);step(g4.ph==='mres'&&g4.match.res==='lose','par + 3 without holing out gives the match away');
+ Q.G.golf=null;Q.G.mode='play'}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -233,6 +248,9 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+const mshot=(name,f)=>shot('match '+name,()=>{worst();go(18,23);Q.startMatch(2);T(3);const g=Q.G.golf;g.strokes=9;g.match.ks=12;f(g)});
+mshot('intro',g=>{g.ph='intro';g.t=20});mshot('aim',g=>{g.ph='aim';g.t=200});mshot('kestrel throws',g=>{g.ph='rival';g.ra={pts:[g.c.tee.x,g.c.tee.y,g.c.tee.x,g.c.tee.y-40],i:2,msg:'KESTREL: INTO AN OPEN GRAVE! +1',t:1,then:()=>{}};g.msg={s:g.ra.msg,c:'#ff9a70',t:60}});
+mshot('win',g=>{g.ph='mres';g.t=80;g.match.res='win'});mshot('lose',g=>{g.ph='mres';g.t=80;g.match.res='lose';g.strokes=99});
 for(const [nm,py] of [['bottom',40],['top',130]])shot('reply choices '+nm,()=>{worst();go(18,23);Q.P.y=py;Q.ask('MITTENS: Mittens drops something at your feet. It is a very small, very dead mouse.',[['She brought me a mouse.',()=>{}],['I will look after her.',()=>{}],['...Thanks for the tip?',()=>{}]]);const d=Q.G.dlg;d.pi=d.pages.length-1;d.ch=999;d.len=d.pages[d.pi].join('').length;d.sel=1});
 shot('sword limit banner',()=>{worst();go(18,23);Q.G.banner={s:'SWORD LIMIT: WIN CROWN PIECES',t:100}});
 shot('sword perk banner',()=>{worst();go(18,23);Q.G.banner={s:'LV 25: THIRD-HIT DOUBLE',t:100}});
