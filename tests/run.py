@@ -197,9 +197,8 @@ Q.swordXP(5000);step(Q.S.swl===Q.TUNE.sword.capBase,'with no crown pieces the sw
 setPc(7);Q.swordXP(5000);step(Q.S.swl>=15&&Q.S.swl<=19,'with 7 pieces it stops in the high teens ('+Q.S.swl+')');
 setPc(13);Q.swordXP(5000);step(Q.S.swl<30,'one piece short of half the course, level 30 is still out of reach');
 setPc(14);Q.swordXP(5000);step(Q.S.swl===30,'at 14 pieces (about half the course) the sword reaches level 30');const mh2=Q.S.maxHp;Q.S.hpc=0;for(let i=0;i<4;i++)Q.heartPiece('t');Q.G.mode='play';T(2);adv();step(Q.S.maxHp===mh2+2,'four heart pieces make a container');
-// old save migration (wv 2, three old shards)
-const old=JSON.parse(JSON.stringify(Q.newState()));old.wv=2;old.shards=[1,2,4];old.items.sword=1;Q.S=Object.assign(Q.newState(),old);Q.S.wv=2;Q.startLoaded();adv();
-step(Q.S.wv===3&&Q.S.shards.length===3&&Q.S.shards.every(d=>d>Q.HD0),'old shards become crown pieces');
+// a saved game loads where it left off
+fresh();Q.S.shards=[Q.HD0+1,Q.HD0+2];Q.S.gems=77;Q.S.swl=6;Q.save();Q.S=Object.assign(Q.newState(),Q.loadSave());Q.startLoaded();step(Q.S.shards.length===2&&Q.S.gems===77&&Q.S.swl===6&&Q.G.mode==='play','a saved game loads where it left off');
 return {checks:n,bad};"""
 
 # Layout: screens drawn with worst-case values; any text drawn over other text fails.
