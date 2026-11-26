@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""Wren Quest test suite.
+
+    python3 tests/run.py              # every suite
+    python3 tests/run.py layout golf  # just these
+
+Suites: world, golf, flows, layout, stress. Needs Python 3 and Playwright
+(pip install playwright && playwright install chromium). Set CHROME to use an
+installed Chrome instead (e.g. CHROME=/usr/bin/google-chrome), and WQ_GAME
+to test another copy of the game file.
+
+The runner copies site/index.html to a temp folder, injects tests/hook.js right
+after the top-level `requestAnimationFrame(frame);` line so tests can reach the game's internals,
+and drives it headless. Nothing here is served or shipped.
+"""
+import asyncio, os, sys, tempfile, time, pathlib
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+GAME = pathlib.Path(os.environ['WQ_GAME']) if os.environ.get('WQ_GAME') else ROOT / 'site' / 'index.html'
+HOOK = ROOT / 'tests' / 'hook.js'
+ANCHOR = '\nrequestAnimationFrame(frame);\n'
+
+def build_copy():
+    src = GAME.read_text()
+    if src.count(ANCHOR) != 1:
+        sys.exit('tests: expected exactly one top-level requestAnimationFrame(frame); line in site/index.html')
+    out = src.replace(ANCHOR, ANCHOR + HOOK.read_text() + '\n', 1)
+    d = tempfile.mkdtemp(prefix='wq-test-')
+    p = pathlib.Path(d) / 'index.html'
+    p.write_text(out)
+    return p.as_uri()
+
+# ---------------------------------------------------------------- JS helpers
+PRE = """const Q=window.__WQ,T=n=>{for(let i=0;i<n;i++)Q.tick()},K=Q.K,
+press=k=>{K[k]=1;T(1);K[k]=0;T(1)},
+adv=()=>{for(let i=0;i<120&&['dialog','hold','fade'].includes(Q.G.mode);i++){K.KeyJ=1;T(1);K.KeyJ=0;T(20)}},
+fresh=()=>{Q.S=Q.newState();Q.G.bf={};Q.S.items.sword=1;Q.S.items.disc_putt=1;Q.S.maxHp=20;Q.S.hp=20;Q.G.mode='play';Q.G.dlg=null;Q.G.duel=null;Q.G.golf=null},
+go=(x,y)=>{const rm=Q.genScreen(x,y);Q.setRoom(rm);Q.G.mode='play';Q.G.dlg=null;Q.G.ents=[];Q.G.npcs=[];Q.G.picks=[];Q.G.banner=null;Q.G.floats=[];return rm};"""
+
+WORLD = PRE + r"""
+const bad=[],WALK=Q.WALK;
+// overworld: every exit reaches every other (jumps over up to 3 water/lava/hurdle tiles; rune pillars count as open)
+for(let y=0;y<Q.WH;y++)for(let x=0;x<Q.WW;x++){const t=Q.genScreen(x,y).t.slice();for(let i=0;i<176;i++)if(t[i]===Q.RP)t[i]=0;
+  const ok=v=>WALK.has(v)||v===4||v===5,J=new Set([Q.WA,Q.LV,Q.HU]);let s0=-1;for(let i=0;i<176&&s0<0;i++){const c=i%16,w=i>>4;if((c===0||c===15||w===0||w===10)&&ok(t[i]))s0=i}if(s0<0)continue;
+  const seen=new Set([s0]),q=[s0];while(q.length){const i=q.pop(),c=i%16,w=i>>4;for(const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]])for(let k=1;k<=4;k++){const nc=c+dx*k,nw=w+dy*k;if(nc<0||nc>15||nw<0||nw>10)break;const j=nw*16+nc;if(ok(t[j])){if(!seen.has(j)){seen.add(j);q.push(j)}break}if(!J.has(t[j]))break}}
+  for(let i=0;i<176;i++){const c=i%16,w=i>>4;if((c===0||c===15||w===0||w===10)&&ok(t[i])&&!seen.has(i)){bad.push('overworld exit cut off at '+x+','+y);break}}}
+// dungeons: holes, throne, side dungeons
+Q.S=Q.newState();const dl=[];for(let n=1;n<=27;n++)dl.push(Q.HD0+n);dl.push(Q.NDUN);
+for(const d of dl){Q.S.dun[d]={unl:[],keys:[],item:0,boss:0,hc:0,vis:[]};const g=Q.genDungeon(d);if(!g.boss)bad.push('no boss in dungeon '+d);if(g.list.length<8)bad.push('dungeon '+d+' has '+g.list.length+' rooms')}
+for(const k in Q.CAVES){const cv=Q.CAVES[k];if(cv&&cv.sid!==undefined){try{const g=Q.genSide(20+cv.sid);if(!g||!g.list||!g.list.length)bad.push('side dungeon '+cv.sid)}catch(e){bad.push('side dungeon '+cv.sid+' threw '+e.message)}}}
+// caverns: every screen joined up
+Q.CAVS.forEach((C,i)=>{const first=[...C.cells.keys()][0],seen=new Set([first]),q=[first];while(q.length){const k=q.pop(),[x,y]=k.split(',').map(Number);for(const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]){const k2=(x+dx)+','+(y+dy);if(!C.cells.has(k2)||seen.has(k2))continue;if(C.open.has(k+'|'+k2)||C.open.has(k2+'|'+k)){seen.add(k2);q.push(k2)}}}if(seen.size!==C.cells.size)bad.push('cavern '+i+': '+(C.cells.size-seen.size)+' screens unreachable')});
+return {checks:Q.WW*Q.WH+dl.length+Q.CAVS.length,bad};"""
+
+GOLF = PRE + r"""
+const bad=[],out=[];
+const aimFor=(lie,mk,cv)=>{const Tg=Math.hypot(mk.x-lie.x,mk.y-lie.y),base=Math.atan2(mk.y-lie.y,mk.x-lie.x);let a=base,D=Tg;for(let i=0;i<5;i++){const e=Q.golfPath(lie.x,lie.y,a,D,cv),ch=Math.hypot(e.x-lie.x,e.y-lie.y)||1;a-=Math.atan2(e.y-lie.y,e.x-lie.x)-base;D*=Tg/ch}return{a,D}};
+const fly=(c,lie,a,D,cv)=>{const v0=Math.sqrt(2*0.05*Math.max(1,D));let x=lie.x,y=lie.y,v=v0,t=0;const Tt=v0/0.05,zm=Math.min(18,6+12*D/Q.GOLF_MAX);let hit=0;
+  while(v>0){const sp=v/v0;a+=cv*0.022*(0.25+(1-sp)*1.2);x+=Math.cos(a)*v+c.wind.x;y+=Math.sin(a)*v+c.wind.y;v-=0.05;t++;const z=zm*Math.sin(Math.PI*Math.min(1,t/Tt));
+    if(Math.hypot(x-c.bk.x,y-c.bk.y)<7&&z<10){if(sp<0.85)return{in:1};if(!hit){hit=1;v*=0.3;a+=Math.PI}}
+    for(const tr of c.trees)if(z<13&&Math.hypot(x-tr.x,y-tr.y)<tr.r+2)return{x:x-Math.cos(a)*4,y:y-Math.sin(a)*4};if(x<4||x>252||y<4||y>c.L-4)return{ob:1}}
+  if(c.water.some(w=>x>=w.x&&x<=w.x+w.w&&y>=w.y&&y<=w.y+w.h))return{ob:1};return{x,y}};
+const choose=(c,lie)=>{let best=null,bd=1e9;const dB=Math.hypot(c.bk.x-lie.x,c.bk.y-lie.y);
+  for(let r=Math.min(Q.GOLF_MAX,dB+10);r>=20;r-=Math.max(10,r*0.12))for(let da=-0.9;da<=0.9;da+=0.08){const ang=Math.atan2(c.bk.y-lie.y,c.bk.x-lie.x)+da,mk={x:lie.x+Math.cos(ang)*r,y:lie.y+Math.sin(ang)*r};
+    for(const cv of [-0.75,0,0.75]){const s=aimFor(lie,mk,cv),res=fly(c,lie,s.a,s.D,cv);if(res.ob)continue;const d=res.in?-1:Math.hypot(c.bk.x-res.x,c.bk.y-res.y);if(d<bd){bd=d;best=res}}}return best};
+for(const h of Q.HOLES){if(h.par<3||h.par>4)bad.push('hole '+h.n+' is par '+h.par);const c=Q.golfCourse(h);let lie={x:c.tee.x,y:c.tee.y},st=0,done=0;
+  while(st<h.par&&!done){if(Math.hypot(c.bk.x-lie.x,c.bk.y-lie.y)<=Q.PUTT_FT){st++;done=1;break}const r=choose(c,lie);st++;if(!r){break}if(r.in){done=1;break}lie={x:r.x,y:r.y}}
+  out.push(h.n+':'+(done?st:'X')+'/'+h.par);if(!done||st>h.par)bad.push('hole '+h.n+' not makeable in par by perfect play')}
+return {checks:Q.HOLES.length,bad,info:out.join(' ')};"""
+
+FLOWS = PRE + r"""
+const bad=[],ck=(c,m)=>{if(!c)bad.push(m)};let n=0;const step=(c,m)=>{n++;ck(c,m)};
+// new game says the intro
+Q.newGame();step(Q.G.mode==='dialog'&&/27 pieces/.test(Q.G.dlg.pages.join(' ')),'new game intro');Q.G.mode='play';Q.G.dlg=null;
+// all pars 3 or 4
+step(Q.HOLES.every(h=>h.par===3||h.par===4),'pars are 3 or 4');
+// hole loop: sink basket -> dungeon -> boss -> golf -> over par replays -> par gives crown + stairs -> exit to basket screen
+fresh();const h=Q.HOLES[0],[hx,hy]=h.key.split(',').map(Number);go(hx,hy);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
+step(!!Q.G.basket,'hole 1 basket exists');if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(130);for(let i=0;i<80&&Q.G.mode!=='play';i++)T(1)}
+step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+1,'sinking hole 1 enters its dungeon');
+const b=Q.G.dg.boss;b.t=Q.dunTiles(b);Q.setRoom(b);Q.P.x=112;Q.P.y=124;Q.onEnter();Q.G.mode='play';T(200);const boss=Q.G.ents.find(e=>e.boss);step(!!boss,'boss spawns');
+if(boss){boss.inv=0;Q.hitEnemy(boss,99999,boss.x,boss.y);T(140);adv()}step(Q.G.mode==='golf'&&!Q.G.golf.admin,'boss death starts the golf challenge');
+let g=Q.G.golf;if(g){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);step(g.ph==='retry'&&!Q.G.ents.some(e=>e.boss&&!e.dead),'over par replays with no boss');T(60);press('KeyJ');step(g.ph==='aim'&&g.tries===2&&g.strokes===0,'replay restarts the hole');
+  // three fails cost one heart container
+  const mh=Q.S.maxHp;for(let k=0;k<2;k++){g.strokes=g.c.par;g.ph='land';g.lt=1;T(3);T(60);press('KeyJ')}step(Q.S.maxHp===mh-2,'third failed try costs a heart container');
+  // putting mini-game: lock inside the chains
+  g.lie={x:g.c.bk.x,y:g.c.bk.y+20};g.strokes=0;g.ph='land';g.lt=1;T(3);step(g.ph==='putt','within 30 ft starts the putting mini-game');
+  const p=g.pt;T(12);p.x=p.ox;press('KeyJ');T(7);p.y=p.oy;press('KeyJ');T(45);step(g.made===1&&g.ph==='done','putt inside the chains is made');
+  T(270);adv();T(5)}
+step(Q.S.shards.includes(Q.HD0+1)&&[...Q.G.room.t].includes(Q.ST),'par gives the crown piece and opens the stairs');
+Q.exitDungeon();T(60);adv();step(Q.G.room.kind==='over'&&Q.G.room.key===h.key,'stairs return to the basket screen');
+// admin menu is hidden without the flag
+fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin');
+// ambush: duel mid-ambush restores the ambush and clearing opens the gates
+fresh();const ak=[...Q.ARENA][0].split(',').map(Number);go(ak[0],ak[1]);Q.P.x=112;Q.P.y=80;Q.onEnter();Q.G.mode='play';T(60);
+Q.startDuel('duelist',{lvl:1});T(115);Q.G.duel.phase='ko';Q.G.duel.t=200;T(3);step(!!Q.G.arena,'ambush survives a duel');
+for(let w=0;w<3;w++){for(const e of Q.G.ents)if(!e.dead){e.inv=0;e.spawn=0;Q.hitEnemy(e,999,e.x,e.y)}T(120)}step(!Q.G.arena&&![...Q.G.room.t].includes(17),'clearing the ambush opens the gates');
+// sword levels and heart pieces
+fresh();Q.swordXP(5000);step(Q.S.swl===30,'sword reaches level 30');const mh2=Q.S.maxHp;Q.S.hpc=0;for(let i=0;i<4;i++)Q.heartPiece('t');Q.G.mode='play';T(2);adv();step(Q.S.maxHp===mh2+2,'four heart pieces make a container');
+// old save migration (wv 2, three old shards)
+const old=JSON.parse(JSON.stringify(Q.newState()));old.wv=2;old.shards=[1,2,4];old.items.sword=1;Q.S=Object.assign(Q.newState(),old);Q.S.wv=2;Q.startLoaded();adv();
+step(Q.S.wv===3&&Q.S.shards.length===3&&Q.S.shards.every(d=>d>Q.HD0),'old shards become crown pieces');
+return {checks:n,bad};"""
+
+# Layout: screens drawn with worst-case values; any text drawn over other text fails.
+LAYOUT = PRE + r"""
+const res=[];const shot=(name,setup)=>{try{fresh();setup();Q.G.floats=[];Q.G.banner=null;const L=window.__frameText(),ov=window.__overlaps(L),off=window.__offscreen(L);res.push({name,n:L.length,ov,off})}catch(e){res.push({name,n:0,ov:['THREW '+e.message],off:[]})}};
+const worst=()=>{const S=Q.S;S.maxHp=32;S.hp=31;S.gems=999;S.bombs=99;S.swl=30;S.swx=0;S.hpc=3;S.deaths=123;S.secrets=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'];S.shards=[];for(let n=1;n<=27;n++)S.shards.push(Q.HD0+n);
+  for(const k in Q.ITEMS)S.items[k]=1;for(const k of Q.CONSK)S.inv[k]=9;for(const k of ['giant','boom','frost'])S.bag[k]=9;for(const hh of Q.HOLES)S.bk[hh.key]={s:hh.par+3,o:hh.n};S.aces=12;S.putts=99};
+for(const [x,y] of [[18,23],[0,0],[35,23],[35,0]])shot('overworld HUD '+x+','+y,()=>{worst();go(x,y)});
+shot('hole 27 dungeon HUD',()=>{worst();Q.enterDungeon(Q.HD0+27);T(60);Q.G.mode='play'});
+shot('throne HUD',()=>{worst();Q.enterDungeon(Q.NDUN);T(60);Q.G.mode='play'});
+shot('pause items',()=>{worst();go(18,23);Q.G.mode='pause';Q.G.ppage=0;Q.G.pcur=Q.INV.length-1});
+shot('pause map',()=>{worst();go(18,23);Q.G.mode='pause';Q.G.ppage=1;Q.G.pcur=0});
+for(const c of [1,2,3])shot('scorecard '+c,()=>{worst();go(18,23);Q.openCard(c);T(60)});
+shot('admin menu',()=>{worst();go(18,23);Q.G.adm={i:26,col:1};Q.G.mode='admin'});
+shot('warp menu',()=>{worst();go(18,23);for(const hh of Q.HOLES)Q.S.visited.push(hh.key);Q.openWarp()});
+shot('dialog',()=>{worst();go(18,23);Q.say('WWWWWWWWWWWWWWWWWWWWWWWWWWWW WWWWWWWWWWWWWWWWWWWWWWWWWWWW WWWWWWWWWWWWWWWWWWWWWWWWWWWW WWWWWWWWWWWWWWWWWWWWWWWWWWWW');T(200)});
+shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(130);Q.G.duel.love=88});
+shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
+const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
+golf('intro',g=>{g.ph='intro';g.t=20});
+golf('aim',g=>{g.ph='aim';g.t=200;g.mk={x:g.lie.x,y:g.lie.y-210};g.pv=null});
+golf('power',g=>{g.ph='power';g.pw=1.1});
+golf('release',g=>{g.ph='rel';g.pw=1;g.rel=0.9});
+golf('retry heart lost',g=>{g.ph='retry';g.t=80;g.heartLost=1;g.failed=1});
+golf('retry',g=>{g.ph='retry';g.t=80;g.heartLost=0;g.fails=1;g.failed=1});
+golf('done',g=>{g.ph='done';g.t=50;g.made=1;g.strokes=1});
+golf('message',g=>{g.ph='aim';g.msg={s:'OUT OF BOUNDS! +1',c:'#fff',t:50}});
+for(const ph of ['x','y','miss'])golf('putt '+ph,g=>{g.lie={x:g.c.bk.x,y:g.c.bk.y+30};Q.startPutt();g.pt.ph=ph;g.pt.t=10;g.pt.res='SHORT! HITS THE CAGE'});
+shot('title',()=>{Q.G.mode='title';Q.G.t=200});
+shot('win',()=>{worst();go(18,23);Q.S.time=359999;Q.G.mode='win';Q.G.winT=300});
+const bad=[];for(const r of res){for(const o of r.ov)bad.push(r.name+': "'+o+'" overlap');for(const o of r.off)bad.push(r.name+': "'+o+'" runs off screen')}
+return {checks:res.length,bad};"""
+
+STRESS = PRE + r"""
+fresh();const S=Q.S;for(const k in Q.ITEMS)S.items[k]=1;S.maxHp=40;S.hp=40;S.bombs=20;S.gems=500;go(18,23);Q.onEnter();
+const keys=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyJ','KeyK','KeyL','Space'];let seed=3;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+const places=[()=>{go(10+Math.floor(rnd()*16),4+Math.floor(rnd()*16));Q.onEnter()},()=>{Q.enterDungeon(Q.HD0+1+Math.floor(rnd()*27));T(50)},()=>{const i=Math.floor(rnd()*Q.CAVS.length),k=[...Q.CAVS[i].cells.keys()][0].split(',').map(Number);Q.setRoom(Q.genCavScreen(i,k[0],k[1]));Q.onEnter()}];
+let frames=0;for(let r=0;r<12;r++){places[r%3]();Q.G.mode='play';Q.G.dlg=null;for(let f=0;f<1500;f++){if(f%9===0)for(const k of keys)K[k]=rnd()<0.25?1:0;Q.tick();frames++;
+  if(['dialog','hold'].includes(Q.G.mode)&&f%30===0){Q.G.mode='play';Q.G.dlg=null}if(Q.G.mode==='gameover'||S.hp<=2){S.hp=40;Q.G.mode='play'}if(Q.G.mode==='golf'){Q.G.golf=null;Q.G.mode='play'}}}
+for(const k of keys)K[k]=0;return {checks:frames,bad:[]};"""
+
+SUITES = {'world': WORLD, 'golf': GOLF, 'flows': FLOWS, 'layout': LAYOUT, 'stress': STRESS}
+
+async def run(names):
+    from playwright.async_api import async_playwright
+    url = build_copy()
+    failed = 0
+    async with async_playwright() as p:
+        kw = {'executable_path': os.environ['CHROME']} if os.environ.get('CHROME') else {}
+        browser = await p.chromium.launch(**kw)
+        for name in names:
+            page = await browser.new_page(viewport={'width': 600, 'height': 640})
+            errs = []
+            page.on('pageerror', lambda e: errs.append(str(e)))
+            page.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
+            await page.goto(url)
+            await page.wait_for_timeout(700)
+            await page.keyboard.down('Enter'); await page.wait_for_timeout(120); await page.keyboard.up('Enter')
+            await page.wait_for_timeout(500)
+            t0 = time.time()
+            try:
+                r = await page.evaluate('()=>{' + SUITES[name] + '}')
+            except Exception as e:
+                r = {'checks': 0, 'bad': ['suite threw: ' + str(e).splitlines()[0]]}
+            bad = list(r.get('bad', [])) + ['console error: ' + e for e in errs]
+            ok = not bad
+            failed += 0 if ok else 1
+            print('%-7s %s  %s checks  %.0fs' % (name, 'PASS' if ok else 'FAIL', r.get('checks', 0), time.time() - t0))
+            if r.get('info'):
+                print('        ' + r['info'])
+            for b in bad[:30]:
+                print('        - ' + b)
+            if len(bad) > 30:
+                print('        ... and %d more' % (len(bad) - 30))
+            await page.close()
+        await browser.close()
+    return failed
+
+if __name__ == '__main__':
+    names = sys.argv[1:] or list(SUITES)
+    unknown = [n for n in names if n not in SUITES]
+    if unknown:
+        sys.exit('unknown suite(s): %s (have: %s)' % (', '.join(unknown), ', '.join(SUITES)))
+    sys.exit(1 if asyncio.run(run(names)) else 0)
