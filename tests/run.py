@@ -174,7 +174,16 @@ fresh();go(18,23);Q.openAdmin();step(Q.G.mode!=='admin','admin menu needs ?admin
  Q.S.swl=25;Q.G.ents=[];const fe=Q.makeEnemy(ty,Q.P.x+20,Q.P.y,3);fe.hp=999;fe.maxhp=999;fe.spawn=0;Q.G.ents.push(fe);const dm=[];
  for(let k=0;k<3;k++){fe.inv=0;fe.kbT=0;fe.x=Q.P.x+16;fe.y=Q.P.y;const h0=fe.hp;Q.P.atk=10;Q.P.swing++;Q.P.wep=null;Q.swordHits();dm.push(h0-fe.hp);T(10)}
  step(dm[2]>=dm[0]*1.9&&dm[0]>0,'level 25: the third hit in a row hits double ('+dm.join(',')+')');Q.G.ents=[];
- Q.S.swl=4;Q.S.swx=Q.swNeed(4)-1;Q.G.banner=null;Q.swordXP(1);step(Q.S.swl===5&&Q.G.banner&&/REACH/.test(Q.G.banner.s),'a perk level shows a banner')}
+ for(let i=1;i<=14;i++)Q.S.shards.push(Q.HD0+i);Q.S.swl=4;Q.S.swx=Q.swNeed(4)-1;Q.G.banner=null;Q.swordXP(1);step(Q.S.swl===5&&Q.G.banner&&/REACH/.test(Q.G.banner.s),'a perk level shows a banner')}
+// sword XP is for skill: only sword kills count, clean and spin kills earn more, a hit taken costs progress, a flawless boss pays double
+{fresh();go(18,23);for(let i=1;i<=14;i++)Q.S.shards.push(Q.HD0+i);Q.S.swl=10;Q.G.ents=[];const ty=Object.keys(Q.EN)[0];const mk=()=>{const e=Q.makeEnemy(ty,Q.P.x+20,Q.P.y,1);e.spawn=0;Q.G.ents.push(e);return e};
+ const gain=f=>{Q.S.swx=0;f();return Q.S.swx};
+ step(gain(()=>{const e=mk();Q.G.lastSword=null;Q.killEnemy(e)})===0,'a kill that is not a sword blow earns no sword XP');
+ Q.G.hurtT=Q.G.t;step(gain(()=>{const e=mk();Q.swordMark(e,'sword');Q.killEnemy(e)})===1,'a sword kill right after being hit earns 1');
+ Q.G.hurtT=-1e9;step(gain(()=>{const e=mk();Q.swordMark(e,'sword');Q.killEnemy(e)})===2,'a clean sword kill earns 2');
+ step(gain(()=>{const e=mk();Q.swordMark(e,'spin');Q.killEnemy(e)})===3,'a clean spin kill earns 3');
+ Q.S.swx=5;Q.P.inv=0;Q.P.roll=0;Q.G.mode='play';Q.hurtPlayer(1,Q.P.x+20,Q.P.y);step(Q.S.swx===4,'a hit taken costs sword progress');Q.P.inv=0;
+ Q.S.swx=0;Q.G.fightHurt=0;Q.bossXP();step(Q.S.swx===10,'a boss beaten without a hit pays 10');Q.S.swx=0;Q.G.fightHurt=2;Q.bossXP();step(Q.S.swx===5,'a boss beaten after hits pays 5');Q.G.ents=[]}
 // a random duel cannot start while the ground is opening; the drop still happens
 fresh();{const h3=Q.HOLES[2],[x3,y3]=h3.key.split(',').map(Number);go(x3,y3);Q.P.x=112;Q.P.y=120;Q.onEnter();Q.G.mode='play';Q.G.dlg=null;Q.G.banner=null;
  if(Q.G.basket){Q.G.strokes=2;Q.basketMade();T(20);Q.G.duelPending='duelist';T(10);step(Q.G.mode!=='duel'&&!Q.G.duel,'no random duel while the ground opens');waitDun();step(Q.G.room.kind==='dun'&&Q.G.dn===Q.HD0+3,'the drop still happens (mode '+Q.G.mode+', room '+Q.G.room.kind+', he '+JSON.stringify(Q.G.holeEnter)+', duel '+!!Q.G.duel+', dlg '+(Q.G.dlg&&Q.G.dlg.pages&&Q.G.dlg.pages[0]||'').slice(0,60)+')')}}
@@ -183,7 +192,11 @@ fresh();const ak=[...Q.ARENA][0].split(',').map(Number);go(ak[0],ak[1]);Q.P.x=11
 Q.startDuel('duelist',{lvl:1});T(115);Q.G.duel.phase='ko';Q.G.duel.t=200;T(3);step(!!Q.G.arena,'ambush survives a duel');
 for(let w=0;w<8&&Q.G.arena;w++){for(const e of Q.G.ents)if(!e.dead){e.inv=0;e.spawn=0;Q.hitEnemy(e,999,e.x,e.y)}T(120)}step(!Q.G.arena&&![...Q.G.room.t].includes(17),'clearing the ambush opens the gates');
 // sword levels and heart pieces
-fresh();Q.swordXP(5000);step(Q.S.swl===30,'sword reaches level 30');const mh2=Q.S.maxHp;Q.S.hpc=0;for(let i=0;i<4;i++)Q.heartPiece('t');Q.G.mode='play';T(2);adv();step(Q.S.maxHp===mh2+2,'four heart pieces make a container');
+fresh();const setPc=n=>{Q.S.shards=[];for(let i=1;i<=n;i++)Q.S.shards.push(Q.HD0+i)};
+Q.swordXP(5000);step(Q.S.swl===Q.TUNE.sword.capBase,'with no crown pieces the sword stops at level '+Q.TUNE.sword.capBase);
+setPc(7);Q.swordXP(5000);step(Q.S.swl>=15&&Q.S.swl<=19,'with 7 pieces it stops in the high teens ('+Q.S.swl+')');
+setPc(13);Q.swordXP(5000);step(Q.S.swl<30,'one piece short of half the course, level 30 is still out of reach');
+setPc(14);Q.swordXP(5000);step(Q.S.swl===30,'at 14 pieces (about half the course) the sword reaches level 30');const mh2=Q.S.maxHp;Q.S.hpc=0;for(let i=0;i<4;i++)Q.heartPiece('t');Q.G.mode='play';T(2);adv();step(Q.S.maxHp===mh2+2,'four heart pieces make a container');
 // old save migration (wv 2, three old shards)
 const old=JSON.parse(JSON.stringify(Q.newState()));old.wv=2;old.shards=[1,2,4];old.items.sword=1;Q.S=Object.assign(Q.newState(),old);Q.S.wv=2;Q.startLoaded();adv();
 step(Q.S.wv===3&&Q.S.shards.length===3&&Q.S.shards.every(d=>d>Q.HD0),'old shards become crown pieces');
@@ -207,6 +220,7 @@ shot('marebear duel',()=>{worst();go(18,23);Q.startDuel('marebear',{lvl:9});T(13
 shot('champion duel ready',()=>{worst();go(18,23);Q.startDuel('shadow',{lvl:9});T(20)});
 const golf=(name,f)=>shot('golf '+name,()=>{worst();go(18,23);Q.startGolf(27);T(5);const g=Q.G.golf;g.tries=12;g.strokes=9;g.shape=2;g.fails=11;f(g)});
 golf('intro',g=>{g.ph='intro';g.t=20});
+shot('sword limit banner',()=>{worst();go(18,23);Q.G.banner={s:'SWORD LIMIT: WIN CROWN PIECES',t:100}});
 shot('sword perk banner',()=>{worst();go(18,23);Q.G.banner={s:'LV 25: THIRD-HIT DOUBLE',t:100}});
 shot('boss banner',()=>{worst();Q.enterDungeon(Q.HD0+18);T(60);Q.G.mode='play';Q.G.banner={s:Q.DUN[Q.HD0+18].boss.n,t:100}});
 for(const bn of ['forest','swamp','desert','grave','volcano'])shot('course '+bn,()=>{worst();go(18,23);const h=Q.HOLES.find(h=>Q.holeBiome(h)===bn);Q.startGolf(h.n);T(5);const g=Q.G.golf;g.ph='intro';g.t=20;g.admin=false});
